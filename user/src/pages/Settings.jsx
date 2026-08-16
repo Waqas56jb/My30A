@@ -24,7 +24,7 @@ function SettingRow({ icon, title, sub, control, onClick, as = 'div' }) {
         <span className="setting-row__title">{title}</span>
         {sub && <span className="setting-row__sub">{sub}</span>}
       </span>
-      {control ?? (onClick ? <Icon name="chevronRight" style={{ color: 'var(--ink-300)' }} /> : null)}
+      {control ?? (onClick ? <Icon name="chevronRight" size={18} className="setting-row__chev" /> : null)}
     </Tag>
   )
 }
@@ -220,7 +220,9 @@ export default function Settings() {
                     {property?.name} · /guest/{guest.slug}
                   </span>
                 </span>
-                {guest.slug === guestSlug && <Icon name="check" style={{ color: 'var(--sea-700)' }} />}
+                {guest.slug === guestSlug && (
+                  <Icon name="check" size={18} style={{ color: 'var(--sea-700)', flex: 'none' }} />
+                )}
               </button>
             )
           })}

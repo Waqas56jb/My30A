@@ -365,12 +365,22 @@ const P = {
 
 export const ICON_NAMES = Object.keys(P)
 
+/**
+ * Icons always emit width/height *attributes* so a glyph placed somewhere
+ * without a sizing rule renders at 20px instead of expanding to fill its
+ * container. CSS rules (`.btn svg`, `.tabbar__item svg`, …) and the `size`
+ * prop both still win, because CSS and inline styles beat SVG attributes.
+ */
+const DEFAULT_SIZE = 20
+
 export default function Icon({ name, size, className = '', strokeWidth = 1.7, ...rest }) {
   const glyph = P[name] ?? P.circle
   const dimension = size ? { width: size, height: size } : undefined
   return (
     <svg
       viewBox="0 0 24 24"
+      width={size ?? DEFAULT_SIZE}
+      height={size ?? DEFAULT_SIZE}
       fill="none"
       stroke="currentColor"
       strokeWidth={strokeWidth}
@@ -394,6 +404,8 @@ export function IconSolid({ name, size, className = '', ...rest }) {
   return (
     <svg
       viewBox="0 0 24 24"
+      width={size ?? DEFAULT_SIZE}
+      height={size ?? DEFAULT_SIZE}
       fill="currentColor"
       stroke="currentColor"
       strokeWidth="1.2"

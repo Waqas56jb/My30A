@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import * as api from '../services/mockApi'
 import { setAnalyticsContext, track, ANALYTICS_EVENTS } from '../services/analytics'
 import { readStore, writeStore, STORAGE_KEYS } from '../utils/storage'
-import { DEFAULT_GUEST_SLUG } from '../data/mockGuests'
+import { resolveAccessCode } from '../data/mockGuests'
 import { makeId } from '../utils/format'
 
 const AppContext = createContext(null)
@@ -21,12 +21,14 @@ const DEFAULT_SETTINGS = {
  * Everything reads through mockApi so the backend swap is a one-file change.
  */
 export function AppProvider({ children }) {
-  const [guestSlug, setGuestSlug] = useState(
-    () => readStore(STORAGE_KEYS.guestSlug) ?? DEFAULT_GUEST_SLUG,
-  )
+  // No slug means the visitor is browsing publicly. The destination content is
+  // open to everyone; only property-specific screens need a guest link.
+  const [guestSlug, setGuestSlug] = useState(() => readStore(STORAGE_KEYS.guestSlug) ?? null)
   const [guest, setGuest] = useState(null)
   const [property, setProperty] = useState(null)
-  const [status, setStatus] = useState('loading') // loading | ready | error
+  const [status, setStatus] = useState(() =>
+    readStore(STORAGE_KEYS.guestSlug) ? 'loading' : 'public',
+  ) // public | loading | ready | error
   const [error, setError] = useState(null)
 
   const [notifications, setNotifications] = useState([])
@@ -88,9 +90,39 @@ export function AppProvider({ children }) {
   )
 
   useEffect(() => {
-    loadSession(guestSlug)
     writeStore(STORAGE_KEYS.guestSlug, guestSlug)
+    if (!guestSlug) {
+      setGuest(null)
+      setProperty(null)
+      setSavedIds([])
+      setStatus('public')
+      return
+    }
+    loadSession(guestSlug)
   }, [guestSlug, loadSession])
+
+  /**
+   * Exchange a printed access code (or a pasted guest link) for a session.
+   * This is the single seam where real authentication will land.
+   */
+  const unlockWithCode = useCallback(
+    (input) => {
+      const slug = resolveAccessCode(input)
+      if (!slug) return false
+      setGuestSlug(slug)
+      return true
+    },
+    [],
+  )
+
+  const signOut = useCallback(() => {
+    setGuestSlug(null)
+    pushToast({
+      tone: 'info',
+      title: 'Signed out of your stay',
+      message: 'You can still explore 30A. Re-enter your code any time.',
+    })
+  }, [pushToast])
 
   /* -------------------------- Notifications ------------------------ */
   const refreshNotifications = useCallback(async () => {
@@ -192,7 +224,10 @@ export function AppProvider({ children }) {
       guest,
       property,
       status,
+      hasGuest: !!guest,
       error,
+      unlockWithCode,
+      signOut,
       reloadSession: () => loadSession(guestSlug),
       notifications,
       unreadCount,
@@ -216,6 +251,8 @@ export function AppProvider({ children }) {
       property,
       status,
       error,
+      unlockWithCode,
+      signOut,
       loadSession,
       notifications,
       unreadCount,

@@ -19,19 +19,49 @@ export function img(id, w = 1200, ratio = 1.5) {
   return `${BASE}${id}?auto=format&fit=crop&w=${w}&h=${h}&q=72`
 }
 
-/** Ids grouped by subject so pages never reach for an unrelated stock photo. */
+/**
+ * Ids grouped by subject so pages never reach for an unrelated stock photo.
+ *
+ * Everything in the LIFESTYLE block below was sourced from Unsplash search by
+ * subject and visually checked before being added - these are the photos that
+ * carry the destination, so a near-miss is not good enough. Run
+ * `npm run test:images` after editing to confirm every URL still resolves.
+ */
 export const PHOTO = {
+  /* ---------- Lifestyle: people actually enjoying 30A ---------- */
+  heroEmerald: '1636937400111-f08d1fe8af2b', // white sand, emerald Gulf water
+  duneWalkover: '1560427791-bcf0b027ff44', // boardwalk through sea oats to the beach
+  bonfirePeople: '1569918970203-ea053ffda098', // group around a beach fire at sunset
+  bonfireGroup: '1596326270763-87f26e0f9225', // sitting on the sand around a fire
+  golfCartOcean: '1646606625592-7d61da12cff0', // cart parked above the ocean at sunset
+  golfCartRow: '1561251224-e393160cd769', // carts lined up ready to go
+  golfCartCourse: '1500948814185-c95ddc695d23', // two people riding a cart
+  bikeRide: '1758967439612-80c7483f7168', // people cycling a coastal path
+  bikeBoardwalk: '1768478581941-bbdcc8fa46d4', // two riders on a boardwalk
+  familyWalk: '1695425812104-8a9963d58887', // family walking the shore hand in hand
+  familyShore: '1576696058573-12b47c49559e', // mother and children at the water
+  boatSunset: '1605472075294-4c73b9909d08', // people aboard at sunset
+  boatDay: '1614808317315-4807afbab5eb', // two people out on the water
+  paddleCouple: '1526188717906-ab4a2f949f26', // paddleboarding together
+  beachCoupleWalk: '1654206700775-1c6257fb12e9', // couple walking the sand
+  beachChairsWide: '1658157799932-eef5dee4118c', // chairs and umbrellas on wide sand
+  beachGrass: '1654206855819-e639d7f0cb67', // dunes looking out to the Gulf
+  coastalRoad: '1662666625842-0d2f1bf1a931', // 30A-style road along the beach
+  yogaSunset: '1646941836303-12a0a6bff9b6', // yoga on the sand at golden hour
+  patioLights: '1774228296846-14fd638af680', // outdoor dining under string lights
+  sunsetSilhouette: '1602594748821-6df031e275e1', // arms raised at sunset
+
   // Coastal / 30A
   beachAerial: '1505142468610-359e7d316be0',
   beachTurquoise: '1507525428034-b723cf961d3e',
-  beachUmbrellas: '1519046904884-53103b34b206',
+  beachUmbrellas: '1658157799932-eef5dee4118c',
   beachDunes: '1473116763249-2faaef81ccda',
-  beachSunset: '1520454974749-611b7248ffdb',
+  beachSunset: '1602594748821-6df031e275e1',
   beachWaves: '1559827260-dc66d52bef19',
   beachBoardwalk: '1502680390469-be75c86b636f',
-  beachFamily: '1602002418082-a4443e081dd1',
-  beachKids: '1530549387789-4c1017266635',
-  coastalTown: '1512917774080-9991f1c4c750',
+  beachFamily: '1695425812104-8a9963d58887',
+  beachKids: '1576696058573-12b47c49559e',
+  coastalTown: '1662666625842-0d2f1bf1a931',
 
   // Homes
   houseWhite: '1580587771525-78b9dba3b914',
@@ -58,12 +88,12 @@ export const PHOTO = {
   iceCream: '1497034825429-c343d7c6a68f',
 
   // Activities & partners
-  bikes: '1485965120184-e220f721d03e',
-  bikeBeach: '1571068316344-75bc76f77890',
+  bikes: '1758967439612-80c7483f7168',
+  bikeBeach: '1768478581941-bbdcc8fa46d4',
   boatYacht: '1567899378494-47b22a2ae96a',
-  boatPontoon: '1544551763-46a013bb70d5',
-  paddleboard: '1526188717906-eb0f39e5b374',
-  golfCourse: '1535131749006-b7f58c99034b',
+  boatPontoon: '1614808317315-4807afbab5eb',
+  paddleboard: '1526188717906-ab4a2f949f26',
+  golfCourse: '1500948814185-c95ddc695d23',
   golfSwing: '1587174486073-ae5e5cff23aa',
   spaMassage: '1544161515-4ab6ce6db874',
   spaStones: '1540555700478-4be289fbecef',
@@ -73,12 +103,12 @@ export const PHOTO = {
   photographer: '1452587925148-ce544e77e70d',
   familyPhoto: '1543269865-cbf427effbad',
   fishing: '1544551763-77ef2d0cfc6c',
-  kayak: '1527004013197-933c4bb611b7',
+  kayak: '1505118380757-91f5f5632de0',
   tennis: '1554068865-24cecd4e34b8',
 
   // Services
   groceryBags: '1542838132-92c53300491e',
-  groceryCart: '1601599963565-b7f49deb352a',
+  groceryCart: '1604719312566-8912e9227c6a',
   groceryDelivery: '1543168256-418811576931',
   groceryKitchen: '1556909212-d5b604d0c90d',
   suvTransfer: '1449824913935-59a10b8d2000',
@@ -89,7 +119,7 @@ export const PHOTO = {
   cleaning: '1581578731548-c64695cc6952',
 
   // Events & shopping
-  concert: '1470229722913-7ea0d7c1f0d0',
+  concert: '1501386761578-eac5c94b800a',
   farmersMarket: '1533106418989-88406c7cc8ca',
   artFestival: '1503095396549-807759245b35',
   fireworks: '1467810563316-b5476525c0f9',

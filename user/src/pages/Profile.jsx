@@ -246,7 +246,7 @@ export default function Profile() {
               <div className="u-xs u-muted">Restaurants, beaches, and partners you’ve hearted</div>
             </div>
           </div>
-          <Icon name="chevronRight" style={{ color: 'var(--ink-300)' }} />
+          <Icon name="chevronRight" size={18} style={{ color: 'var(--ink-300)', flex: 'none' }} />
         </div>
       </Section>
 

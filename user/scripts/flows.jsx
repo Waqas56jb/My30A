@@ -1,13 +1,15 @@
-﻿/**
+/**
  * Interaction test.
  *
- * The route smoke test proves pages render; this drives the things a guest
- * actually does â€” sending a message to Vitoria, completing both request
- * wizards, tripping form validation, authorising a mock payment, tipping,
- * rating, filtering, and saving a place.
+ * The route smoke test proves pages render; this drives what a guest actually
+ * does - sending a message to Vitoria, completing both request wizards,
+ * tripping form validation, authorising a mock payment, tipping, rating,
+ * filtering, saving a place, and recovering from an API failure.
  *
- *   npx vite build --ssr scripts/flows.jsx --outDir .smoke
- *   node --import ./scripts/setup-dom.js .smoke/flows.js
+ *   npm run test:flows
+ *
+ * Expectations are ASCII-only so the harness never depends on how a terminal
+ * or editor encodes typographic punctuation.
  */
 import { createRoot } from 'react-dom/client'
 import { act } from 'react'
@@ -85,11 +87,12 @@ async function click(el) {
   await flush(4)
 }
 
-/** React tracks its own value; the native setter is required for onChange. */
+/** React tracks its own value; the prototype setter is required for onChange. */
 async function type(el, value) {
-  const proto = el instanceof window.HTMLTextAreaElement
-    ? window.HTMLTextAreaElement.prototype
-    : window.HTMLInputElement.prototype
+  const proto =
+    el instanceof window.HTMLTextAreaElement
+      ? window.HTMLTextAreaElement.prototype
+      : window.HTMLInputElement.prototype
   const setter = Object.getOwnPropertyDescriptor(proto, 'value').set
   await act(async () => {
     setter.call(el, value)
@@ -140,17 +143,25 @@ test('Send button is disabled while the composer is empty', async () => {
   await page.destroy()
 })
 
+test('Chat groups messages under a date separator', async () => {
+  const page = await mount('/vitoria')
+  if (all(page.container, '.chat-date').length === 0)
+    throw new Error('no date separator rendered in the thread')
+  if (all(page.container, '.bubble').length < 2) throw new Error('seed conversation did not render')
+  await page.destroy()
+})
+
 test('Grocery wizard blocks an empty list and completes when filled', async () => {
   resetMockData()
   const page = await mount('/groceries/new')
 
-  // Step 1 â†’ 2
+  // Step 1 -> 2
   const date = page.container.querySelector('input[type="date"]')
   await type(date, '2026-08-21')
   await click(findByText(page.container, 'Continue'))
   if (!page.text().includes('Where should we shop?')) throw new Error('did not advance to the store step')
 
-  // Step 2 â†’ 3
+  // Step 2 -> 3
   await click(findByText(page.container, 'Continue'))
   if (!page.text().includes('What do you need?')) throw new Error('did not advance to the list step')
 
@@ -164,12 +175,11 @@ test('Grocery wizard blocks an empty list and completes when filled', async () =
   await click(findByText(page.container, 'Continue'))
   if (!page.text().includes('Review your request')) throw new Error('did not reach the review step')
 
-  // Validation: submit without accepting terms
+  // Validation: submit without accepting the cancellation terms
   await click(findByText(page.container, 'Submit request'))
   if (!page.text().includes('accept the cancellation terms'))
     throw new Error('submitted without accepting the cancellation terms')
 
-  // Accept and submit
   await click(page.container.querySelector('.checkbox input'))
   await click(findByText(page.container, 'Submit request'))
   await flush(15)
@@ -210,7 +220,7 @@ test('Transfer wizard validates the flight number and submits', async () => {
 test('Transfer price responds to vehicle class', async () => {
   const page = await mount('/transfers/new')
   const before = page.text()
-  if (!before.includes('$203')) throw new Error(`expected the SUV quote of $203, got: ${before.slice(0, 120)}`)
+  if (!before.includes('$203')) throw new Error('expected the SUV quote of $203')
 
   await click(findByText(page.container, 'Sprinter Van'))
   if (!page.text().includes('$285')) throw new Error('price did not update for the Sprinter')
@@ -240,8 +250,7 @@ test('Tipping and rating a delivered order persist', async () => {
   await click(findByText(page.container, '18%'))
   await click(findByText(page.container, 'Add tip'))
   await flush(10)
-  if (!page.text().includes('goes entirely to your shopper'))
-    throw new Error('tip was not recorded')
+  if (!page.text().includes('goes entirely to your shopper')) throw new Error('tip was not recorded')
 
   const stars = all(page.container, '.stars--input button')
   await click(stars[4])
@@ -292,8 +301,7 @@ test('Cancelling a grocery request asks for confirmation first', async () => {
   if (!document.body.textContent.includes('Cancel this grocery request?'))
     throw new Error('confirmation modal did not open')
 
-  const confirm = findByText(document.body, 'Cancel request', '.modal button')
-  await click(confirm)
+  await click(findByText(document.body, 'Cancel request', '.modal button'))
   await flush(12)
   if (!page.text().includes('Cancelled')) throw new Error('request was not cancelled')
   await page.destroy()
@@ -314,79 +322,9 @@ test('Restaurant filters narrow the results', async () => {
 
 test('Search with no matches shows an empty state', async () => {
   const page = await mount('/explore')
-  const input = page.container.querySelector('.search__input')
-  await type(input, 'zzzzz-not-a-real-place')
+  await type(page.container.querySelector('.search__input'), 'zzzzz-not-a-real-place')
   await flush(8)
   if (!page.text().includes('Nothing matched that')) throw new Error('no empty state for a dead search')
-  await page.destroy()
-})
-
-test('Saving a place updates the trip', async () => {
-  resetMockData()
-  const page = await mount('/restaurants')
-  const heart = page.container.querySelector('.place-card__fav')
-  const wasPressed = heart.getAttribute('aria-pressed') === 'true'
-  await click(heart)
-  await flush(8)
-  if ((heart.getAttribute('aria-pressed') === 'true') === wasPressed)
-    throw new Error('save state did not toggle')
-  await page.destroy()
-})
-
-test('Notifications can be marked read', async () => {
-  resetMockData()
-  const page = await mount('/notifications')
-  if (all(page.container, '.notif--unread').length === 0)
-    throw new Error('expected unread notifications in the fixture')
-
-  await click(findByText(page.container, 'Mark all read'))
-  await flush(8)
-  if (all(page.container, '.notif--unread').length !== 0)
-    throw new Error('notifications were not marked read')
-  await page.destroy()
-})
-
-test('Partner detail tracks outbound clicks without claiming a booking', async () => {
-  const page = await mount('/partners/partner_bike_beachside')
-  const text = page.text()
-  if (!text.includes('Visit website')) throw new Error('missing website CTA')
-  if (!text.includes('Call partner')) throw new Error('missing phone CTA')
-  if (!text.includes('independent local business'))
-    throw new Error('missing the partner relationship disclosure')
-  await page.destroy()
-})
-
-test('Error state appears when the API fails, and retry recovers', async () => {
-  // Failure mode is toggled after mount because the provider syncs it from
-  // settings on start-up, which would otherwise clear the flag.
-  const page = await mount('/restaurants')
-  setFailureMode(true)
-
-  // Changing the search re-runs the query, which now fails.
-  await type(page.container.querySelector('.search__input'), 'seafood')
-  await flush(10)
-  if (!page.text().includes('Try again')) throw new Error('no error state while the API is failing')
-
-  setFailureMode(false)
-  await click(findByText(page.container, 'Try again'))
-  await flush(12)
-  if (all(page.container, '.place-card').length === 0)
-    throw new Error('retry did not reload the list')
-  await page.destroy()
-})
-
-test('Profile preferences can be edited and saved', async () => {
-  resetMockData()
-  const page = await mount('/profile')
-  await click(findByText(page.container, 'Edit preferences'))
-  await flush(4)
-  if (!document.body.textContent.includes('Favourite cuisines'))
-    throw new Error('edit sheet did not open')
-
-  await click(findByText(document.body, 'Barbecue', '.sheet .chip'))
-  await click(findByText(document.body, 'Save preferences', '.sheet button'))
-  await flush(10)
-  if (!page.text().includes('Barbecue')) throw new Error('preference was not saved back to the profile')
   await page.destroy()
 })
 
@@ -437,11 +375,71 @@ test('Dialogs close on Escape', async () => {
   await page.destroy()
 })
 
-test('Chat groups messages under a date separator', async () => {
-  const page = await mount('/vitoria')
-  if (all(page.container, '.chat-date').length === 0)
-    throw new Error('no date separator rendered in the thread')
-  if (all(page.container, '.bubble').length < 2) throw new Error('seed conversation did not render')
+test('Saving a place updates the trip', async () => {
+  resetMockData()
+  const page = await mount('/restaurants')
+  const heart = page.container.querySelector('.place-card__fav')
+  const wasPressed = heart.getAttribute('aria-pressed') === 'true'
+  await click(heart)
+  await flush(8)
+  if ((heart.getAttribute('aria-pressed') === 'true') === wasPressed)
+    throw new Error('save state did not toggle')
+  await page.destroy()
+})
+
+test('Notifications can be marked read', async () => {
+  resetMockData()
+  const page = await mount('/notifications')
+  if (all(page.container, '.notif--unread').length === 0)
+    throw new Error('expected unread notifications in the fixture')
+
+  await click(findByText(page.container, 'Mark all read'))
+  await flush(8)
+  if (all(page.container, '.notif--unread').length !== 0)
+    throw new Error('notifications were not marked read')
+  await page.destroy()
+})
+
+test('Partner detail leads with outbound CTAs and a clear disclosure', async () => {
+  const page = await mount('/partners/partner_bike_beachside')
+  const text = page.text()
+  if (!text.includes('Visit website')) throw new Error('missing website CTA')
+  if (!text.includes('Call partner')) throw new Error('missing phone CTA')
+  if (!text.includes('independent local business'))
+    throw new Error('missing the partner relationship disclosure')
+  await page.destroy()
+})
+
+test('Error state appears when the API fails, and retry recovers', async () => {
+  // Failure mode is toggled after mount because the provider syncs it from
+  // settings on start-up, which would otherwise clear the flag.
+  const page = await mount('/restaurants')
+  setFailureMode(true)
+
+  // Changing the search re-runs the query, which now fails.
+  await type(page.container.querySelector('.search__input'), 'seafood')
+  await flush(10)
+  if (!page.text().includes('Try again')) throw new Error('no error state while the API is failing')
+
+  setFailureMode(false)
+  await click(findByText(page.container, 'Try again'))
+  await flush(12)
+  if (all(page.container, '.place-card').length === 0) throw new Error('retry did not reload the list')
+  await page.destroy()
+})
+
+test('Profile preferences can be edited and saved', async () => {
+  resetMockData()
+  const page = await mount('/profile')
+  await click(findByText(page.container, 'Edit preferences'))
+  await flush(4)
+  if (!document.body.textContent.includes('Favourite cuisines'))
+    throw new Error('edit sheet did not open')
+
+  await click(findByText(document.body, 'Barbecue', '.sheet .chip'))
+  await click(findByText(document.body, 'Save preferences', '.sheet button'))
+  await flush(10)
+  if (!page.text().includes('Barbecue')) throw new Error('preference was not saved back to the profile')
   await page.destroy()
 })
 
@@ -460,9 +458,7 @@ async function main() {
     }
   }
   console.log(
-    failures === 0
-      ? `\nAll ${tests.length} flows passed.`
-      : `\n${failures} of ${tests.length} flows failed.`,
+    failures === 0 ? `\nAll ${tests.length} flows passed.` : `\n${failures} of ${tests.length} flows failed.`,
   )
   process.exit(failures === 0 ? 0 : 1)
 }

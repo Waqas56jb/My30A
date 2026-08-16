@@ -1388,12 +1388,19 @@
   display: flex;
   align-items: center;
   gap: var(--sp-3);
-  padding: var(--sp-4) var(--sp-5);
+  padding: var(--sp-4);
   border-bottom: 1px solid var(--line-soft);
   width: 100%;
+  min-height: 64px;
   text-align: left;
   background: var(--surface);
   transition: background var(--dur-fast) var(--ease);
+}
+
+@media (min-width: 620px) {
+  .setting-row {
+    padding: var(--sp-4) var(--sp-5);
+  }
 }
 
 .setting-row:last-child {
@@ -1426,31 +1433,53 @@ a.setting-row:hover {
   min-width: 0;
 }
 
+/* These are <span>s, so they must be told to stack — otherwise the title and
+   the description run together on one line. */
 .setting-row__title {
+  display: block;
   font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--ink-900);
+  line-height: 1.4;
 }
 
 .setting-row__sub {
+  display: block;
   font-size: var(--fs-xs);
   color: var(--ink-500);
-  margin-top: 1px;
+  margin-top: 2px;
+  line-height: 1.45;
+}
+
+.setting-row__chev {
+  color: var(--ink-300);
+  flex: none;
 }
 
 /* Toggle */
 .switch {
   position: relative;
-  width: 46px;
-  height: 28px;
+  width: 50px;
+  height: 30px;
   border-radius: var(--r-pill);
   background: var(--surface-3);
-  transition: background var(--dur) var(--ease);
+  border: 1px solid var(--line);
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
   flex: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Keeps the visual switch compact while giving it a 44px touch target. */
+.switch::before {
+  content: '';
+  position: absolute;
+  inset: -8px -4px;
 }
 
 .switch[aria-checked='true'] {
   background: var(--sea-500);
+  border-color: var(--sea-500);
 }
 
 .switch::after {
@@ -1467,7 +1496,12 @@ a.setting-row:hover {
 }
 
 .switch[aria-checked='true']::after {
-  transform: translateX(18px);
+  transform: translateX(20px);
+}
+
+.switch:focus-visible {
+  outline: 2px solid var(--sea-500);
+  outline-offset: 3px;
 }
 
 /* ---------------- Explore ---------------- */

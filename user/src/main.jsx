@@ -10,6 +10,7 @@ import './styles/layout.css'
 import './styles/components.css'
 import './styles/chat.css'
 import './styles/pages.css'
+import './styles/discover.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

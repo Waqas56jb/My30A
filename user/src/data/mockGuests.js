@@ -105,4 +105,28 @@ export const getGuestBySlug = (slug) => {
   )
 }
 
+/**
+ * Access codes are what a host prints on the welcome card or encodes in the
+ * QR sticker by the door. Entering one is the mock stand-in for auth.
+ */
+export const ACCESS_CODES = {
+  'MY30A-8842': 'demo',
+  'MY30A-9107': 'daniel',
+}
+
+/** Accepts a printed code, a pasted link, or a bare slug. */
+export function resolveAccessCode(input) {
+  if (!input) return null
+  const raw = String(input).trim()
+  if (!raw) return null
+
+  const code = raw.toUpperCase().replace(/\s+/g, '')
+  if (ACCESS_CODES[code]) return ACCESS_CODES[code]
+
+  // Tolerate someone pasting the whole link they were sent.
+  const fromLink = raw.match(/guest\/([\w-]+)/i)?.[1]
+  const candidate = (fromLink ?? raw).toLowerCase()
+  return getGuestBySlug(candidate)?.slug ?? null
+}
+
 export const DEFAULT_GUEST_SLUG = 'demo'

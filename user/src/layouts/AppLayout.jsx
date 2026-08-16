@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar, TopBar, MobileBottomNav } from '../components/nav/Navigation'
+import MobileDrawer from '../components/nav/MobileDrawer'
 import { Toaster } from '../components/ui/Modal'
 import { ErrorState } from '../components/ui/States'
 import { SkeletonPage } from '../components/ui/Skeleton'
@@ -12,12 +13,15 @@ import { cx } from '../utils/format'
 const FULLSCREEN_ROUTES = ['/vitoria']
 
 /**
- * The guest shell: sidebar on desktop, top bar + bottom tabs on mobile.
- * It also owns the viewport hook (keyboard handling) and scroll restoration.
+ * The guest shell: sidebar on desktop, top bar + bottom tabs + slide-in drawer
+ * on mobile. It also owns the viewport hook (keyboard handling) and scroll
+ * restoration. Public visitors get the same shell — only the property-specific
+ * screens ask for a guest link.
  */
 export default function AppLayout() {
   const location = useLocation()
   const { status, error, reloadSession, toasts, dismissToast } = useApp()
+  const [menuOpen, setMenuOpen] = useState(false)
   const mainRef = useRef(null)
   const isFullscreen = FULLSCREEN_ROUTES.includes(location.pathname)
 
@@ -37,7 +41,7 @@ export default function AppLayout() {
 
       <Sidebar />
 
-      {!isFullscreen && <TopBar />}
+      {!isFullscreen && <TopBar onOpenMenu={() => setMenuOpen(true)} />}
 
       <main
         id="main-content"
@@ -48,17 +52,14 @@ export default function AppLayout() {
         {status === 'loading' && <SkeletonPage />}
         {status === 'error' && (
           <div className="page">
-            <ErrorState
-              title="We could not open your stay"
-              error={error}
-              onRetry={reloadSession}
-            />
+            <ErrorState title="We could not open your stay" error={error} onRetry={reloadSession} />
           </div>
         )}
-        {status === 'ready' && <Outlet />}
+        {(status === 'ready' || status === 'public') && <Outlet />}
       </main>
 
       <MobileBottomNav />
+      <MobileDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
       <Toaster toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
