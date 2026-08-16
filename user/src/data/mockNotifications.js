@@ -1,0 +1,66 @@
+/**
+ * Notification centre feed. Real push (FCM) and email (Resend) arrive later —
+ * `link` is what the notification will deep-link to when it does.
+ */
+export const mockNotifications = [
+  {
+    id: 'ntf_01',
+    type: 'grocery',
+    icon: 'bag',
+    title: 'Your shopper is at Publix',
+    message: 'Marcus started shopping your list for GR-1024. He will text about substitutions.',
+    createdAt: '2026-08-17T18:05:00',
+    read: false,
+    link: '/groceries/GR-1024',
+  },
+  {
+    id: 'ntf_02',
+    type: 'transfer',
+    icon: 'car',
+    title: 'Your airport transfer is confirmed',
+    message: 'TR-2048 · ECP → Rosemary Beach on Aug 20 at 2:00 PM. Card authorisation is the last step.',
+    createdAt: '2026-08-16T19:22:00',
+    read: false,
+    link: '/transfers/TR-2048',
+  },
+  {
+    id: 'ntf_03',
+    type: 'property',
+    icon: 'key',
+    title: 'Your host updated check-in instructions',
+    message: 'Michael added a note about the courtyard gate keypad. Worth a read before you arrive.',
+    createdAt: '2026-08-16T09:10:00',
+    read: false,
+    link: '/my-stay',
+  },
+  {
+    id: 'ntf_04',
+    type: 'vitoria',
+    icon: 'sparkles',
+    title: 'Vitoria found something for you',
+    message: 'The wine tasting at Havana Beach on Aug 24 still has seats — you liked the rooftop last year.',
+    createdAt: '2026-08-15T16:30:00',
+    read: true,
+    link: '/events/event_wine_tasting',
+  },
+  {
+    id: 'ntf_05',
+    type: 'grocery',
+    icon: 'bag',
+    title: 'Your grocery request has been confirmed',
+    message: 'GR-1024 is confirmed for Aug 20, 2:00 PM – 4:00 PM from Publix.',
+    createdAt: '2026-08-17T14:58:00',
+    read: true,
+    link: '/groceries/GR-1024',
+  },
+  {
+    id: 'ntf_06',
+    type: 'property',
+    icon: 'wifi',
+    title: 'Welcome to Rosemary Beach House',
+    message: 'Your stay details, WiFi, and door code are ready in My Stay.',
+    createdAt: '2026-08-14T12:00:00',
+    read: true,
+    link: '/my-stay',
+  },
+]

@@ -1,0 +1,283 @@
+import { PHOTO } from '../assets/images'
+
+/**
+ * Explore categories. `filter` maps a tile to the partner/restaurant category
+ * it should pre-select; `route` points at a dedicated page when one exists.
+ */
+export const exploreCategories = [
+  {
+    id: 'cat_restaurants',
+    label: 'Restaurants',
+    slug: 'restaurants',
+    icon: 'utensils',
+    image: PHOTO.diningPatio,
+    route: '/restaurants',
+    filter: 'Restaurants',
+    blurb: 'Where to eat tonight',
+  },
+  {
+    id: 'cat_beaches',
+    label: 'Beaches',
+    slug: 'beaches',
+    icon: 'umbrella',
+    image: PHOTO.beachUmbrellas,
+    route: '/beaches',
+    filter: 'Beaches',
+    blurb: 'Accesses, parking, chairs',
+  },
+  {
+    id: 'cat_things',
+    label: 'Things To Do',
+    slug: 'activities',
+    icon: 'compass',
+    image: PHOTO.beachBoardwalk,
+    route: '/partners?category=Activities',
+    filter: 'Activities',
+    blurb: 'Surf, tours, adventures',
+  },
+  {
+    id: 'cat_events',
+    label: 'Events',
+    slug: 'events',
+    icon: 'ticket',
+    image: PHOTO.concert,
+    route: '/events',
+    filter: 'Events',
+    blurb: 'Happening this week',
+  },
+  {
+    id: 'cat_golf',
+    label: 'Golf',
+    slug: 'golf',
+    icon: 'flag',
+    image: PHOTO.golfCourse,
+    route: '/partners?category=Golf',
+    filter: 'Golf',
+    blurb: 'Tee times nearby',
+  },
+  {
+    id: 'cat_boating',
+    label: 'Boating',
+    slug: 'boating',
+    icon: 'boat',
+    image: PHOTO.boatPontoon,
+    route: '/partners?category=Boating',
+    filter: 'Boating',
+    blurb: 'Charters & paddleboards',
+  },
+  {
+    id: 'cat_photography',
+    label: 'Photography',
+    slug: 'photography',
+    icon: 'camera',
+    image: PHOTO.familyPhoto,
+    route: '/partners?category=Photography',
+    filter: 'Photography',
+    blurb: 'Family beach sessions',
+  },
+  {
+    id: 'cat_bonfires',
+    label: 'Bonfires',
+    slug: 'bonfires',
+    icon: 'flame',
+    image: PHOTO.bonfire,
+    route: '/partners?category=Bonfires',
+    filter: 'Bonfires',
+    blurb: 'Permitted & set up for you',
+  },
+  {
+    id: 'cat_bikes',
+    label: 'Bike Rentals',
+    slug: 'bike-rentals',
+    icon: 'bike',
+    image: PHOTO.bikes,
+    route: '/partners?category=Bike%20Rentals',
+    filter: 'Bike Rentals',
+    blurb: 'Delivered to the door',
+  },
+  {
+    id: 'cat_spa',
+    label: 'Wellness & Spa',
+    slug: 'wellness',
+    icon: 'leaf',
+    image: PHOTO.spaMassage,
+    route: '/partners?category=Wellness%20%26%20Spa',
+    filter: 'Wellness & Spa',
+    blurb: 'Massage, yoga, recovery',
+  },
+  {
+    id: 'cat_family',
+    label: 'Family Services',
+    slug: 'family',
+    icon: 'users',
+    image: PHOTO.beachFamily,
+    route: '/partners?category=Family%20Services',
+    filter: 'Family Services',
+    blurb: 'Gear, setup, support',
+  },
+  {
+    id: 'cat_sitters',
+    label: 'Babysitters',
+    slug: 'babysitters',
+    icon: 'baby',
+    image: PHOTO.babysitter,
+    route: '/partners?category=Babysitters',
+    filter: 'Babysitters',
+    blurb: 'Vetted, CPR certified',
+  },
+  {
+    id: 'cat_experiences',
+    label: 'Local Experiences',
+    slug: 'experiences',
+    icon: 'sparkles',
+    image: PHOTO.kayak,
+    route: '/partners?category=Activities',
+    filter: 'Activities',
+    blurb: 'Dune lakes & eco tours',
+  },
+  {
+    id: 'cat_shopping',
+    label: 'Shopping',
+    slug: 'shopping',
+    icon: 'bag',
+    image: PHOTO.shoppingStreet,
+    route: '/partners?category=Shopping',
+    filter: 'Shopping',
+    blurb: 'Boutiques & bookshops',
+  },
+]
+
+/** Home screen quick actions. */
+export const quickActions = [
+  { id: 'qa_vitoria', label: 'Ask Vitoria', icon: 'sparkles', to: '/vitoria', accent: true },
+  { id: 'qa_explore', label: 'Explore 30A', icon: 'compass', to: '/explore' },
+  { id: 'qa_grocery', label: 'Groceries', icon: 'bag', to: '/groceries/new' },
+  { id: 'qa_transfer', label: 'Airport', icon: 'car', to: '/transfers/new' },
+  { id: 'qa_restaurants', label: 'Restaurants', icon: 'utensils', to: '/restaurants' },
+  { id: 'qa_todo', label: 'Things To Do', icon: 'ticket', to: '/partners?category=Activities' },
+  { id: 'qa_beach', label: 'Beach Guide', icon: 'umbrella', to: '/beaches' },
+  { id: 'qa_trip', label: 'My Trip', icon: 'suitcase', to: '/my-trip' },
+]
+
+/** Concierge services that My30A fulfils itself (vs. partner referrals). */
+export const conciergeServices = [
+  {
+    id: 'svc_grocery',
+    name: 'Grocery Delivery',
+    icon: 'bag',
+    to: '/groceries/new',
+    image: PHOTO.groceryBags,
+    blurb: 'Send a list, we stock the kitchen before you walk in.',
+    priceNote: 'Service fee from $39 + groceries',
+    fulfilment: 'my30a',
+  },
+  {
+    id: 'svc_transfer',
+    name: 'Airport Transfer',
+    icon: 'car',
+    to: '/transfers/new',
+    image: PHOTO.blackCar,
+    blurb: 'Private black-car pickup from ECP, VPS, or PNS.',
+    priceNote: 'From $150 · ECP → Rosemary Beach',
+    fulfilment: 'my30a',
+  },
+  {
+    id: 'svc_bonfire',
+    name: 'Beach Bonfire',
+    icon: 'flame',
+    to: '/partners/partner_bonfire_30a',
+    image: PHOTO.bonfire,
+    blurb: 'Permits, wood, chairs, and cleanup handled by our partner.',
+    priceNote: 'From $225 · booked with the partner',
+    fulfilment: 'partner',
+  },
+  {
+    id: 'svc_spa',
+    name: 'In-Home Massage',
+    icon: 'leaf',
+    to: '/partners/partner_spa_serenity',
+    image: PHOTO.spaMassage,
+    blurb: 'A licensed therapist brings the table to your house.',
+    priceNote: 'From $160 · booked with the partner',
+    fulfilment: 'partner',
+  },
+  {
+    id: 'svc_sitter',
+    name: 'Babysitting',
+    icon: 'baby',
+    to: '/partners/partner_sitter_seaside',
+    image: PHOTO.babysitter,
+    blurb: 'Background-checked sitters for a night out.',
+    priceNote: 'From $30/hr · booked with the partner',
+    fulfilment: 'partner',
+  },
+  {
+    id: 'svc_photo',
+    name: 'Family Photos',
+    icon: 'camera',
+    to: '/partners/partner_photo_dune',
+    image: PHOTO.familyPhoto,
+    blurb: 'Sunrise sessions on the dunes, gallery in 72 hours.',
+    priceNote: 'From $425 · booked with the partner',
+    fulfilment: 'partner',
+  },
+]
+
+export const AIRPORTS = [
+  {
+    code: 'ECP',
+    name: 'Northwest Florida Beaches Intl',
+    city: 'Panama City',
+    driveTime: '35 min',
+    basePrice: 150,
+  },
+  {
+    code: 'VPS',
+    name: 'Destin–Fort Walton Beach',
+    city: 'Valparaiso',
+    driveTime: '55 min',
+    basePrice: 195,
+  },
+  {
+    code: 'PNS',
+    name: 'Pensacola International',
+    city: 'Pensacola',
+    driveTime: '1 hr 50 min',
+    basePrice: 320,
+  },
+]
+
+export const VEHICLE_CLASSES = [
+  { id: 'sedan', name: 'Luxury Sedan', capacity: '3 guests · 3 bags', multiplier: 1 },
+  { id: 'suv', name: 'Premium SUV', capacity: '6 guests · 6 bags', multiplier: 1.35 },
+  { id: 'sprinter', name: 'Sprinter Van', capacity: '12 guests · 14 bags', multiplier: 1.9 },
+]
+
+export const GROCERY_STORES = [
+  { id: 'publix', name: 'Publix', note: 'Everyday selection · Inlet Beach', eta: 'Same day' },
+  { id: 'fresh_market', name: 'The Fresh Market', note: 'Premium & organic · Grand Blvd', eta: 'Same day' },
+  { id: 'winn_dixie', name: 'Winn-Dixie', note: 'Best value · Santa Rosa Beach', eta: 'Same day' },
+]
+
+export const GROCERY_TEMPLATES = [
+  {
+    id: 'tpl_breakfast',
+    name: 'Breakfast basics',
+    items: 'Eggs (2 dozen)\nMilk (1 gal, 2%)\nOrange juice\nCoffee (ground, medium roast)\nBread (whole wheat)\nButter\nGreek yogurt (6)\nBananas\nBerries',
+  },
+  {
+    id: 'tpl_beach',
+    name: 'Beach day',
+    items: 'Bottled water (2 cases)\nGatorade (variety)\nSandwich meat & cheese\nChips (2 bags)\nGrapes\nSunscreen SPF 50\nZiploc bags\nPaper towels',
+  },
+  {
+    id: 'tpl_kids',
+    name: 'Kid essentials',
+    items: 'Goldfish crackers\nApple juice boxes\nMac & cheese (4)\nChicken nuggets\nStrawberries\nPeanut butter & jelly\nCereal (2 boxes)\nPopsicles',
+  },
+  {
+    id: 'tpl_dinner',
+    name: 'Dinner in',
+    items: 'Fresh Gulf shrimp (2 lb)\nPasta\nOlive oil\nGarlic\nLemons\nSalad mix\nParmesan\nSourdough loaf\nWhite wine (2 bottles)',
+  },
+]

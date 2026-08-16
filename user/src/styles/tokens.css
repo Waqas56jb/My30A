@@ -1,0 +1,118 @@
+/* ==========================================================================
+   My30A — Design tokens
+   Warm off-white grounds, deep navy/green ink, natural sand accents.
+   ========================================================================== */
+
+:root {
+  /* ---- Surfaces ---- */
+  --bg: #faf7f2;
+  --bg-tint: #f5f0e8;
+  --surface: #ffffff;
+  --surface-2: #f7f3ec;
+  --surface-3: #efe8dc;
+  --surface-ink: #12363a;
+  --overlay: rgba(18, 36, 44, 0.44);
+
+  /* ---- Ink ---- */
+  --ink-900: #10262c;
+  --ink-800: #163942;
+  --ink-700: #24474f;
+  --ink-600: #3d5c63;
+  --ink-500: #5f7880;
+  --ink-400: #8b9ea4;
+  --ink-300: #b3c1c5;
+  --on-dark: #f6f1e8;
+  --on-dark-soft: rgba(246, 241, 232, 0.72);
+
+  /* ---- Accents ---- */
+  --sea-900: #0e3034;
+  --sea-700: #17575a;
+  --sea-500: #2b7d7a;
+  --sea-200: #cfe3e0;
+  --sea-50: #eef5f3;
+
+  --sand-700: #9b7a4d;
+  --sand-500: #c3a37a;
+  --sand-300: #e0cdae;
+  --sand-100: #f2e8d8;
+
+  --gold: #b8894b;
+  --coral: #c9705c;
+
+  /* ---- Status ---- */
+  --ok: #2f7a5b;
+  --ok-bg: #e6f2ec;
+  --warn: #a9762a;
+  --warn-bg: #fbf1e0;
+  --info: #2b6c86;
+  --info-bg: #e6f0f4;
+  --danger: #b04437;
+  --danger-bg: #fbeae7;
+  --neutral-bg: #efe9df;
+
+  /* ---- Lines ---- */
+  --line: #e7ded0;
+  --line-soft: #f0e9de;
+  --line-strong: #d8cbb6;
+
+  /* ---- Type ---- */
+  --font-display: 'Fraunces', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+
+  --fs-display: clamp(2rem, 1.4rem + 2.6vw, 3.25rem);
+  --fs-h1: clamp(1.65rem, 1.3rem + 1.5vw, 2.4rem);
+  --fs-h2: clamp(1.3rem, 1.12rem + 0.75vw, 1.75rem);
+  --fs-h3: clamp(1.08rem, 1rem + 0.35vw, 1.28rem);
+  --fs-body: 0.975rem;
+  --fs-sm: 0.875rem;
+  --fs-xs: 0.78rem;
+  --fs-micro: 0.7rem;
+
+  /* ---- Space ---- */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-7: 2rem;
+  --sp-8: 2.5rem;
+  --sp-9: 3.25rem;
+  --sp-10: 4.5rem;
+
+  /* ---- Radius ---- */
+  --r-xs: 8px;
+  --r-sm: 12px;
+  --r-md: 18px;
+  --r-lg: 24px;
+  --r-xl: 32px;
+  --r-pill: 999px;
+
+  /* ---- Elevation (soft, coastal) ---- */
+  --sh-1: 0 1px 2px rgba(18, 54, 58, 0.05), 0 2px 8px rgba(18, 54, 58, 0.04);
+  --sh-2: 0 2px 6px rgba(18, 54, 58, 0.06), 0 12px 28px rgba(18, 54, 58, 0.07);
+  --sh-3: 0 4px 12px rgba(18, 54, 58, 0.08), 0 24px 56px rgba(18, 54, 58, 0.1);
+  --sh-inset: inset 0 0 0 1px var(--line);
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(0.32, 0.72, 0.24, 1);
+  --dur-fast: 140ms;
+  --dur: 220ms;
+  --dur-slow: 380ms;
+
+  /* ---- Layout ---- */
+  --nav-w: 264px;
+  --rail-w: 336px;
+  --topbar-h: 58px;
+  --tabbar-h: 62px;
+  --content-max: 1180px;
+
+  /* ---- Runtime (set by hooks) ---- */
+  --app-vh: 100vh;
+  --kb-inset: 0px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
