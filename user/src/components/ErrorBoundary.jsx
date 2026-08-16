@@ -34,7 +34,7 @@ export default class ErrorBoundary extends Component {
             <button type="button" className="btn" onClick={() => window.location.reload()}>
               Reload the app
             </button>
-            <a className="btn btn--secondary" href="/home">
+            <a className="btn btn--secondary" href="/">
               Back to home
             </a>
           </div>

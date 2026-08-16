@@ -139,7 +139,7 @@ export default function GroceryNew() {
             <Button to={`/groceries/${created.id}`} iconRight="arrowRight">
               Track this request
             </Button>
-            <Button variant="secondary" to="/home">
+            <Button variant="secondary" to="/">
               Back to home
             </Button>
           </div>

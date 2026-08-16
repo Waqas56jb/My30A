@@ -212,18 +212,20 @@ export function ScrollRow({ children, className, label }) {
 /** Gallery grid + lightbox trigger. */
 export function ImageGallery({ images = [], alt = '', onOpen }) {
   if (!images.length) return null
+  // Without an onOpen handler these are decorative — don't render dead buttons.
+  const Item = onOpen ? 'button' : 'div'
   return (
     <div className="gallery">
       {images.map((photoId, i) => (
-        <button
+        <Item
           key={`${photoId}-${i}`}
-          type="button"
+          type={onOpen ? 'button' : undefined}
           className="gallery__item"
-          onClick={() => onOpen?.(i)}
-          aria-label={`Open photo ${i + 1} of ${images.length}`}
+          onClick={onOpen ? () => onOpen(i) : undefined}
+          aria-label={onOpen ? `Open photo ${i + 1} of ${images.length}` : undefined}
         >
           <SmartImage photoId={photoId} alt={`${alt} photo ${i + 1}`} ratio="4x3" width={640} zoom />
-        </button>
+        </Item>
       ))}
     </div>
   )

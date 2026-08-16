@@ -52,5 +52,6 @@ export default function GuestLink() {
 
   if (!ready || status === 'loading') return <SkeletonPage />
 
-  return <Navigate to="/home" replace />
+  // Land on the property, since that is what the link unlocked.
+  return <Navigate to="/my-stay" replace />
 }

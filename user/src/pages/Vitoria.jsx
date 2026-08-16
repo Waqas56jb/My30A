@@ -158,7 +158,7 @@ export default function Vitoria() {
       <div className="chat-screen">
         {/* ------------------------- Header ------------------------- */}
         <header className="chat-head">
-          <Link to="/home" aria-label="Back to home" className="icon-btn" style={{ marginLeft: -6 }}>
+          <Link to="/" aria-label="Back to home" className="icon-btn" style={{ marginLeft: -6 }}>
             <Icon name="arrowLeft" />
           </Link>
           <Avatar size="md" vitoria />

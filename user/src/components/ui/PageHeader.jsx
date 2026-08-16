@@ -40,7 +40,7 @@ export default function PageHeader({
 
   const goBack = () => {
     if (window.history.length > 1) navigate(-1)
-    else navigate(backTo ?? '/home')
+    else navigate(backTo ?? '/')
   }
 
   return (

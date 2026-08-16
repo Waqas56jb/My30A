@@ -121,7 +121,7 @@ export default function TransferNew() {
             <Button to={`/transfers/${created.id}`} iconRight="arrowRight">
               Track this transfer
             </Button>
-            <Button variant="secondary" to="/home">
+            <Button variant="secondary" to="/">
               Back to home
             </Button>
           </div>

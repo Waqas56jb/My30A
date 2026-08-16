@@ -2,16 +2,18 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
 import ErrorBoundary from './components/ErrorBoundary'
+import RequireGuest from './components/RequireGuest'
 import { SkeletonPage } from './components/ui/Skeleton'
 
-/* Landing and the guest-link resolver load eagerly — they are the entry
-   points. Everything else is split so first paint stays fast on mobile. */
-import Landing from './pages/Landing'
+/* Discover is the entry point for every visitor, so it loads eagerly.
+   Everything else is split to keep first paint fast on mobile. */
+import Discover from './pages/Discover'
 import GuestLink from './pages/GuestLink'
 
-const Home = lazy(() => import('./pages/Home'))
+const Access = lazy(() => import('./pages/Access'))
 const Vitoria = lazy(() => import('./pages/Vitoria'))
 const Explore = lazy(() => import('./pages/Explore'))
+const ExperienceDetail = lazy(() => import('./pages/ExperienceDetail'))
 const Restaurants = lazy(() => import('./pages/Restaurants'))
 const Partners = lazy(() => import('./pages/Partners'))
 const PlaceDetail = lazy(() => import('./pages/PlaceDetail'))
@@ -20,6 +22,9 @@ const BeachDetail = lazy(() => import('./pages/BeachDetail'))
 const Events = lazy(() => import('./pages/Events'))
 const EventDetail = lazy(() => import('./pages/EventDetail'))
 const MapPage = lazy(() => import('./pages/MapPage'))
+const SearchPage = lazy(() => import('./pages/SearchPage'))
+const Favorites = lazy(() => import('./pages/Favorites'))
+const Help = lazy(() => import('./pages/Help'))
 const Services = lazy(() => import('./pages/Services'))
 const Groceries = lazy(() => import('./pages/Groceries'))
 const GroceryNew = lazy(() => import('./pages/GroceryNew'))
@@ -34,52 +39,73 @@ const Profile = lazy(() => import('./pages/Profile'))
 const Settings = lazy(() => import('./pages/Settings'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
+/** Property-specific screens ask for an access code first. */
+const guarded = (element, props) => <RequireGuest {...props}>{element}</RequireGuest>
+
 export default function App() {
   return (
     <ErrorBoundary>
       <Suspense fallback={<SkeletonPage />}>
         <Routes>
-          {/* Entry points */}
-          <Route path="/" element={<Landing />} />
+          {/* Standalone entry points */}
+          <Route path="/access" element={<Access />} />
           <Route path="/guest/:guestId" element={<GuestLink />} />
 
-          {/* The guest experience */}
           <Route element={<AppLayout />}>
-            <Route path="/home" element={<Home />} />
-            <Route path="/vitoria" element={<Vitoria />} />
-
+            {/* ---------------- Public: the destination ---------------- */}
+            <Route index element={<Discover />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/experiences/:slug" element={<ExperienceDetail />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/help" element={<Help />} />
+            <Route path="/vitoria" element={<Vitoria />} />
 
             <Route path="/restaurants" element={<Restaurants />} />
             <Route path="/restaurants/:id" element={<PlaceDetail kind="restaurant" />} />
-
             <Route path="/partners" element={<Partners />} />
             <Route path="/partners/:id" element={<PlaceDetail kind="partner" />} />
-
             <Route path="/beaches" element={<Beaches />} />
             <Route path="/beaches/:id" element={<BeachDetail />} />
-
             <Route path="/events" element={<Events />} />
             <Route path="/events/:id" element={<EventDetail />} />
 
-            <Route path="/services" element={<Services />} />
-            <Route path="/groceries" element={<Groceries />} />
-            <Route path="/groceries/new" element={<GroceryNew />} />
-            <Route path="/groceries/:id" element={<GroceryDetail />} />
-            <Route path="/transfers" element={<Transfers />} />
-            <Route path="/transfers/new" element={<TransferNew />} />
-            <Route path="/transfers/:id" element={<TransferDetail />} />
+            {/* ---------------- Guest: their stay ---------------- */}
+            <Route
+              path="/my-stay"
+              element={guarded(<MyStay />, {
+                title: 'Your property details live here',
+                message:
+                  'WiFi, door code, parking, house rules, check-out steps, and your host’s number — all of it appears once you enter the code your host sent.',
+              })}
+            />
+            <Route path="/my-trip" element={guarded(<MyTrip />)} />
+            <Route path="/profile" element={guarded(<Profile />)} />
+            <Route
+              path="/services"
+              element={guarded(<Services />, {
+                title: 'Concierge services need your stay',
+                message:
+                  'Grocery delivery and airport transfers are tied to your property and dates. Unlock your stay and you can request both in a couple of taps.',
+              })}
+            />
+            <Route path="/groceries" element={guarded(<Groceries />)} />
+            <Route path="/groceries/new" element={guarded(<GroceryNew />)} />
+            <Route path="/groceries/:id" element={guarded(<GroceryDetail />)} />
+            <Route path="/transfers" element={guarded(<Transfers />)} />
+            <Route path="/transfers/new" element={guarded(<TransferNew />)} />
+            <Route path="/transfers/:id" element={guarded(<TransferDetail />)} />
 
-            <Route path="/my-stay" element={<MyStay />} />
-            <Route path="/my-trip" element={<MyTrip />} />
+            {/* ---------------- Open to everyone ---------------- */}
             <Route path="/notifications" element={<Notifications />} />
-            <Route path="/profile" element={<Profile />} />
             <Route path="/settings" element={<Settings />} />
 
-            {/* Legacy / convenience aliases */}
+            {/* Aliases kept so older links never dead-end */}
+            <Route path="/home" element={<Navigate to="/" replace />} />
             <Route path="/orders" element={<Navigate to="/services" replace />} />
             <Route path="/property" element={<Navigate to="/my-stay" replace />} />
+            <Route path="/login" element={<Navigate to="/access" replace />} />
 
             <Route path="*" element={<NotFound />} />
           </Route>

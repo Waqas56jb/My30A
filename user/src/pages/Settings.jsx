@@ -35,7 +35,8 @@ function SettingRow({ icon, title, sub, control, onClick, as = 'div' }) {
  * buffer that will later be pointed at a real provider.
  */
 export default function Settings() {
-  const { settings, updateSettings, resetDemoData, guestSlug, setGuestSlug, pushToast } = useApp()
+  const { settings, updateSettings, resetDemoData, guestSlug, setGuestSlug, pushToast, signOut } =
+    useApp()
   const navigate = useNavigate()
   const [resetOpen, setResetOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
@@ -123,10 +124,18 @@ export default function Settings() {
         <div className="card" style={{ overflow: 'hidden' }}>
           <SettingRow
             icon="key"
-            title="Guest link"
-            sub={`/guest/${guestSlug}`}
-            onClick={() => setSwitchOpen(true)}
+            title={guestSlug ? 'Guest link' : 'Unlock your stay'}
+            sub={guestSlug ? `/guest/${guestSlug}` : 'Enter the access code from your host'}
+            onClick={() => (guestSlug ? setSwitchOpen(true) : navigate('/access'))}
           />
+          {guestSlug && (
+            <SettingRow
+              icon="logout"
+              title="Sign out of this stay"
+              sub="Keeps browsing open, clears your property details"
+              onClick={signOut}
+            />
+          )}
           <SettingRow
             icon="building"
             title="My Stay"
@@ -206,7 +215,7 @@ export default function Settings() {
                 onClick={() => {
                   setGuestSlug(guest.slug)
                   setSwitchOpen(false)
-                  navigate('/home')
+                  navigate('/')
                 }}
               >
                 <span className="order-card__icon" aria-hidden="true">

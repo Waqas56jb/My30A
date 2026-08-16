@@ -54,7 +54,7 @@ export default function Notifications() {
         title="Notifications"
         subtitle={unreadCount > 0 ? `${unreadCount} unread` : 'You’re all caught up'}
         back
-        backTo="/home"
+        backTo="/"
         actions={
           unreadCount > 0 ? (
             <Button size="sm" variant="secondary" onClick={markAllNotificationsRead} icon="check">
@@ -77,7 +77,7 @@ export default function Notifications() {
                 : 'Updates about your requests, your property, and anything Vitoria finds for you will land here.'
             }
             actionLabel="Back to home"
-            actionTo="/home"
+            actionTo="/"
           />
         </div>
       ) : (

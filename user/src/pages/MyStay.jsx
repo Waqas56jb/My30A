@@ -49,7 +49,7 @@ export default function MyStay() {
         title="My Stay"
         subtitle="Access, house notes, and everything your host wants you to know."
         back
-        backTo="/home"
+        backTo="/"
       />
 
       {/* --------------------------- Property hero --------------------------- */}
