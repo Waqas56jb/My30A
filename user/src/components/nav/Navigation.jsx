@@ -1,4 +1,4 @@
-import { NavLink, Link, useNavigate } from 'react-router-dom'
+import { NavLink, Link } from 'react-router-dom'
 import Icon from '../ui/Icon'
 import { IconButton } from '../ui/Button'
 import { Avatar } from '../ui/Display'
@@ -40,15 +40,7 @@ const ACCOUNT_NAV = [
 
 /** Desktop sidebar (>=1024px). */
 export function Sidebar() {
-  const { guest, property, unreadCount, hasGuest, signOut } = useApp()
-  const navigate = useNavigate()
-
-  /* Signing out drops the property layer and returns to the public site,
-     which is the only place a signed-out visitor has anything to do. */
-  const leaveStay = () => {
-    signOut()
-    navigate('/')
-  }
+  const { guest, property, unreadCount, hasGuest, isAuthed, account } = useApp()
 
   return (
     <aside className="sidebar" aria-label="Main navigation">
@@ -97,38 +89,50 @@ export function Sidebar() {
       </div>
 
       <div className="sidebar__group sidebar__foot">
-        {hasGuest ? (
+        {isAuthed ? (
           <>
             <NavLink to="/profile" className="sidebar__item">
-              <Avatar src={guest?.avatar} name={guest?.firstName} size="sm" />
+              <Avatar
+                src={guest?.avatar ?? account?.avatar}
+                name={account?.firstName ?? guest?.firstName}
+                size="sm"
+              />
               <span style={{ minWidth: 0 }}>
                 <span style={{ display: 'block' }} className="u-truncate">
-                  {guest.firstName} {guest.lastName}
+                  {account?.firstName ?? guest?.firstName} {account?.lastName ?? guest?.lastName}
                 </span>
                 <span className="u-xs u-muted u-truncate" style={{ display: 'block', fontWeight: 400 }}>
-                  {property?.name ?? '-'}
+                  {hasGuest ? (property?.name ?? '-') : 'No stay linked yet'}
                 </span>
               </span>
             </NavLink>
+            {!hasGuest && (
+              <Link to="/access" className="btn btn--sm btn--block">
+                <Icon name="key" />
+                Add your stay
+              </Link>
+            )}
             <NavLink to="/settings" className="sidebar__item">
               <Icon name="settings" />
               Settings
             </NavLink>
-            <button type="button" className="sidebar__item" onClick={leaveStay}>
+            {/* A route, not a handler — /logout is unguarded, so clearing the
+                session cannot race with RequireAuth. */}
+            <Link to="/logout" className="sidebar__item">
               <Icon name="logout" />
-              Sign out of this stay
-            </button>
+              Sign out
+            </Link>
           </>
         ) : (
           <>
-            <Link to="/access" className="btn btn--sm btn--block">
-              <Icon name="key" />
-              Unlock your stay
+            <Link to="/login" className="btn btn--sm btn--block">
+              <Icon name="user" />
+              Log in
             </Link>
-            <NavLink to="/settings" className="sidebar__item">
-              <Icon name="settings" />
-              Settings
-            </NavLink>
+            <Link to="/signup" className="sidebar__item">
+              <Icon name="plus" />
+              Create an account
+            </Link>
             <Link to="/" className="sidebar__item">
               <Icon name="waves" />
               Back to the website
@@ -142,7 +146,7 @@ export function Sidebar() {
 
 /** Mobile / tablet top bar. The menu button opens the drawer. */
 export function TopBar({ onOpenMenu }) {
-  const { unreadCount, guest, hasGuest } = useApp()
+  const { unreadCount, guest, account, isAuthed } = useApp()
   return (
     <header className="topbar">
       <button
@@ -163,13 +167,17 @@ export function TopBar({ onOpenMenu }) {
       <div className="topbar__actions">
         <IconButton icon="search" label="Search 30A" to="/search" />
         <IconButton icon="bell" label="Notifications" to="/notifications" badge={unreadCount} />
-        {hasGuest ? (
+        {isAuthed ? (
           <Link to="/profile" aria-label="Your profile" style={{ marginLeft: 2, display: 'flex' }}>
-            <Avatar src={guest?.avatar} name={guest?.firstName} size="sm" />
+            <Avatar
+              src={guest?.avatar ?? account?.avatar}
+              name={account?.firstName ?? guest?.firstName}
+              size="sm"
+            />
           </Link>
         ) : (
-          <Link to="/access" className="btn btn--sm" style={{ marginLeft: 2 }}>
-            Unlock
+          <Link to="/login" className="btn btn--sm" style={{ marginLeft: 2 }}>
+            Log in
           </Link>
         )}
       </div>

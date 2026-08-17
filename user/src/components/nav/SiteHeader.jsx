@@ -28,7 +28,7 @@ const NAV = [
  * with a logo bolted on.
  */
 export default function SiteHeader() {
-  const { hasGuest, guest } = useApp()
+  const { isAuthed, account } = useApp()
   const location = useLocation()
   const [solid, setSolid] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -70,17 +70,22 @@ export default function SiteHeader() {
           </nav>
 
           <div className="site-head__actions">
-            {hasGuest ? (
+            {isAuthed ? (
               <Link to="/discover" className="site-head__guest">
-                <Avatar src={guest?.avatar} name={guest?.firstName} size="sm" />
+                <Avatar src={account?.avatar} name={account?.firstName} size="sm" />
                 <span className="u-small" style={{ fontWeight: 600 }}>
                   My stay
                 </span>
               </Link>
             ) : (
-              <Button to="/access" size="sm" icon="key" className="site-head__cta">
-                Unlock your stay
-              </Button>
+              <>
+                <Link to="/login" className="site-head__link site-head__signin">
+                  Log in
+                </Link>
+                <Button to="/signup" size="sm" className="site-head__cta">
+                  Sign up
+                </Button>
+              </>
             )}
 
             <button
@@ -126,16 +131,21 @@ export default function SiteHeader() {
             </nav>
 
             <div className="site-menu__foot">
-              {hasGuest ? (
+              {isAuthed ? (
                 <Button to="/discover" block size="lg" iconRight="arrowRight">
                   Go to my stay
                 </Button>
               ) : (
-                <Button to="/access" block size="lg" icon="key">
-                  Unlock your stay
-                </Button>
+                <>
+                  <Button to="/signup" block size="lg" iconRight="arrowRight">
+                    Create your account
+                  </Button>
+                  <Button to="/login" block variant="secondary">
+                    Log in
+                  </Button>
+                </>
               )}
-              <Button to="/vitoria" block variant="secondary" icon="sparkles">
+              <Button to="/vitoria" block variant="ghost" icon="sparkles">
                 Ask Vitoria
               </Button>
               <Link to="/help" className="u-small u-muted" style={{ textAlign: 'center' }}>

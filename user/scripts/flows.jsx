@@ -17,16 +17,37 @@ import { MemoryRouter } from 'react-router-dom'
 import App from '../src/App'
 import { AppProvider } from '../src/context/AppContext'
 import { setLatency, resetMockData, setFailureMode } from '../src/services/mockApi'
+import { setAuthLatency, resetAccounts } from '../src/services/authService'
 import { setTypingDelay } from '../src/services/vitoriaService'
 
 setLatency(0, 0)
+setAuthLatency(0, 0)
 setTypingDelay(0)
 
-const SLUG_KEY = 'my30a.guest.v1.guestSlug'
+const key = (k) => `my30a.guest.v1.${k}`
+
+/**
+ * Three states, and the difference matters:
+ *   public — no account
+ *   authed — an account with no stay linked (acc_alex)
+ *   guest  — an account with a stay (acc_sarah + the demo property)
+ */
+function seed(as) {
+  // Accounts persist to localStorage, so without this an account created (or a
+  // stay linked) by one test would leak into the next.
+  resetAccounts()
+  window.localStorage.removeItem(key('session'))
+  window.localStorage.removeItem(key('guestSlug'))
+  if (as === 'guest') {
+    window.localStorage.setItem(key('session'), JSON.stringify({ accountId: 'acc_sarah' }))
+    window.localStorage.setItem(key('guestSlug'), JSON.stringify('demo'))
+  } else if (as === 'authed') {
+    window.localStorage.setItem(key('session'), JSON.stringify({ accountId: 'acc_alex' }))
+  }
+}
 
 /** Seed an unlocked stay for the flows that live behind the access code. */
-const unlock = () => window.localStorage.setItem(SLUG_KEY, JSON.stringify('demo'))
-const lock = () => window.localStorage.removeItem(SLUG_KEY)
+const unlock = () => seed('guest')
 
 /* ------------------------------- helpers -------------------------------- */
 
@@ -42,12 +63,11 @@ const flush = async (times = 10) => {
 }
 
 /**
- * Mounts with an unlocked stay by default, since most flows live behind the
- * access code. Pass `{ guest: false }` to exercise the public experience.
+ * Mounts signed in with a stay by default, since most flows live there. Pass
+ * `{ as: 'public' }` or `{ as: 'authed' }` for the other two states.
  */
-async function mount(route, { guest = true } = {}) {
-  if (guest) unlock()
-  else lock()
+async function mount(route, { as = 'guest' } = {}) {
+  seed(as)
   const container = document.createElement('div')
   document.body.appendChild(container)
   const root = createRoot(container)
@@ -462,7 +482,7 @@ test('Profile preferences can be edited and saved', async () => {
 /* ------------------- Public website + navigation ------------------------- */
 
 test('The site opens on a landing page, not on the app shell', async () => {
-  const page = await mount('/', { guest: false })
+  const page = await mount('/', { as: 'public' })
 
   // A website: header, hero, footer. Not a dashboard.
   if (!page.container.querySelector('.site-head')) throw new Error('no public site header')
@@ -479,7 +499,7 @@ test('The site opens on a landing page, not on the app shell', async () => {
 })
 
 test('Landing page sells the destination before the services', async () => {
-  const page = await mount('/', { guest: false })
+  const page = await mount('/', { as: 'public' })
   const text = page.text()
   if (!text.includes('Experience 30A like a local')) throw new Error('hero headline missing')
   if (!text.includes('Explore 30A')) throw new Error('primary CTA missing')
@@ -493,7 +513,7 @@ test('Landing page sells the destination before the services', async () => {
 })
 
 test('Landing page welcomes an unlocked guest and points into the app', async () => {
-  const page = await mount('/', { guest: true })
+  const page = await mount('/', { as: 'guest' })
   const text = page.text()
   if (!text.includes('Welcome back, Sarah')) throw new Error('guest strip missing')
   if (!text.includes('Go to my stay')) throw new Error('no way into the app from the website')
@@ -507,7 +527,7 @@ test('Landing page welcomes an unlocked guest and points into the app', async ()
 })
 
 test('App home personalises for an unlocked stay', async () => {
-  const page = await mount('/discover', { guest: true })
+  const page = await mount('/discover', { as: 'guest' })
   const text = page.text()
   if (!text.includes('Welcome back, Sarah')) throw new Error('stay header missing')
   if (!text.includes('Rosemary Beach House')) throw new Error('property not shown')
@@ -520,37 +540,37 @@ test('App home personalises for an unlocked stay', async () => {
   await page.destroy()
 })
 
-test('Public app home uses the full width — no empty rail column', async () => {
-  const page = await mount('/discover', { guest: false })
+test('App home without a stay uses the full width — no empty rail column', async () => {
+  const page = await mount('/discover', { as: 'authed' })
   const shell = page.container.querySelector('.page')
 
   if (shell.classList.contains('page--railed'))
-    throw new Error('public visitor got the two-column layout, leaving dead space on the right')
+    throw new Error('a guest with no stay got the two-column layout, leaving dead space on the right')
   if (page.container.querySelector('.rail'))
     throw new Error('context rail rendered without a stay')
-  if (!page.text().includes('Staying on 30A')) throw new Error('no prompt to unlock a stay')
+  if (!page.text().includes('no stay linked yet')) throw new Error('no prompt to add a stay')
   await page.destroy()
 })
 
 test('Signing out from the sidebar returns to the public landing page', async () => {
-  const page = await mount('/my-stay', { guest: true })
+  const page = await mount('/my-stay', { as: 'guest' })
   if (!page.text().includes('House rules')) throw new Error('did not start on the property page')
 
-  await click(findByText(page.container, 'Sign out of this stay', '.sidebar__item'))
+  await click(findByText(page.container, 'Sign out', '.sidebar__item'))
   await flush(14)
 
   const text = page.text()
   if (!text.includes('Experience 30A like a local'))
     throw new Error('sign out did not land on the landing page')
   if (text.includes('House rules')) throw new Error('property detail survived sign out')
-  if (!text.includes('Unlock your stay')) throw new Error('no way back in after signing out')
+  if (!text.includes('Sign up')) throw new Error('no way back in after signing out')
   if (page.container.querySelector('.sidebar'))
     throw new Error('app chrome survived sign out - should be back on the public website')
   await page.destroy()
 })
 
 test('Landing page markets every service end to end', async () => {
-  const page = await mount('/', { guest: false })
+  const page = await mount('/', { as: 'public' })
   const text = page.text()
 
   for (const beat of [
@@ -589,7 +609,7 @@ test('Landing page markets every service end to end', async () => {
 })
 
 test('Hero plays a silent looping background video over the still photo', async () => {
-  const page = await mount('/', { guest: false })
+  const page = await mount('/', { as: 'public' })
 
   const bg = page.container.querySelector('.video-bg')
   if (!bg) throw new Error('no video background on the hero')
@@ -621,7 +641,7 @@ test('Hero plays a silent looping background video over the still photo', async 
 })
 
 test('The video section plays with controls and no autoplay', async () => {
-  const page = await mount('/', { guest: false })
+  const page = await mount('/', { as: 'public' })
 
   const player = page.container.querySelector('.video-frame iframe')
   if (!player) throw new Error('no watchable player in the video section')
@@ -642,7 +662,7 @@ test('The video section plays with controls and no autoplay', async () => {
 
 test('Both players read the same video id from one constant', async () => {
   const { VIDEO_ID } = await import('../src/config/video')
-  const page = await mount('/', { guest: false })
+  const page = await mount('/', { as: 'public' })
 
   const heroSrc = page.container.querySelector('.video-bg iframe').getAttribute('src')
   const playerSrc = page.container.querySelector('.video-frame iframe').getAttribute('src')
@@ -654,7 +674,7 @@ test('Both players read the same video id from one constant', async () => {
 })
 
 test('Experience page leads with lifestyle, then lists providers', async () => {
-  const page = await mount('/experiences/golf-carts', { guest: false })
+  const page = await mount('/experiences/golf-carts', { as: 'public' })
   const text = page.text()
   if (!text.includes('Explore 30A your way')) throw new Error('headline missing')
   if (!text.includes('Who to call')) throw new Error('provider section missing')
@@ -665,13 +685,15 @@ test('Experience page leads with lifestyle, then lists providers', async () => {
 })
 
 test('Public site menu opens and leads into the app', async () => {
-  const page = await mount('/', { guest: false })
+  const page = await mount('/', { as: 'public' })
   await click(findByLabel(page.container.querySelector('.site-head'), 'Open menu'))
   await flush(4)
 
   const menu = document.body.querySelector('.site-menu')
   if (!menu) throw new Error('site menu did not open')
-  if (!menu.textContent.includes('Unlock your stay')) throw new Error('menu is missing the unlock CTA')
+  if (!menu.textContent.includes('Create your account'))
+    throw new Error('menu is missing the sign-up CTA')
+  if (!menu.textContent.includes('Log in')) throw new Error('menu is missing the log-in CTA')
 
   await click(findByText(menu, 'Beaches', '.site-menu__link'))
   await flush(8)
@@ -681,7 +703,7 @@ test('Public site menu opens and leads into the app', async () => {
 })
 
 test('Mobile drawer opens, navigates, and closes', async () => {
-  const page = await mount('/discover', { guest: false })
+  const page = await mount('/discover', { as: 'authed' })
   await click(findByLabel(page.container.querySelector('.topbar'), 'Open menu'))
   await flush(4)
 
@@ -689,8 +711,8 @@ test('Mobile drawer opens, navigates, and closes', async () => {
   if (!drawer) throw new Error('drawer did not open')
   if (!drawer.textContent.includes('Beach bonfires'))
     throw new Error('drawer is missing the experience links')
-  if (!drawer.textContent.includes('Unlock your stay'))
-    throw new Error('drawer is missing the unlock prompt')
+  if (!drawer.textContent.includes('Add your stay'))
+    throw new Error('drawer is missing the prompt to link a stay')
 
   await click(findByText(drawer, 'Beach bonfires', '.drawer__item'))
   await flush(8)
@@ -701,7 +723,7 @@ test('Mobile drawer opens, navigates, and closes', async () => {
 })
 
 test('Drawer closes on Escape', async () => {
-  const page = await mount('/discover', { guest: false })
+  const page = await mount('/discover', { as: 'authed' })
   await click(findByLabel(page.container.querySelector('.topbar'), 'Open menu'))
   await flush(4)
   if (!document.body.querySelector('.drawer')) throw new Error('drawer did not open')
@@ -714,10 +736,201 @@ test('Drawer closes on Escape', async () => {
   await page.destroy()
 })
 
+/* ------------------------------ Accounts --------------------------------- */
+
+test('Login rejects an empty form before it submits', async () => {
+  const page = await mount('/login', { as: 'public' })
+  await click(findByText(page.container, 'Log in', 'button'))
+  await flush(6)
+  if (!page.text().includes('Enter your email address'))
+    throw new Error('an empty login form was accepted')
+  await page.destroy()
+})
+
+test('An unknown email and a wrong password fail differently', async () => {
+  const page = await mount('/login', { as: 'public' })
+  const email = page.container.querySelector('.auth__email')
+  const password = page.container.querySelector('.pw__input')
+
+  await type(email, 'nobody@my30a.com')
+  await type(password, 'demo1234')
+  await click(findByText(page.container, 'Log in', 'button'))
+  await flush(8)
+  if (!page.text().includes('No account matches that email'))
+    throw new Error('an unknown account was accepted')
+
+  await type(email, 'sarah@my30a.com')
+  await type(password, 'wrong-password')
+  await click(findByText(page.container, 'Log in', 'button'))
+  await flush(8)
+  if (!page.text().includes('password is not right'))
+    throw new Error('a wrong password was accepted')
+
+  await page.destroy()
+})
+
+test('Logging in restores the account and its stay', async () => {
+  const page = await mount('/login', { as: 'public' })
+  await type(page.container.querySelector('.auth__email'), 'sarah@my30a.com')
+  await type(page.container.querySelector('.pw__input'), 'demo1234')
+  await click(findByText(page.container, 'Log in', 'button'))
+  await flush(18)
+
+  const text = page.text()
+  if (!text.includes('Welcome back, Sarah')) throw new Error('login did not reach the app home')
+  if (!text.includes('Rosemary Beach House'))
+    throw new Error('the stay linked to the account was not restored')
+  if (!page.container.querySelector('.sidebar')) throw new Error('app shell did not take over')
+  await page.destroy()
+})
+
+test('A protected route sends you to log in, then back to where you were going', async () => {
+  const page = await mount('/groceries', { as: 'public' })
+  if (!page.text().includes('Log in')) throw new Error('a protected route rendered without an account')
+  if (page.text().includes('Arrive to a full kitchen'))
+    throw new Error('grocery content leaked to a signed-out visitor')
+
+  await type(page.container.querySelector('.auth__email'), 'sarah@my30a.com')
+  await type(page.container.querySelector('.pw__input'), 'demo1234')
+  await click(findByText(page.container, 'Log in', 'button'))
+  await flush(18)
+
+  if (!page.text().includes('Arrive to a full kitchen'))
+    throw new Error('login did not continue to the page the guest originally asked for')
+  await page.destroy()
+})
+
+test('The password field can be revealed', async () => {
+  const page = await mount('/login', { as: 'public' })
+  const input = page.container.querySelector('.pw__input')
+  if (input.getAttribute('type') !== 'password') throw new Error('password was visible by default')
+
+  await click(page.container.querySelector('.pw__toggle'))
+  if (input.getAttribute('type') !== 'text') throw new Error('reveal toggle did nothing')
+
+  await click(page.container.querySelector('.pw__toggle'))
+  if (input.getAttribute('type') !== 'password') throw new Error('toggle did not hide it again')
+  await page.destroy()
+})
+
+test('A demo account fills the login form', async () => {
+  const page = await mount('/login', { as: 'public' })
+  await click(findByText(page.container, 'Sarah Whitmore', '.access__demo'))
+  await flush(4)
+  if (page.container.querySelector('.auth__email').value !== 'sarah@my30a.com')
+    throw new Error('demo account did not fill the email')
+  await page.destroy()
+})
+
+test('Signup validates the terms, the password and duplicate emails', async () => {
+  const page = await mount('/signup', { as: 'public' })
+  const fields = all(page.container, 'input')
+  const [first, last, email] = fields
+  const password = page.container.querySelector('.pw__input')
+
+  // Terms unchecked
+  await type(first, 'Jamie')
+  await type(last, 'Fox')
+  await type(email, 'jamie@my30a.com')
+  await type(password, 'sunshine22')
+  await click(findByText(page.container, 'Create account', 'button'))
+  await flush(6)
+  if (!page.text().includes('accept the terms'))
+    throw new Error('an account was created without accepting the terms')
+
+  await click(page.container.querySelector('.checkbox input'))
+
+  // Weak password
+  await type(password, 'short')
+  await click(findByText(page.container, 'Create account', 'button'))
+  await flush(8)
+  if (!page.text().includes('at least 8 characters'))
+    throw new Error('a weak password was accepted')
+
+  // Email already in use
+  await type(password, 'sunshine22')
+  await type(email, 'sarah@my30a.com')
+  await click(findByText(page.container, 'Create account', 'button'))
+  await flush(8)
+  if (!page.text().includes('already uses that email'))
+    throw new Error('a duplicate email was accepted')
+
+  await page.destroy()
+})
+
+test('Signing up creates an account that has no stay yet', async () => {
+  const page = await mount('/signup', { as: 'public' })
+  const [first, last, email] = all(page.container, 'input')
+
+  await type(first, 'Jamie')
+  await type(last, 'Fox')
+  await type(email, 'jamie@my30a.com')
+  await type(page.container.querySelector('.pw__input'), 'sunshine22')
+  await click(page.container.querySelector('.checkbox input'))
+  await click(findByText(page.container, 'Create account', 'button'))
+  await flush(20)
+
+  const text = page.text()
+  if (!text.includes('no stay linked yet'))
+    throw new Error('a brand new account should land on the app home with no stay')
+  if (text.includes('Rosemary Beach House'))
+    throw new Error('a new account inherited somebody else stay')
+  await page.destroy()
+})
+
+test('Password reset runs from email through to a new password', async () => {
+  const page = await mount('/forgot-password', { as: 'public' })
+
+  await type(page.container.querySelector('.auth__email'), 'sarah@my30a.com')
+  await click(findByText(page.container, 'Send reset link', 'button'))
+  await flush(10)
+  if (!page.text().includes('Check your email')) throw new Error('no confirmation after requesting')
+
+  await click(findByText(page.container, 'Open the reset link', 'a'))
+  await flush(10)
+  if (!page.text().includes('Set a new password')) throw new Error('the reset link did not open')
+
+  const [next, confirm] = all(page.container, '.pw__input')
+  await type(next, 'newpassword9')
+  await type(confirm, 'different9')
+  await click(findByText(page.container, 'Save new password', 'button'))
+  await flush(10)
+  if (!page.text().includes('need to match')) throw new Error('mismatched passwords were accepted')
+
+  await type(confirm, 'newpassword9')
+  await click(findByText(page.container, 'Save new password', 'button'))
+  await flush(14)
+  if (!page.text().includes('Log in')) throw new Error('a completed reset did not return to log in')
+
+  // And the new password actually works.
+  await type(page.container.querySelector('.auth__email'), 'sarah@my30a.com')
+  await type(page.container.querySelector('.pw__input'), 'newpassword9')
+  await click(findByText(page.container, 'Log in', 'button'))
+  await flush(18)
+  if (!page.text().includes('Welcome back, Sarah'))
+    throw new Error('the new password did not work')
+
+  await page.destroy()
+})
+
+test('An unknown email still reports success, without confirming it exists', async () => {
+  const page = await mount('/forgot-password', { as: 'public' })
+  await type(page.container.querySelector('.auth__email'), 'nobody@my30a.com')
+  await click(findByText(page.container, 'Send reset link', 'button'))
+  await flush(10)
+
+  const text = page.text()
+  if (!text.includes('Check your email'))
+    throw new Error('an unknown address was told the account does not exist')
+  if (text.includes('Open the reset link'))
+    throw new Error('a reset link was issued for an address with no account')
+  await page.destroy()
+})
+
 /* --------------------------- Guest access -------------------------------- */
 
-test('Guest routes explain themselves instead of dead-ending', async () => {
-  const page = await mount('/my-stay', { guest: false })
+test('Stay routes explain themselves instead of dead-ending', async () => {
+  const page = await mount('/my-stay', { as: 'authed' })
   const text = page.text()
   if (!text.includes('Enter your code')) throw new Error('no unlock prompt on a gated route')
   if (!text.includes('Keep exploring 30A')) throw new Error('no way back into the public app')
@@ -726,7 +939,7 @@ test('Guest routes explain themselves instead of dead-ending', async () => {
 })
 
 test('A wrong access code is rejected, a real one unlocks the stay', async () => {
-  const page = await mount('/access', { guest: false })
+  const page = await mount('/access', { as: 'authed' })
   const input = page.container.querySelector('.access__code')
 
   await type(input, 'NOPE-1234')
@@ -789,7 +1002,7 @@ test('Settings toggles flip and persist', async () => {
 /* -------------------------------- Search --------------------------------- */
 
 test('Global search finds places and experiences', async () => {
-  const page = await mount('/search', { guest: false })
+  const page = await mount('/search', { as: 'public' })
   await type(page.container.querySelector('.search__input'), 'bonfire')
   await flush(10)
 

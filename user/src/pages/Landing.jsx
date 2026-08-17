@@ -34,7 +34,7 @@ const STATS = [
  * only then unlocks their stay and steps into the app.
  */
 export default function Landing() {
-  const { hasGuest, guest } = useApp()
+  const { hasGuest, guest, isAuthed, account } = useApp()
   useDocumentTitle(null)
 
   const restaurants = useAsync(() => api.getRestaurants({ sort: 'featured' }), [])
@@ -95,13 +95,17 @@ export default function Landing() {
       </header>
 
       <div className="site-section">
-        {/* -------------------- Welcome back (unlocked) -------------------- */}
-        {hasGuest && (
+        {/* -------------------- Welcome back (signed in) -------------------- */}
+        {isAuthed && (
           <div className="home-float" style={{ padding: 0, marginTop: 'calc(var(--sp-6) * -1)' }}>
             <div className="guest-strip">
               <div style={{ minWidth: 0 }}>
-                <p className="u-eyebrow">Your stay is unlocked</p>
-                <h2 style={{ fontSize: '1.2rem' }}>Welcome back, {guest.firstName}</h2>
+                <p className="u-eyebrow">
+                  {hasGuest ? 'Your stay is unlocked' : 'You are signed in'}
+                </p>
+                <h2 style={{ fontSize: '1.2rem' }}>
+                  Welcome back, {account?.firstName ?? guest?.firstName}
+                </h2>
               </div>
               <div className="u-row u-wrap" style={{ marginLeft: 'auto' }}>
                 <Button size="sm" to="/discover" iconRight="arrowRight">
@@ -234,9 +238,9 @@ export default function Landing() {
               <Button to="/vitoria" variant="light" icon="sparkles">
                 Start a conversation
               </Button>
-              {!hasGuest && (
-                <Button to="/access" variant="onDark" icon="key">
-                  Unlock your stay
+              {!isAuthed && (
+                <Button to="/signup" variant="onDark" iconRight="arrowRight">
+                  Create your account
                 </Button>
               )}
             </div>
@@ -366,28 +370,35 @@ export default function Landing() {
         {/* ----------------------------- Final CTA --------------------------- */}
         <div className="band band--sand">
           <div className="band__inner">
-            <p className="u-eyebrow">{hasGuest ? 'Your stay is ready' : 'Staying on 30A?'}</p>
+            <p className="u-eyebrow">{isAuthed ? 'Your stay is ready' : 'Staying on 30A?'}</p>
             <h2 className="band__title">
-              {hasGuest ? 'Everything is waiting for you.' : 'Unlock your property.'}
+              {isAuthed ? 'Everything is waiting for you.' : 'Unlock your property.'}
             </h2>
             <p className="band__body">
-              {hasGuest
+              {isAuthed
                 ? 'Your WiFi, door code, check-out steps, grocery delivery and airport transfers are all one tap away.'
-                : 'Your host sends a code with your booking. Enter it once and you get your WiFi, door code, check-out steps, grocery delivery, airport transfers, and a concierge who already knows where you are staying.'}
+                : 'Create an account, then enter the code your host sends with your booking. You get your WiFi, door code, check-out steps, grocery delivery, airport transfers, and a concierge who already knows where you are staying.'}
             </p>
             <div className="u-row u-wrap" style={{ marginTop: 'var(--sp-3)' }}>
-              {hasGuest ? (
-                <Button to="/discover" iconRight="arrowRight">
-                  Go to my stay
-                </Button>
+              {isAuthed ? (
+                <>
+                  <Button to="/discover" iconRight="arrowRight">
+                    Go to my stay
+                  </Button>
+                  <Button to="/help" variant="secondary">
+                    Help &amp; contact
+                  </Button>
+                </>
               ) : (
-                <Button to="/access" icon="key">
-                  Enter your code
-                </Button>
+                <>
+                  <Button to="/signup" iconRight="arrowRight">
+                    Create your account
+                  </Button>
+                  <Button to="/login" variant="secondary">
+                    I already have one
+                  </Button>
+                </>
               )}
-              <Button to="/help" variant="secondary">
-                {hasGuest ? 'Help & contact' : 'I do not have one'}
-              </Button>
             </div>
           </div>
         </div>

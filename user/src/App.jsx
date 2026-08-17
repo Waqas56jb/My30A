@@ -2,8 +2,10 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
 import MarketingLayout from './layouts/MarketingLayout'
+import AuthLayout from './layouts/AuthLayout'
 import ErrorBoundary from './components/ErrorBoundary'
 import RequireGuest from './components/RequireGuest'
+import RequireAuth from './components/RequireAuth'
 import { SkeletonPage } from './components/ui/Skeleton'
 
 /* The landing page is the front door of the website, so it loads eagerly.
@@ -41,16 +43,45 @@ const Profile = lazy(() => import('./pages/Profile'))
 const Settings = lazy(() => import('./pages/Settings'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
-/** Property-specific screens ask for an access code first. */
-const guarded = (element, props) => <RequireGuest {...props}>{element}</RequireGuest>
+const Login = lazy(() => import('./pages/auth/Login'))
+const Signup = lazy(() => import('./pages/auth/Signup'))
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'))
+const Logout = lazy(() => import('./pages/auth/Logout'))
+
+/**
+ * Two gates, and they are not the same thing.
+ *
+ *   authed  — you have an account. Everything personal sits behind this.
+ *   guarded — you have an account *and* a stay linked to it. Property details
+ *             and concierge services need the house, not just the person.
+ */
+const authed = (element) => <RequireAuth>{element}</RequireAuth>
+const guarded = (element, props) => (
+  <RequireAuth>
+    <RequireGuest {...props}>{element}</RequireGuest>
+  </RequireAuth>
+)
 
 export default function App() {
   return (
     <ErrorBoundary>
       <Suspense fallback={<SkeletonPage />}>
         <Routes>
+          {/* ---------------- Accounts ---------------- */}
+          {/* Its own shell: no navigation to wander off into mid-signup. */}
+          <Route element={<AuthLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+          </Route>
+
+          {/* Unguarded on purpose — see Logout.jsx */}
+          <Route path="/logout" element={<Logout />} />
+
           {/* Standalone entry points */}
-          <Route path="/access" element={<Access />} />
+          <Route path="/access" element={authed(<Access />)} />
           <Route path="/guest/:guestId" element={<GuestLink />} />
           {/* Older host-generated links used /stay/:slug. Keep them working. */}
           <Route path="/stay/:guestId" element={<GuestLink />} />
@@ -63,13 +94,16 @@ export default function App() {
           </Route>
 
           <Route element={<AppLayout />}>
-            {/* ---------------- Browse the destination ---------------- */}
-            <Route path="/discover" element={<Discover />} />
+            {/* -------- Your app home: needs an account, not a stay -------- */}
+            <Route path="/discover" element={authed(<Discover />)} />
+
+            {/* ---------------- Browse the destination ----------------
+                Open to everyone on purpose. The public site has to sell 30A
+                to people who have not booked, so none of this is gated. */}
             <Route path="/explore" element={<Explore />} />
             <Route path="/experiences/:slug" element={<ExperienceDetail />} />
             <Route path="/map" element={<MapPage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/favorites" element={<Favorites />} />
             <Route path="/help" element={<Help />} />
             <Route path="/vitoria" element={<Vitoria />} />
 
@@ -108,15 +142,17 @@ export default function App() {
             <Route path="/transfers/new" element={guarded(<TransferNew />)} />
             <Route path="/transfers/:id" element={guarded(<TransferDetail />)} />
 
-            {/* ---------------- Open to everyone ---------------- */}
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/settings" element={<Settings />} />
+            {/* ---------------- Your account ---------------- */}
+            <Route path="/favorites" element={authed(<Favorites />)} />
+            <Route path="/notifications" element={authed(<Notifications />)} />
+            <Route path="/settings" element={authed(<Settings />)} />
 
             {/* Aliases kept so older links never dead-end */}
             <Route path="/home" element={<Navigate to="/discover" replace />} />
             <Route path="/orders" element={<Navigate to="/services" replace />} />
             <Route path="/property" element={<Navigate to="/my-stay" replace />} />
-            <Route path="/login" element={<Navigate to="/access" replace />} />
+            <Route path="/sign-up" element={<Navigate to="/signup" replace />} />
+            <Route path="/register" element={<Navigate to="/signup" replace />} />
 
             <Route path="*" element={<NotFound />} />
           </Route>

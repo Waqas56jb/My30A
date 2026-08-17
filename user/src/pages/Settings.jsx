@@ -35,8 +35,16 @@ function SettingRow({ icon, title, sub, control, onClick, as = 'div' }) {
  * buffer that will later be pointed at a real provider.
  */
 export default function Settings() {
-  const { settings, updateSettings, resetDemoData, guestSlug, setGuestSlug, pushToast, signOut } =
-    useApp()
+  const {
+    settings,
+    updateSettings,
+    resetDemoData,
+    guestSlug,
+    setGuestSlug,
+    pushToast,
+    leaveStay,
+    account,
+  } = useApp()
   const navigate = useNavigate()
   const [resetOpen, setResetOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
@@ -130,10 +138,10 @@ export default function Settings() {
           />
           {guestSlug && (
             <SettingRow
-              icon="logout"
-              title="Sign out of this stay"
-              sub="Keeps browsing open, clears your property details"
-              onClick={signOut}
+              icon="key"
+              title="Remove this stay"
+              sub="Keeps you logged in, clears your property details"
+              onClick={leaveStay}
             />
           )}
           <SettingRow
@@ -141,6 +149,29 @@ export default function Settings() {
             title="My Stay"
             sub="Door code, WiFi, house rules"
             onClick={() => navigate('/my-stay')}
+          />
+        </div>
+      </Section>
+
+      <Section title="Your account">
+        <div className="card" style={{ overflow: 'hidden' }}>
+          <SettingRow
+            icon="user"
+            title={account ? `${account.firstName} ${account.lastName}` : 'Your profile'}
+            sub={account?.email ?? 'Name, contact details and preferences'}
+            onClick={() => navigate('/profile')}
+          />
+          <SettingRow
+            icon="lock"
+            title="Change your password"
+            sub="Sends a reset link to your email"
+            onClick={() => navigate('/forgot-password')}
+          />
+          <SettingRow
+            icon="logout"
+            title="Sign out"
+            sub="Signs you out on this device and returns to the website"
+            onClick={() => navigate('/logout')}
           />
         </div>
       </Section>
@@ -215,7 +246,7 @@ export default function Settings() {
                 onClick={() => {
                   setGuestSlug(guest.slug)
                   setSwitchOpen(false)
-                  navigate('/')
+                  navigate('/discover')
                 }}
               >
                 <span className="order-card__icon" aria-hidden="true">

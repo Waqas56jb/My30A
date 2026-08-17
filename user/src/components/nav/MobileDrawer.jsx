@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import Icon from '../ui/Icon'
 import { Avatar } from '../ui/Display'
 import { IconButton } from '../ui/Button'
@@ -18,9 +18,8 @@ import { useFocusTrap } from '../../hooks/useFocusTrap'
  * on navigation, on Escape, and on a backdrop tap, and traps focus while open.
  */
 export default function MobileDrawer({ open, onClose }) {
-  const { guest, property, hasGuest, unreadCount, signOut } = useApp()
+  const { guest, property, hasGuest, isAuthed, account, unreadCount } = useApp()
   const location = useLocation()
-  const navigate = useNavigate()
   const panelRef = useRef(null)
 
   useLockBodyScroll(open)
@@ -46,25 +45,46 @@ export default function MobileDrawer({ open, onClose }) {
           <IconButton icon="x" label="Close menu" onClick={onClose} />
         </div>
 
-        {hasGuest ? (
-          <Link to="/profile" className="drawer__guest">
-            <Avatar src={guest?.avatar} name={guest?.firstName} size="md" />
-            <span style={{ minWidth: 0 }}>
-              <span className="drawer__guest-name">
-                {guest.firstName} {guest.lastName}
+        {isAuthed ? (
+          <>
+            <Link to="/profile" className="drawer__guest">
+              <Avatar
+                src={guest?.avatar ?? account?.avatar}
+                name={account?.firstName ?? guest?.firstName}
+                size="md"
+              />
+              <span style={{ minWidth: 0 }}>
+                <span className="drawer__guest-name">
+                  {account?.firstName ?? guest?.firstName} {account?.lastName ?? guest?.lastName}
+                </span>
+                <span className="drawer__guest-sub u-truncate">
+                  {hasGuest ? property?.name : account?.email}
+                </span>
               </span>
-              <span className="drawer__guest-sub u-truncate">{property?.name}</span>
-            </span>
-            <Icon name="chevronRight" size={18} style={{ color: 'var(--ink-300)', flex: 'none' }} />
-          </Link>
+              <Icon name="chevronRight" size={18} style={{ color: 'var(--ink-300)', flex: 'none' }} />
+            </Link>
+
+            {!hasGuest && (
+              <Link to="/access" className="drawer__unlock">
+                <span className="drawer__unlock-icon" aria-hidden="true">
+                  <Icon name="key" />
+                </span>
+                <span>
+                  <span className="drawer__guest-name">Add your stay</span>
+                  <span className="drawer__guest-sub">Enter the code from your host</span>
+                </span>
+                <Icon name="chevronRight" size={18} style={{ color: 'var(--ink-300)', flex: 'none' }} />
+              </Link>
+            )}
+          </>
         ) : (
-          <Link to="/access" className="drawer__unlock">
+          <Link to="/login" className="drawer__unlock">
             <span className="drawer__unlock-icon" aria-hidden="true">
-              <Icon name="key" />
+              <Icon name="user" />
             </span>
             <span>
-              <span className="drawer__guest-name">Unlock your stay</span>
-              <span className="drawer__guest-sub">Enter the code from your host</span>
+              <span className="drawer__guest-name">Log in or sign up</span>
+              <span className="drawer__guest-sub">Your stay, saved places and preferences</span>
             </span>
             <Icon name="chevronRight" size={18} style={{ color: 'var(--ink-300)', flex: 'none' }} />
           </Link>
@@ -92,18 +112,11 @@ export default function MobileDrawer({ open, onClose }) {
               Notifications
               {unreadCount > 0 && <span className="sidebar__count">{unreadCount}</span>}
             </NavLink>
-            {hasGuest && (
-              <button
-                type="button"
-                className="drawer__item"
-                onClick={() => {
-                  signOut()
-                  navigate('/')
-                }}
-              >
+            {isAuthed && (
+              <Link to="/logout" className="drawer__item">
                 <Icon name="logout" />
-                Sign out of this stay
-              </button>
+                Sign out
+              </Link>
             )}
             <Link to="/" className="drawer__item">
               <Icon name="waves" />

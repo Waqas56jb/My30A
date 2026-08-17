@@ -15,7 +15,7 @@ import { getGuestBySlug } from '../data/mockGuests'
  */
 export default function GuestLink() {
   const { guestId } = useParams()
-  const { setGuestSlug, guestSlug, status, error, reloadSession } = useApp()
+  const { setGuestSlug, guestSlug, status, error, reloadSession, isAuthed } = useApp()
   const [ready, setReady] = useState(false)
   useDocumentTitle('Opening your stay')
 
@@ -51,6 +51,11 @@ export default function GuestLink() {
   }
 
   if (!ready || status === 'loading') return <SkeletonPage />
+
+  /* The stay is now attached to this device. Someone arriving from a host's
+     link usually has no account yet, so send them to log in or sign up — the
+     stay is waiting on the other side, and `from` returns them to it. */
+  if (!isAuthed) return <Navigate to="/login" replace state={{ from: '/my-stay' }} />
 
   // Land on the property, since that is what the link unlocked.
   return <Navigate to="/my-stay" replace />

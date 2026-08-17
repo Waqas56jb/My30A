@@ -3,14 +3,15 @@
 A premium, responsive React frontend for the My30A platform and its AI concierge, **Vitoria** —
 built for the vacation-rental market along Florida's Scenic Highway 30A.
 
-This repository holds **three independent applications**. They share a design language but nothing
+This repository holds **four independent applications**. They share a design language but nothing
 else: separate builds, separate dependencies, separate deployments.
 
 | App | Folder | Who it is for | Entry route |
 | --- | --- | --- | --- |
-| **Guest experience** | [`user/`](user/) | Vacationers — public website + the app behind an access code | `/` (public landing page) |
+| **Guest experience** | [`user/`](user/) | Vacationers — public website, then the app behind a login | `/` (public landing page) |
 | **Host panel** | [`host/`](host/) | Property owners configuring their homes | `/host/dashboard` |
 | **Partner portal** | [`partner/`](partner/) | Local businesses listed on My30A | `/partner/dashboard` |
+| **Admin & operations** | [`admin/`](admin/) | The My30A team running the whole ecosystem | `/admin/dashboard` |
 
 Each folder has its own README covering routes, mock data, components and tests.
 
@@ -26,9 +27,10 @@ for real endpoints. See each README's *"What is ready for backend integration"* 
 cd user      && npm install && npm run dev     # http://localhost:5173
 cd host      && npm install && npm run dev     # http://localhost:5180
 cd partner   && npm install && npm run dev     # http://localhost:5185
+cd admin     && npm install && npm run dev     # http://localhost:5190
 ```
 
-The three dev servers use different ports on purpose, so all three can run side by side.
+The four dev servers use different ports on purpose, so all four can run side by side.
 
 ```bash
 npm test            # route smoke tests + interaction flow tests (jsdom)
@@ -41,12 +43,12 @@ npm run build       # production build into dist/
 ## Deploying to Vercel
 
 Each app is **its own Vercel project**, because each has its own `package.json` and build output.
-Three projects, one repository.
+Four projects, one repository.
 
 ### One-time setup, per app
 
 1. **New Project → import this repository.**
-2. **Root Directory:** `user` (then repeat for `host`, then `partner`).
+2. **Root Directory:** `user` (then repeat for `host`, `partner` and `admin`).
    Leave *"Include files outside the Root Directory"* **off** — each app is self-contained.
 3. Framework preset: **Vite** (detected automatically).
    Build command `npm run build`, output directory `dist` — also pinned in `vercel.json`.
@@ -82,10 +84,10 @@ The same file also sets:
 
 - immutable, one-year caching on `/assets/*` (Vite fingerprints every filename, so they can never go stale)
 - `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options` and a `Permissions-Policy` that denies camera, microphone, geolocation, payment and USB
-- `X-Robots-Tag: noindex, nofollow` on **host** and **partner** — those are private panels and must never be indexed. Their `robots.txt` says the same thing.
+- `X-Robots-Tag: noindex, nofollow` on **host**, **partner** and **admin** — those are private panels and must never be indexed. Their `robots.txt` says the same thing.
 
 Each app also carries an `.nvmrc` (Node 22) for local `nvm` users. Vercel takes its Node version
-from **Project Settings → Node.js Version** — set all three projects to **22.x** so local and remote
+from **Project Settings → Node.js Version** — set all four projects to **22.x** so local and remote
 builds match.
 
 ### Custom domains
@@ -98,6 +100,7 @@ Nothing in the code assumes a particular hostname — no absolute URLs, no hardc
 | `my30a.com` | `user` |
 | `host.my30a.com` | `host` |
 | `partners.my30a.com` | `partner` |
+| `admin.my30a.com` | `admin` |
 
 The only cross-app link is the guest-access URL the host panel generates. It is built in one place,
 [`host/src/config/links.js`](host/src/config/links.js), from `VITE_GUEST_APP_URL` — so pointing the
@@ -106,8 +109,10 @@ answers both `/guest/:id` and the older `/stay/:id` shape, so links already in t
 
 ### Checklist before a client demo
 
-- [ ] All three projects deploy green
-- [ ] Open a deep link in each and press **refresh** — `user` → `/discover`, `host` → `/host/analytics`, `partner` → `/partner/analytics`
+- [ ] All four projects deploy green
+- [ ] Open a deep link in each and press **refresh** — `user` → `/discover`, `host` → `/host/analytics`, `partner` → `/partner/analytics`, `admin` → `/admin/operations`
+- [ ] Log in to the guest app as `sarah@my30a.com` / `demo1234`, then refresh — you stay logged in
 - [ ] Landing page video autoplays muted on desktop and mobile
-- [ ] `robots.txt` on host/partner returns `Disallow: /`
+- [ ] `robots.txt` on host, partner and admin returns `Disallow: /`
+- [ ] Sign into the admin panel as `alicia@my30a.com` / `admin1234` and check the operations queue has work in it
 - [ ] Test on a real phone in both orientations — nothing scrolls sideways

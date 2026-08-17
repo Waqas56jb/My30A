@@ -88,11 +88,27 @@ There are **two shells**, and the split matters:
 
 - **`MarketingLayout`** — the public website. Site header floating over the video
   hero, content, site footer. No sidebar, no tab bar. This is `/`.
+- **`AuthLayout`** — log in, sign up, password reset. No navigation at all, so
+  nobody wanders off half-way through signing in.
 - **`AppLayout`** — the product. Sidebar on desktop, top bar + bottom tabs on
   mobile. Everything from `/discover` onwards.
 
-A visitor lands on the website, unlocks their stay at `/access`, and is handed
-to `/discover` inside the app. Signing out returns them to `/`.
+The journey: land on the website → create an account or log in → arrive at
+`/discover` → add the stay with the host's code at `/access`. Signing out
+returns to `/`.
+
+### Account vs stay
+
+Two different ideas, kept apart on purpose:
+
+|  | What it is | How you get it | What it unlocks |
+| --- | --- | --- | --- |
+| **Account** | Who you are — email and password | `/signup` or `/login` | The app itself: `/discover`, saved places, preferences, notifications, settings |
+| **Stay** | Which house you are in this week | The access code your host sends, at `/access` (or a `/guest/:id` link) | WiFi, door code, house rules, grocery delivery, airport transfers |
+
+An account can exist with no stay attached — people find 30A before they find a
+house — so `/discover` works either way and prompts for the code. When a code is
+entered it is remembered on the account, so the next login goes straight in.
 
 **The public website.**
 
@@ -100,40 +116,83 @@ to `/discover` inside the app. Signing out returns them to `/`.
 | --- | --- |
 | `/` | Landing page: full-bleed auto-playing video hero, experience grid, spotlights, watchable video section, how it works, Vitoria band, restaurants, events, service catalogue, testimonials, conversion band |
 
-**Browsing the destination (app shell).** No code required.
+**Accounts.** No account required to reach these, obviously.
 
 | Route | Page |
 | --- | --- |
-| `/discover` | App home: stay header when unlocked, Vitoria prompt, quick actions, in-progress services, personal picks, nearby restaurants, events |
+| `/login` | Email + password, reveal toggle, "keep me logged in", demo accounts. Returns to wherever the guest was originally heading |
+| `/signup` | Name, email, optional mobile, password with a strength meter, terms |
+| `/forgot-password` | Request a reset link. Never reveals whether an account exists |
+| `/reset-password?token=…` | Set a new password. Missing or spent tokens explain themselves |
+| `/logout` | Clears the session and returns to `/` (deliberately unguarded — see below) |
+
+**Browsing the destination.** Open to everyone, no account needed — the site has
+to sell 30A to people who have not booked.
+
+| Route | Page |
+| --- | --- |
 | `/explore` | Explore 30A (categories, search, list/map) |
 | `/experiences/:slug` | Lifestyle pages — bonfires, golf-carts, biking, boating, wellness, family, photography, golf, shopping, outdoor |
 | `/map` | Map experience with layer filters |
 | `/search` | Global search across places and experiences |
-| `/favorites` | Saved places (stored on the device) |
 | `/help` | FAQs and contact |
 | `/vitoria` | AI concierge conversation |
 | `/restaurants` · `/restaurants/:id` | Restaurant list and detail |
 | `/partners` · `/partners/:id` | Partner directory and detail (`?category=` supported) |
 | `/beaches` · `/beaches/:id` | Beach guide and detail |
 | `/events` · `/events/:id` | Events by day and detail |
-| `/notifications` · `/settings` | Notification centre, settings + prototype tools |
 | `*` | Not-found page |
 
-**Guest — their stay.** Behind the access code; visiting without one shows an explanation and a way
-in, never a dead end or a silent redirect.
+**Needs an account** (`RequireAuth`) — redirects to `/login`, carrying the
+intended destination so the guest continues where they were going.
 
 | Route | Page |
 | --- | --- |
-| `/access` | Enter an access code, scan concept, demo stays |
-| `/guest/:guestId` | Resolves a host link and unlocks the stay |
+| `/discover` | App home: stay header when a stay is linked, Vitoria prompt, quick actions, in-progress services, personal picks, nearby restaurants, events |
+| `/favorites` | Saved places |
+| `/notifications` · `/settings` | Notification centre, settings + prototype tools |
+| `/access` | Enter the access code that links a stay to the account |
+
+**Needs an account and a stay** (`RequireAuth` + `RequireGuest`) — an account
+without a stay gets an explanation and a way in, never a dead end.
+
+| Route | Page |
+| --- | --- |
+| `/guest/:guestId` | Resolves a host link, attaches the stay, then asks for a login if there is none |
 | `/my-stay` | Property information |
 | `/services` | Service catalogue + My Services |
 | `/groceries` · `/groceries/new` · `/groceries/:id` | Grocery list, request wizard, tracking |
 | `/transfers` · `/transfers/new` · `/transfers/:id` | Transfer list, request form, tracking |
 | `/my-trip` · `/profile` | Trip overview, saved places, preferences, stay rating |
 
-Aliases: `/home` → `/discover`, `/login` → `/access`, `/orders` → `/services`, `/property` →
-`/my-stay`.
+Aliases: `/home` → `/discover`, `/register` and `/sign-up` → `/signup`, `/orders`
+→ `/services`, `/property` → `/my-stay`, `/stay/:id` → `/guest/:id`.
+
+### Two details worth keeping
+
+**The session is read synchronously.** `AppProvider` initialises from
+localStorage in `useState`, not in an effect. Resolving it asynchronously would
+render every guarded route as "signed out" for one frame and bounce the guest to
+`/login` on every single refresh.
+
+**Signing out is a route, not a click handler.** `/logout` is deliberately
+unguarded. Clearing the account while still standing on a guarded screen is a
+race: React Router defers navigation inside a transition, so the urgent state
+update lands first, `RequireAuth` re-renders, and the guest ends up on `/login`
+instead of the website. Stepping onto an open route first has no such ordering
+problem.
+
+### Demo accounts
+
+| Email | Password | State |
+| --- | --- | --- |
+| `sarah@my30a.com` | `demo1234` | Signed in with a stay — Rosemary Beach House |
+| `daniel@my30a.com` | `demo1234` | Signed in with a stay — Watercolor Dune Cottage |
+| `alex@my30a.com` | `demo1234` | An account with no stay linked yet |
+
+Passwords sit in plain text in [`src/data/mockAccounts.js`](src/data/mockAccounts.js)
+because there is no server. [`src/services/authService.js`](src/services/authService.js)
+is the only file a real auth provider needs to replace.
 
 ---
 
@@ -262,7 +321,7 @@ restores the shipped fixtures.
 Two harnesses run the real application in jsdom.
 
 ```bash
-npm test                                  # 59 routes + 40 interaction flows
+npm test                                  # 73 routes + 50 interaction flows
 SMOKE_VIEWPORT=desktop npm run test:routes # same routes at desktop widths
 ```
 
@@ -281,7 +340,13 @@ out must return them to the public landing page with the app chrome gone.
 
 **Images** (`scripts/check-images.mjs`) — verifies all 67 registry URLs still return an image.
 
-Current status: **59/59 routes (mobile and desktop), 40/40 flows, 88/88 images**, clean console,
+Auth is covered end to end: empty-form validation, unknown email vs wrong password, a protected
+route bouncing to `/login` and continuing to the original destination afterwards, the reveal toggle,
+signup rejecting weak passwords and duplicate emails, a new account arriving with no stay, and the
+full reset run — request a link, mismatch the confirmation, fix it, then log in with the new
+password. Requesting a reset for an unknown address must still report success without issuing a link.
+
+Current status: **73/73 routes (mobile and desktop), 50/50 flows, 88/88 images**, clean console,
 production build succeeds.
 
 ---

@@ -1,0 +1,12 @@
+node_modules
+dist
+dist-ssr
+.smoke
+.vite
+*.local
+.DS_Store
+npm-debug.log*
+.env
+.env.*
+!.env.example
+.vercel

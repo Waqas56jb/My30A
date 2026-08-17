@@ -18,31 +18,58 @@ import { MemoryRouter } from 'react-router-dom'
 import App from '../src/App'
 import { AppProvider } from '../src/context/AppContext'
 import { setLatency } from '../src/services/mockApi'
+import { setAuthLatency } from '../src/services/authService'
 
 setLatency(0, 0)
+setAuthLatency(0, 0)
 
 const viewport = globalThis.__SMOKE_VIEWPORT__ ?? 'mobile'
 
-const SLUG_KEY = 'my30a.guest.v1.guestSlug'
+const key = (k) => `my30a.guest.v1.${k}`
 
-/** Public browsing has no stay attached; guest routes need an unlocked one. */
-const setSession = (unlocked) => {
-  if (unlocked) window.localStorage.setItem(SLUG_KEY, JSON.stringify('demo'))
-  else window.localStorage.removeItem(SLUG_KEY)
+/**
+ * Three states matter, and they are not the same thing:
+ *   public — no account at all
+ *   authed — logged in, but no stay linked to the account yet
+ *   guest  — logged in with a stay
+ */
+const setSession = (mode) => {
+  window.localStorage.removeItem(key('session'))
+  window.localStorage.removeItem(key('guestSlug'))
+
+  if (mode === 'guest') {
+    window.localStorage.setItem(key('session'), JSON.stringify({ accountId: 'acc_sarah' }))
+    window.localStorage.setItem(key('guestSlug'), JSON.stringify('demo'))
+  } else if (mode === 'authed' || mode === 'gated') {
+    // acc_alex ships with guestSlug: null — an account without a booking.
+    window.localStorage.setItem(key('session'), JSON.stringify({ accountId: 'acc_alex' }))
+  }
 }
 
 /**
  * [route, expected copy, mode]
- * mode: 'public' (default), 'guest' (seed a stay), or 'gated' (guest route
- * visited without a stay, which must explain itself rather than dead-end).
+ * mode: 'public' (default), 'authed', 'guest', or 'gated' (a stay-only route
+ * opened by someone logged in without a stay, which must explain itself).
  */
 const ROUTES = [
   // ---- The public website ----
   ['/', 'Experience 30A like a local'],
   ['/', 'Experience 30A like a local', 'guest'],
 
+  // ---- Accounts ----
+  ['/login', 'Log in'],
+  ['/signup', 'Create your account'],
+  ['/forgot-password', 'Forgot your password'],
+  ['/reset-password', 'This link is not complete'],
+  ['/reset-password?token=rst_demo', 'Set a new password'],
+  ['/login', 'Welcome back', 'guest'], // already signed in -> straight to the app
+
+  // ---- App home: needs an account ----
+  ['/discover', 'Log in'], // no account -> bounced to the login screen
+  ['/discover', 'no stay linked yet', 'authed'],
+  ['/discover', 'Welcome back', 'guest'],
+
   // ---- Public destination experience (inside the app shell) ----
-  ['/discover', 'Staying on 30A'],
   ['/explore', 'Browse by category'],
   ['/experiences/bonfires', 'Make tonight unforgettable'],
   ['/experiences/golf-carts', 'Explore 30A your way'],
@@ -56,7 +83,6 @@ const ROUTES = [
   ['/experiences/outdoor', 'Get properly outside'],
   ['/map', 'place'],
   ['/search', 'Try one of these'],
-  ['/favorites', 'Saved places'],
   ['/help', 'Common questions'],
   ['/vitoria', 'Your 30A local concierge'],
   ['/restaurants', 'restaurant'],
@@ -71,17 +97,25 @@ const ROUTES = [
   ['/events', 'By day'],
   ['/events/event_seaside_concert', 'Seaside Summer Concert Series'],
   ['/events/nope', 'open this event'],
-  ['/notifications', 'Notifications'],
-  ['/settings', 'Prototype tools'],
   ['/nope', 'find that page'],
 
-  // ---- Access ----
-  ['/access', 'Unlock your stay'],
-  ['/guest/demo', 'House rules', 'public'],
-  ['/guest/nope', 'This link is not active'],
-  ['/stay/demo', 'House rules', 'public'],
+  // ---- Personal screens: an account is required ----
+  ['/favorites', 'Log in'],
+  ['/notifications', 'Log in'],
+  ['/settings', 'Log in'],
+  ['/favorites', 'Saved places', 'authed'],
+  ['/notifications', 'Notifications', 'authed'],
+  ['/settings', 'Prototype tools', 'authed'],
 
-  // ---- Guest routes without a stay: must explain, never dead-end ----
+  // ---- Access ----
+  ['/access', 'Log in'], // linking a stay needs an account first
+  ['/access', 'Unlock your stay', 'authed'],
+  ['/guest/demo', 'Log in', 'public'], // link accepted, then asked to sign in
+  ['/guest/demo', 'House rules', 'authed'],
+  ['/guest/nope', 'This link is not active'],
+  ['/stay/demo', 'House rules', 'authed'],
+
+  // ---- Stay routes without a stay: must explain, never dead-end ----
   ['/my-stay', 'Enter your code', 'gated'],
   ['/services', 'Enter your code', 'gated'],
   ['/groceries', 'Enter your code', 'gated'],
@@ -101,13 +135,13 @@ const ROUTES = [
   ['/transfers/new', 'Estimated price', 'guest'],
   ['/transfers/TR-2048', 'Transfer TR-2048', 'guest'],
   ['/transfers/nope', 'find that transfer', 'guest'],
-  ['/discover', 'Welcome back', 'guest'],
 
   // ---- Redirect aliases ----
-  ['/home', 'Staying on 30A'],
+  ['/home', 'no stay linked yet', 'authed'],
   ['/orders', 'Enter your code', 'gated'],
   ['/property', 'Enter your code', 'gated'],
-  ['/login', 'Unlock your stay'],
+  ['/register', 'Create your account'],
+  ['/sign-up', 'Create your account'],
 ]
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -148,7 +182,7 @@ async function main() {
   let failures = 0
 
   for (const [route, expected, mode = 'public'] of ROUTES) {
-    setSession(mode === 'guest')
+    setSession(mode)
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)

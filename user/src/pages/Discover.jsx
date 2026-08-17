@@ -30,7 +30,7 @@ const ACTIVE = ['pending', 'confirmed', 'shopping', 'on_the_way', 'payment_requi
  * hero, the video and the service catalogue all live on `/` instead.
  */
 export default function Discover() {
-  const { guest, property, hasGuest } = useApp()
+  const { guest, property, hasGuest, account } = useApp()
   useDocumentTitle('Home')
 
   const recs = useAsync(() => api.getRecommendations(), [], { skip: !hasGuest })
@@ -89,15 +89,17 @@ export default function Discover() {
         ) : (
           <div className="home-inner" style={{ paddingTop: 'var(--sp-5)' }}>
             <Callout icon="key">
-              <strong style={{ display: 'block', marginBottom: 2 }}>Staying on 30A?</strong>
-              Unlock your property with the code your host sent and this becomes your stay — WiFi,
-              door code, groceries, transfers and a concierge who knows the house.
+              <strong style={{ display: 'block', marginBottom: 2 }}>
+                Hello {account?.firstName ?? 'there'} — no stay linked yet
+              </strong>
+              Add your property with the code your host sent and this becomes your stay: WiFi, door
+              code, groceries, transfers and a concierge who knows the house.
               <div className="u-row u-wrap" style={{ marginTop: 'var(--sp-3)' }}>
                 <Button size="sm" to="/access" icon="key">
                   Enter your code
                 </Button>
-                <Button size="sm" variant="secondary" to="/">
-                  Back to the website
+                <Button size="sm" variant="secondary" to="/explore" icon="compass">
+                  Explore 30A meanwhile
                 </Button>
               </div>
             </Callout>
