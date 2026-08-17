@@ -16,7 +16,7 @@ export default function NotFound() {
           in the right direction.
         </p>
         <div className="u-row u-wrap" style={{ justifyContent: 'center' }}>
-          <Button to="/" icon="home">
+          <Button to="/discover" icon="home">
             Back to home
           </Button>
           <Button to="/vitoria" variant="secondary" icon="sparkles">

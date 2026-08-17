@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import * as api from '../services/mockApi'
+import * as auth from '../services/authService'
 import { setAnalyticsContext, track, ANALYTICS_EVENTS } from '../services/analytics'
 import { readStore, writeStore, STORAGE_KEYS } from '../utils/storage'
 import { resolveAccessCode } from '../data/mockGuests'
@@ -21,13 +22,24 @@ const DEFAULT_SETTINGS = {
  * Everything reads through mockApi so the backend swap is a one-file change.
  */
 export function AppProvider({ children }) {
-  // No slug means the visitor is browsing publicly. The destination content is
-  // open to everyone; only property-specific screens need a guest link.
-  const [guestSlug, setGuestSlug] = useState(() => readStore(STORAGE_KEYS.guestSlug) ?? null)
+  /* ------------------------------ Account ------------------------------
+     Read synchronously from storage. An async check would render every
+     guarded route as "signed out" for one frame and bounce the guest to
+     /login on every refresh. */
+  const [account, setAccount] = useState(() => auth.getSession()?.account ?? null)
+
+  // No slug means no stay is attached yet. The destination content is open to
+  // everyone; the app itself needs an account, and property-specific screens
+  // need a stay on top of that.
+  const [guestSlug, setGuestSlug] = useState(
+    () => readStore(STORAGE_KEYS.guestSlug) ?? auth.getSession()?.account?.guestSlug ?? null,
+  )
   const [guest, setGuest] = useState(null)
   const [property, setProperty] = useState(null)
   const [status, setStatus] = useState(() =>
-    readStore(STORAGE_KEYS.guestSlug) ? 'loading' : 'public',
+    readStore(STORAGE_KEYS.guestSlug) ?? auth.getSession()?.account?.guestSlug
+      ? 'loading'
+      : 'public',
   ) // public | loading | ready | error
   const [error, setError] = useState(null)
 
@@ -101,28 +113,79 @@ export function AppProvider({ children }) {
     loadSession(guestSlug)
   }, [guestSlug, loadSession])
 
+  /* --------------------------- Authentication ---------------------------
+     An account is who you are; a stay is which house you are in this week.
+     Logging in restores both, because the account remembers the last stay
+     that was linked to it. */
+
+  const adoptSession = useCallback((session) => {
+    setAccount(session.account)
+    // A returning guest should not have to re-enter a code they already used.
+    if (session.account?.guestSlug) setGuestSlug(session.account.guestSlug)
+    return session.account
+  }, [])
+
+  const logIn = useCallback(
+    async (credentials) => adoptSession(await auth.login(credentials)),
+    [adoptSession],
+  )
+
+  const signUp = useCallback(
+    async (input) => adoptSession(await auth.signUp(input)),
+    [adoptSession],
+  )
+
+  const signOut = useCallback(async () => {
+    await auth.signOut()
+    setAccount(null)
+    setGuestSlug(null)
+    pushToast({
+      tone: 'info',
+      title: 'Signed out',
+      message: 'Your stay is safe — log back in any time to pick it up.',
+    })
+  }, [pushToast])
+
   /**
-   * Exchange a printed access code (or a pasted guest link) for a session.
-   * This is the single seam where real authentication will land.
+   * Exchange a printed access code (or a pasted guest link) for a stay.
+   *
+   * This attaches a property to whoever is signed in; it is not a login. The
+   * link is remembered on the account so the next sign-in goes straight there.
    */
   const unlockWithCode = useCallback(
     (input) => {
       const slug = resolveAccessCode(input)
       if (!slug) return false
       setGuestSlug(slug)
+      if (account?.id) {
+        auth.linkStayToAccount(account.id, slug).then((next) => {
+          if (next) setAccount(next)
+        })
+      }
       return true
     },
-    [],
+    [account],
   )
 
-  const signOut = useCallback(() => {
+  /** Detach the property but stay logged in — for end of holiday. */
+  const leaveStay = useCallback(async () => {
     setGuestSlug(null)
+    if (account?.id) {
+      const next = await auth.linkStayToAccount(account.id, null)
+      if (next) setAccount(next)
+    }
     pushToast({
       tone: 'info',
-      title: 'Signed out of your stay',
-      message: 'You can still explore 30A. Re-enter your code any time.',
+      title: 'Stay removed',
+      message: 'Your account is still signed in. Enter a new code whenever you book again.',
     })
-  }, [pushToast])
+  }, [account, pushToast])
+
+  const updateAccount = useCallback(async (patch) => {
+    const next = await auth.updateAccount(patch)
+    setAccount(next)
+    return next
+  }, [])
 
   /* -------------------------- Notifications ------------------------ */
   const refreshNotifications = useCallback(async () => {
@@ -219,6 +282,12 @@ export function AppProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      account,
+      isAuthed: !!account,
+      logIn,
+      signUp,
+      updateAccount,
+      leaveStay,
       guestSlug,
       setGuestSlug,
       guest,
@@ -246,6 +315,11 @@ export function AppProvider({ children }) {
       dismissToast,
     }),
     [
+      account,
+      logIn,
+      signUp,
+      updateAccount,
+      leaveStay,
       guestSlug,
       guest,
       property,
@@ -282,6 +356,10 @@ export function useApp() {
 }
 
 /** Convenience selectors used all over the app. */
+export const useAuth = () => {
+  const { account, isAuthed, logIn, signUp, signOut } = useApp()
+  return { account, isAuthed, logIn, signUp, signOut }
+}
 export const useGuest = () => useApp().guest
 export const useProperty = () => useApp().property
 export const useToast = () => useApp().pushToast

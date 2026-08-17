@@ -1,0 +1,15 @@
+# My30A — public guest experience. Indexing is welcome.
+User-agent: *
+Allow: /
+
+# Nothing behind an access code is useful to a crawler.
+Disallow: /access
+Disallow: /guest/
+Disallow: /my-stay
+Disallow: /my-trip
+Disallow: /profile
+Disallow: /services
+Disallow: /groceries
+Disallow: /transfers
+Disallow: /notifications
+Disallow: /settings

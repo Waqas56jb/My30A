@@ -1,0 +1,27 @@
+{
+  "name": "my30a-partner",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "My30A Partner Portal — local businesses manage their listing and see the interest My30A sends them (frontend only, mock data).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "npm run test:routes && npm run test:flows",
+    "test:build": "vite build --ssr scripts/smoke.jsx --outDir .smoke/routes && vite build --ssr scripts/flows.jsx --outDir .smoke/flows",
+    "test:routes": "npm run test:build && node --import ./scripts/setup-dom.js .smoke/routes/smoke.js",
+    "test:flows": "node --import ./scripts/setup-dom.js .smoke/flows/flows.js",
+    "test:images": "node scripts/check-images.mjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "jsdom": "^30.0.1",
+    "vite": "^5.4.8"
+  }
+}

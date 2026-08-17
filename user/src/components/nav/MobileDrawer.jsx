@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import Icon from '../ui/Icon'
 import { Avatar } from '../ui/Display'
 import { IconButton } from '../ui/Button'
@@ -20,6 +20,7 @@ import { useFocusTrap } from '../../hooks/useFocusTrap'
 export default function MobileDrawer({ open, onClose }) {
   const { guest, property, hasGuest, unreadCount, signOut } = useApp()
   const location = useLocation()
+  const navigate = useNavigate()
   const panelRef = useRef(null)
 
   useLockBodyScroll(open)
@@ -38,7 +39,7 @@ export default function MobileDrawer({ open, onClose }) {
     <div className="drawer-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
       <div className="drawer" role="dialog" aria-modal="true" aria-label="Menu" ref={panelRef}>
         <div className="drawer__head">
-          <Link to="/" className="topbar__brand">
+          <Link to="/discover" className="topbar__brand">
             <Icon name="waves" size={20} style={{ color: 'var(--sea-700)' }} />
             My30A
           </Link>
@@ -92,11 +93,22 @@ export default function MobileDrawer({ open, onClose }) {
               {unreadCount > 0 && <span className="sidebar__count">{unreadCount}</span>}
             </NavLink>
             {hasGuest && (
-              <button type="button" className="drawer__item" onClick={signOut}>
+              <button
+                type="button"
+                className="drawer__item"
+                onClick={() => {
+                  signOut()
+                  navigate('/')
+                }}
+              >
                 <Icon name="logout" />
                 Sign out of this stay
               </button>
             )}
+            <Link to="/" className="drawer__item">
+              <Icon name="waves" />
+              Back to the website
+            </Link>
           </div>
         </nav>
       </div>

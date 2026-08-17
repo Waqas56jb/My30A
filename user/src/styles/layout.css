@@ -211,11 +211,28 @@
 }
 
 /* ---------- Main region ---------- */
+/* Sideways scrolling is guarded on mobile by `body { overflow-x: hidden }` in
+   base.css, and on desktop by `overflow-x: clip` inside the 1024px block —
+   where overflow-y is already `auto`. Setting clip against a `visible` axis
+   would coerce that axis to `auto` and turn this into a scroll container. */
 .app-main {
   flex: 1 1 auto;
   min-width: 0;
   width: 100%;
   padding-bottom: calc(var(--tabbar-h) + var(--safe-bottom) + var(--sp-6));
+}
+
+/* Grid and flex children default to min-width:auto, which lets a long word or
+   a wide child push a track past its container. These are the layouts where
+   that actually bites. */
+.page > *,
+.page__main > *,
+.grid > *,
+.qa-grid > *,
+.exp-grid > *,
+.stay-grid > *,
+.section > * {
+  min-width: 0;
 }
 
 .app-main--flush {
@@ -506,6 +523,7 @@ body.kb-open .tabbar {
     padding-bottom: var(--sp-9);
     height: 100vh;
     overflow-y: auto;
+    overflow-x: clip;
   }
 
   .page {
@@ -521,12 +539,17 @@ body.kb-open .tabbar {
   }
 }
 
-/* ---------- Desktop with contextual right rail ---------- */
+/* ---------- Desktop with contextual right rail ----------
+   `page--railed` is only applied by React when a rail is actually rendered.
+   A public visitor has no stay context, so they get the full-width single
+   column instead of a 336px hole down the right-hand side. */
 @media (min-width: 1360px) {
   .page--railed {
-    max-width: none;
+    max-width: 1560px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) var(--rail-w);
+    /* Both tracks must be able to shrink, or the fixed rail pushes the grid
+       wider than its container and the whole page scrolls sideways. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, var(--rail-w));
     gap: var(--sp-7);
     align-items: start;
   }

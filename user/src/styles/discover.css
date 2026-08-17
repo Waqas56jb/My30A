@@ -1,4 +1,312 @@
 /* ==========================================================================
+   Public website chrome — header, menu, page shell
+   ========================================================================== */
+
+/* No `overflow-x: clip` here: paired with a visible vertical axis it would
+   coerce this element into a scroll container. `body { overflow-x: hidden }`
+   already catches anything that tries to float sideways. */
+.site {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+.site__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.site__foot {
+  padding: 0 max(var(--sp-5), var(--safe-left));
+}
+
+@media (min-width: 1024px) {
+  .site__foot {
+    padding: 0 var(--sp-8);
+  }
+}
+
+/* ---------------- Header ---------------- */
+.site-head {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 90;
+  padding-top: var(--safe-top);
+  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+  border-bottom: 1px solid transparent;
+}
+
+/* Solid once you scroll off the hero. */
+.site-head--solid {
+  background: rgba(250, 247, 242, 0.92);
+  backdrop-filter: saturate(1.6) blur(16px);
+  -webkit-backdrop-filter: saturate(1.6) blur(16px);
+  border-bottom-color: var(--line-soft);
+  box-shadow: 0 1px 20px rgba(18, 54, 58, 0.05);
+}
+
+.site-head__inner {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  min-height: 70px;
+  padding: 0 max(var(--sp-4), var(--safe-left)) 0 max(var(--sp-4), var(--safe-right));
+}
+
+@media (min-width: 1024px) {
+  .site-head__inner {
+    padding: 0 var(--sp-7);
+    min-height: 78px;
+  }
+}
+
+.site-head__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: none;
+  min-width: 0;
+}
+
+.site-head__mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  flex: none;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.site-head--solid .site-head__mark {
+  background: var(--surface-ink);
+  color: var(--sand-300);
+  border-color: transparent;
+}
+
+.site-head__name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.16rem;
+  line-height: 1.1;
+  color: #fff;
+  transition: color var(--dur) var(--ease);
+}
+
+.site-head__tag {
+  display: block;
+  font-size: var(--fs-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.66);
+  transition: color var(--dur) var(--ease);
+}
+
+.site-head--solid .site-head__name {
+  color: var(--ink-900);
+}
+
+.site-head--solid .site-head__tag {
+  color: var(--ink-400);
+}
+
+.site-head__nav {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .site-head__nav {
+    display: flex;
+  }
+}
+
+.site-head__link {
+  padding: 9px var(--sp-3);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.86);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+  white-space: nowrap;
+}
+
+.site-head__link:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.site-head--solid .site-head__link {
+  color: var(--ink-600);
+}
+
+.site-head--solid .site-head__link:hover {
+  background: var(--surface-2);
+  color: var(--ink-900);
+}
+
+.site-head--solid .site-head__link[aria-current='page'] {
+  background: var(--sea-50);
+  color: var(--sea-900);
+  font-weight: 600;
+}
+
+.site-head__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-left: auto;
+  flex: none;
+}
+
+@media (min-width: 1024px) {
+  .site-head__actions {
+    margin-left: 0;
+  }
+}
+
+/* The CTA inverts with the header so it stays legible over the video. */
+.site-head__cta {
+  --btn-bg: rgba(255, 255, 255, 0.94);
+  --btn-fg: var(--ink-900);
+  --btn-bd: transparent;
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .site-head__cta {
+    display: inline-flex;
+  }
+}
+
+.site-head--solid .site-head__cta {
+  --btn-bg: var(--surface-ink);
+  --btn-fg: var(--on-dark);
+}
+
+.site-head__guest {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 5px 14px 5px 5px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink-900);
+  box-shadow: var(--sh-1);
+}
+
+.site-head__menu {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--r-pill);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  flex: none;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.site-head--solid .site-head__menu {
+  background: var(--surface);
+  color: var(--ink-800);
+  border-color: var(--line);
+}
+
+@media (min-width: 1024px) {
+  .site-head__menu {
+    display: none;
+  }
+}
+
+/* ---------------- Mobile site menu ---------------- */
+.site-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 220;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  padding: var(--safe-top) max(var(--sp-4), var(--safe-left)) calc(var(--safe-bottom) + var(--sp-5));
+  overflow-y: auto;
+  animation: fade-in var(--dur) var(--ease) both;
+}
+
+.site-menu__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 70px;
+  flex: none;
+}
+
+/* Inside the menu the brand sits on the light ground, not the video. */
+.site-menu .site-head__mark {
+  background: var(--surface-ink);
+  color: var(--sand-300);
+  border-color: transparent;
+}
+
+.site-menu .site-head__name {
+  color: var(--ink-900);
+}
+
+.site-menu__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-4) 0;
+  flex: 1 1 auto;
+}
+
+.site-menu__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4) var(--sp-2);
+  border-bottom: 1px solid var(--line-soft);
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  color: var(--ink-900);
+  min-height: 60px;
+}
+
+.site-menu__link svg {
+  color: var(--ink-300);
+  flex: none;
+}
+
+.site-menu__link[aria-current='page'] {
+  color: var(--sea-700);
+}
+
+.site-menu__foot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  flex: none;
+}
+
+/* ==========================================================================
    Destination storytelling — hero, experience tiles, editorial spotlights
    ========================================================================== */
 
@@ -42,6 +350,96 @@
   .dhero__media img {
     animation: none;
   }
+}
+
+/* ---------------- Video background ---------------- */
+.video-bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--surface-ink);
+  /* Must sit below .dhero__scrim (-1), or the darkening layer paints behind
+     the video and the headline stops being readable over bright footage. */
+  z-index: -2;
+  /* Lets the iframe below size against this box rather than the viewport. */
+  container-type: size;
+}
+
+.video-bg__poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A YouTube iframe is locked to 16:9, so "cover" means overflowing whichever
+   axis is short and centring the result. Viewport units are the fallback;
+   container units are correct when the hero is inset from the page edge. */
+.video-bg__frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1s var(--ease);
+  width: 100vw;
+  height: 56.25vw;
+  min-width: 177.7778vh;
+  min-height: 100vh;
+}
+
+@supports (width: 1cqw) {
+  .video-bg__frame {
+    width: 100cqw;
+    height: 56.25cqw;
+    min-width: 177.7778cqh;
+    min-height: 100cqh;
+  }
+}
+
+.video-bg--ready .video-bg__frame {
+  opacity: 1;
+}
+
+/* ---------------- Watchable player ---------------- */
+.video-frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  background: var(--surface-ink);
+  box-shadow: var(--sh-2);
+  border: 1px solid var(--line-soft);
+}
+
+.video-frame iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.video-feature__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-4);
+}
+
+.video-feature__caption {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-xs);
+  color: var(--ink-500);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .dhero__scrim {
@@ -180,6 +578,299 @@
   .dhero__inner {
     padding: var(--sp-9) var(--sp-8) var(--sp-8);
   }
+}
+
+/* Full-bleed variant used on the public landing page, where the header floats
+   over the video rather than sitting above a rounded card. */
+.dhero--full {
+  min-height: min(94vh, 860px);
+  min-height: min(94dvh, 860px);
+  border-radius: 0;
+}
+
+.dhero--full .dhero__inner {
+  padding-top: calc(var(--safe-top) + 120px);
+  padding-bottom: var(--sp-9);
+}
+
+@media (min-width: 1024px) {
+  .dhero--full {
+    margin: 0;
+    border-radius: 0;
+    min-height: min(92vh, 820px);
+  }
+  .dhero--full .dhero__inner {
+    padding: 150px var(--sp-8) var(--sp-9);
+  }
+}
+
+/* A quiet nudge that there is more below the fold. */
+.dhero__scroll {
+  position: absolute;
+  left: 50%;
+  bottom: var(--sp-5);
+  transform: translateX(-50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.dhero__scroll svg {
+  animation: nudge 2.4s var(--ease) infinite;
+}
+
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .dhero__scroll {
+    display: flex;
+  }
+}
+
+/* Content sections on the public site sit inside this wrapper. */
+.site-section {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 max(var(--sp-4), var(--safe-left));
+}
+
+@media (min-width: 1024px) {
+  .site-section {
+    padding: 0 var(--sp-7);
+  }
+}
+
+/* Inner pages have no hero, so they need to clear the fixed header. */
+.site-page {
+  padding-top: calc(var(--safe-top) + 92px);
+}
+
+@media (min-width: 1024px) {
+  .site-page {
+    padding-top: calc(var(--safe-top) + 112px);
+  }
+}
+
+/* ---------------- Hero trust line ---------------- */
+.dhero__proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-3);
+}
+
+.dhero__proof li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.dhero__proof svg {
+  width: 14px;
+  height: 14px;
+  color: var(--sand-300);
+  flex: none;
+}
+
+/* ---------------- How it works ---------------- */
+.howto {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+}
+
+.howto > * {
+  min-width: 0;
+}
+
+.howto__card {
+  position: relative;
+  padding: var(--sp-5);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--sh-1);
+  overflow: hidden;
+}
+
+.howto__num {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-4);
+  font-family: var(--font-display);
+  font-size: 2.6rem;
+  line-height: 1;
+  color: var(--surface-3);
+  pointer-events: none;
+}
+
+.howto__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: var(--sea-50);
+  color: var(--sea-700);
+  margin-bottom: var(--sp-3);
+}
+
+.howto__icon svg {
+  width: 21px;
+  height: 21px;
+}
+
+.howto__title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--ink-900);
+}
+
+.howto__body {
+  margin-top: 6px;
+  font-size: var(--fs-sm);
+  color: var(--ink-600);
+  line-height: 1.6;
+}
+
+/* ---------------- Full service catalogue ---------------- */
+.svc-groups {
+  display: grid;
+  gap: var(--sp-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.svc-groups > * {
+  min-width: 0;
+}
+
+.svc-group__label {
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sand-700);
+  padding-bottom: var(--sp-2);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--sp-2);
+}
+
+.svc-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-2);
+  border-radius: var(--r-sm);
+  transition: background var(--dur-fast) var(--ease);
+  min-height: 56px;
+}
+
+.svc-item:hover {
+  background: var(--surface-2);
+}
+
+.svc-item__icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-2);
+  color: var(--sea-700);
+  flex: none;
+}
+
+.svc-item__icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.svc-item__title {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.svc-item__line {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--ink-500);
+  margin-top: 1px;
+  line-height: 1.5;
+}
+
+/* ---------------- Testimonials ---------------- */
+.quotes {
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.quotes > * {
+  min-width: 0;
+}
+
+.quote {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5);
+  border-radius: var(--r-lg);
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  box-shadow: var(--sh-1);
+}
+
+.quote__mark {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  line-height: 0.6;
+  color: var(--sand-300);
+}
+
+.quote__text {
+  font-size: var(--fs-sm);
+  color: var(--ink-700);
+  line-height: 1.68;
+  flex: 1 1 auto;
+}
+
+.quote__who {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line-soft);
+}
+
+.quote__name {
+  display: block;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.quote__detail {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--ink-500);
 }
 
 /* ---------------- Guest strip (only when a stay is unlocked) ------------- */
@@ -346,9 +1037,13 @@
   align-items: center;
 }
 
+.spotlight > * {
+  min-width: 0;
+}
+
 @media (min-width: 900px) {
   .spotlight {
-    grid-template-columns: 1.1fr 1fr;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     gap: var(--sp-8);
   }
   .spotlight--flip .spotlight__media {
@@ -474,9 +1169,13 @@
   gap: var(--sp-4);
 }
 
+.svc-pair > * {
+  min-width: 0;
+}
+
 @media (min-width: 760px) {
   .svc-pair {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -518,17 +1217,22 @@
 }
 
 /* ---------------- Footer ---------------- */
+/* Always rendered inside an already-padded container, so no inline padding. */
 .site-foot {
   margin-top: var(--sp-9);
-  padding: var(--sp-8) max(var(--sp-5), var(--safe-left)) var(--sp-7);
+  padding: var(--sp-8) 0 var(--sp-7);
   border-top: 1px solid var(--line);
   display: grid;
   gap: var(--sp-6);
 }
 
+.site-foot > * {
+  min-width: 0;
+}
+
 @media (min-width: 760px) {
   .site-foot {
-    grid-template-columns: 1.4fr 1fr 1fr;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--sp-7);
   }
 }

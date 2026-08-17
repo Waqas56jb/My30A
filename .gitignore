@@ -1,0 +1,22 @@
+# Anything that is generated, installed, or machine-specific.
+# Each app also carries its own .gitignore; this is the safety net for the
+# repository root so a stray build never reaches Vercel.
+
+node_modules/
+dist/
+dist-ssr/
+.smoke/
+.vite/
+.vercel/
+
+.env
+.env.*
+!.env.example
+
+*.local
+*.log
+npm-debug.log*
+yarn-error.log*
+
+.DS_Store
+Thumbs.db

@@ -76,11 +76,7 @@ export default function ExperienceDetail() {
 
       <div className="home-inner" style={{ paddingTop: 'var(--sp-6)' }}>
         <Breadcrumbs
-          items={[
-            { label: 'Explore', to: '/explore' },
-            { label: 'Experiences', to: '/explore' },
-            { label: experience.label },
-          ]}
+          items={[{ label: 'Explore', to: '/explore' }, { label: experience.label }]}
         />
 
         {/* ------------------------- Introduction ------------------------ */}

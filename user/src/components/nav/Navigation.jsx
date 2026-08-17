@@ -1,4 +1,4 @@
-import { NavLink, Link } from 'react-router-dom'
+import { NavLink, Link, useNavigate } from 'react-router-dom'
 import Icon from '../ui/Icon'
 import { IconButton } from '../ui/Button'
 import { Avatar } from '../ui/Display'
@@ -6,7 +6,7 @@ import { useApp } from '../../context/AppContext'
 
 /** The five primary destinations, shared by the tab bar and the sidebar. */
 export const PRIMARY_NAV = [
-  { to: '/', label: 'Home', icon: 'home', end: true },
+  { to: '/discover', label: 'Home', icon: 'home' },
   { to: '/explore', label: 'Explore', icon: 'compass' },
   { to: '/map', label: 'Map', icon: 'map' },
   { to: '/vitoria', label: 'Vitoria', icon: 'sparkles' },
@@ -40,11 +40,19 @@ const ACCOUNT_NAV = [
 
 /** Desktop sidebar (>=1024px). */
 export function Sidebar() {
-  const { guest, property, unreadCount, hasGuest } = useApp()
+  const { guest, property, unreadCount, hasGuest, signOut } = useApp()
+  const navigate = useNavigate()
+
+  /* Signing out drops the property layer and returns to the public site,
+     which is the only place a signed-out visitor has anything to do. */
+  const leaveStay = () => {
+    signOut()
+    navigate('/')
+  }
 
   return (
     <aside className="sidebar" aria-label="Main navigation">
-      <Link to="/" className="sidebar__brand">
+      <Link to="/discover" className="sidebar__brand">
         <span className="sidebar__brand-mark" aria-hidden="true">
           <Icon name="waves" />
         </span>
@@ -90,27 +98,43 @@ export function Sidebar() {
 
       <div className="sidebar__group sidebar__foot">
         {hasGuest ? (
-          <NavLink to="/profile" className="sidebar__item">
-            <Avatar src={guest?.avatar} name={guest?.firstName} size="sm" />
-            <span style={{ minWidth: 0 }}>
-              <span style={{ display: 'block' }} className="u-truncate">
-                {guest.firstName} {guest.lastName}
+          <>
+            <NavLink to="/profile" className="sidebar__item">
+              <Avatar src={guest?.avatar} name={guest?.firstName} size="sm" />
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: 'block' }} className="u-truncate">
+                  {guest.firstName} {guest.lastName}
+                </span>
+                <span className="u-xs u-muted u-truncate" style={{ display: 'block', fontWeight: 400 }}>
+                  {property?.name ?? '-'}
+                </span>
               </span>
-              <span className="u-xs u-muted u-truncate" style={{ display: 'block', fontWeight: 400 }}>
-                {property?.name ?? '-'}
-              </span>
-            </span>
-          </NavLink>
+            </NavLink>
+            <NavLink to="/settings" className="sidebar__item">
+              <Icon name="settings" />
+              Settings
+            </NavLink>
+            <button type="button" className="sidebar__item" onClick={leaveStay}>
+              <Icon name="logout" />
+              Sign out of this stay
+            </button>
+          </>
         ) : (
-          <Link to="/access" className="btn btn--sm btn--block">
-            <Icon name="key" />
-            Unlock your stay
-          </Link>
+          <>
+            <Link to="/access" className="btn btn--sm btn--block">
+              <Icon name="key" />
+              Unlock your stay
+            </Link>
+            <NavLink to="/settings" className="sidebar__item">
+              <Icon name="settings" />
+              Settings
+            </NavLink>
+            <Link to="/" className="sidebar__item">
+              <Icon name="waves" />
+              Back to the website
+            </Link>
+          </>
         )}
-        <NavLink to="/settings" className="sidebar__item">
-          <Icon name="settings" />
-          Settings
-        </NavLink>
       </div>
     </aside>
   )
@@ -131,7 +155,7 @@ export function TopBar({ onOpenMenu }) {
         <Icon name="list" />
       </button>
 
-      <Link to="/" className="topbar__brand">
+      <Link to="/discover" className="topbar__brand">
         <Icon name="waves" size={20} style={{ color: 'var(--sea-700)' }} />
         My30A
       </Link>

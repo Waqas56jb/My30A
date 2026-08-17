@@ -1,15 +1,17 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
+import MarketingLayout from './layouts/MarketingLayout'
 import ErrorBoundary from './components/ErrorBoundary'
 import RequireGuest from './components/RequireGuest'
 import { SkeletonPage } from './components/ui/Skeleton'
 
-/* Discover is the entry point for every visitor, so it loads eagerly.
+/* The landing page is the front door of the website, so it loads eagerly.
    Everything else is split to keep first paint fast on mobile. */
-import Discover from './pages/Discover'
+import Landing from './pages/Landing'
 import GuestLink from './pages/GuestLink'
 
+const Discover = lazy(() => import('./pages/Discover'))
 const Access = lazy(() => import('./pages/Access'))
 const Vitoria = lazy(() => import('./pages/Vitoria'))
 const Explore = lazy(() => import('./pages/Explore'))
@@ -50,10 +52,19 @@ export default function App() {
           {/* Standalone entry points */}
           <Route path="/access" element={<Access />} />
           <Route path="/guest/:guestId" element={<GuestLink />} />
+          {/* Older host-generated links used /stay/:slug. Keep them working. */}
+          <Route path="/stay/:guestId" element={<GuestLink />} />
+
+          {/* ---------------- The public website ---------------- */}
+          {/* Header + hero + footer, no app chrome. This is what a first-time
+              visitor sees; the app shell begins once they step inside. */}
+          <Route element={<MarketingLayout />}>
+            <Route index element={<Landing />} />
+          </Route>
 
           <Route element={<AppLayout />}>
-            {/* ---------------- Public: the destination ---------------- */}
-            <Route index element={<Discover />} />
+            {/* ---------------- Browse the destination ---------------- */}
+            <Route path="/discover" element={<Discover />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/experiences/:slug" element={<ExperienceDetail />} />
             <Route path="/map" element={<MapPage />} />
@@ -102,7 +113,7 @@ export default function App() {
             <Route path="/settings" element={<Settings />} />
 
             {/* Aliases kept so older links never dead-end */}
-            <Route path="/home" element={<Navigate to="/" replace />} />
+            <Route path="/home" element={<Navigate to="/discover" replace />} />
             <Route path="/orders" element={<Navigate to="/services" replace />} />
             <Route path="/property" element={<Navigate to="/my-stay" replace />} />
             <Route path="/login" element={<Navigate to="/access" replace />} />

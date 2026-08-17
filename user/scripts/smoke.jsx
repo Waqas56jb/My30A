@@ -23,21 +23,47 @@ setLatency(0, 0)
 
 const viewport = globalThis.__SMOKE_VIEWPORT__ ?? 'mobile'
 
-/** route -> a string that only appears once the page has really rendered. */
+const SLUG_KEY = 'my30a.guest.v1.guestSlug'
+
+/** Public browsing has no stay attached; guest routes need an unlocked one. */
+const setSession = (unlocked) => {
+  if (unlocked) window.localStorage.setItem(SLUG_KEY, JSON.stringify('demo'))
+  else window.localStorage.removeItem(SLUG_KEY)
+}
+
+/**
+ * [route, expected copy, mode]
+ * mode: 'public' (default), 'guest' (seed a stay), or 'gated' (guest route
+ * visited without a stay, which must explain itself rather than dead-end).
+ */
 const ROUTES = [
-  ['/', 'personal concierge'],
-  ['/guest/demo', 'Welcome to 30A'],
-  ['/guest/daniel', 'Welcome to 30A'],
-  ['/guest/nope', 'This link is not active'],
-  ['/home', 'Vitoria is here to make your stay effortless'],
-  ['/vitoria', 'Your 30A local concierge'],
+  // ---- The public website ----
+  ['/', 'Experience 30A like a local'],
+  ['/', 'Experience 30A like a local', 'guest'],
+
+  // ---- Public destination experience (inside the app shell) ----
+  ['/discover', 'Staying on 30A'],
   ['/explore', 'Browse by category'],
+  ['/experiences/bonfires', 'Make tonight unforgettable'],
+  ['/experiences/golf-carts', 'Explore 30A your way'],
+  ['/experiences/biking', 'Ride through 30A'],
+  ['/experiences/boating', 'Out on the water'],
+  ['/experiences/wellness', 'Start slow'],
+  ['/experiences/family', 'Everyone happy'],
+  ['/experiences/photography', 'Golden hour'],
+  ['/experiences/golf', 'An early tee time'],
+  ['/experiences/shopping', 'An afternoon off the sand'],
+  ['/experiences/outdoor', 'Get properly outside'],
   ['/map', 'place'],
+  ['/search', 'Try one of these'],
+  ['/favorites', 'Saved places'],
+  ['/help', 'Common questions'],
+  ['/vitoria', 'Your 30A local concierge'],
   ['/restaurants', 'restaurant'],
   ['/restaurants/rest_great_southern', 'Great Southern Cafe'],
   ['/restaurants/nope', 'open this listing'],
   ['/partners', 'Local partners'],
-  ['/partners/partner_bike_beachside', 'Beachside Bike Rentals'],
+  ['/partners/partner_golfcart_30a', '30A Golf Cart Rentals'],
   ['/partners/nope', 'open this listing'],
   ['/beaches', 'Beach guide'],
   ['/beaches/beach_inlet', 'Inlet Beach Regional Access'],
@@ -45,23 +71,43 @@ const ROUTES = [
   ['/events', 'By day'],
   ['/events/event_seaside_concert', 'Seaside Summer Concert Series'],
   ['/events/nope', 'open this event'],
-  ['/services', 'Arrange something'],
-  ['/groceries', 'Arrive to a full kitchen'],
-  ['/groceries/new', 'When would you like it?'],
-  ['/groceries/GR-1024', 'Grocery request GR-1024'],
-  ['/groceries/nope', 'find that request'],
-  ['/transfers', 'Met at baggage claim'],
-  ['/transfers/new', 'Estimated price'],
-  ['/transfers/TR-2048', 'Transfer TR-2048'],
-  ['/transfers/nope', 'find that transfer'],
-  ['/my-stay', 'House rules'],
-  ['/my-trip', 'Saved places'],
   ['/notifications', 'Notifications'],
-  ['/profile', 'Preferences'],
   ['/settings', 'Prototype tools'],
-  ['/orders', 'Arrange something'],
-  ['/property', 'House rules'],
   ['/nope', 'find that page'],
+
+  // ---- Access ----
+  ['/access', 'Unlock your stay'],
+  ['/guest/demo', 'House rules', 'public'],
+  ['/guest/nope', 'This link is not active'],
+  ['/stay/demo', 'House rules', 'public'],
+
+  // ---- Guest routes without a stay: must explain, never dead-end ----
+  ['/my-stay', 'Enter your code', 'gated'],
+  ['/services', 'Enter your code', 'gated'],
+  ['/groceries', 'Enter your code', 'gated'],
+  ['/transfers/new', 'Enter your code', 'gated'],
+  ['/profile', 'Enter your code', 'gated'],
+
+  // ---- Guest routes with an unlocked stay ----
+  ['/my-stay', 'House rules', 'guest'],
+  ['/my-trip', 'Saved places', 'guest'],
+  ['/profile', 'Preferences', 'guest'],
+  ['/services', 'Arrange something', 'guest'],
+  ['/groceries', 'Arrive to a full kitchen', 'guest'],
+  ['/groceries/new', 'When would you like it?', 'guest'],
+  ['/groceries/GR-1024', 'Grocery request GR-1024', 'guest'],
+  ['/groceries/nope', 'find that request', 'guest'],
+  ['/transfers', 'Met at baggage claim', 'guest'],
+  ['/transfers/new', 'Estimated price', 'guest'],
+  ['/transfers/TR-2048', 'Transfer TR-2048', 'guest'],
+  ['/transfers/nope', 'find that transfer', 'guest'],
+  ['/discover', 'Welcome back', 'guest'],
+
+  // ---- Redirect aliases ----
+  ['/home', 'Staying on 30A'],
+  ['/orders', 'Enter your code', 'gated'],
+  ['/property', 'Enter your code', 'gated'],
+  ['/login', 'Unlock your stay'],
 ]
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -82,6 +128,9 @@ console.error = (...args) => {
   const text = args.map(String).join(' ')
   if (
     text.includes('unique "key"') ||
+    text.includes('same key') ||
+    text.includes('Keys should be unique') ||
+    text.includes('Each child in a list') ||
     text.includes('validateDOMNesting') ||
     text.includes('cannot appear as a descendant') ||
     text.includes('React does not recognize') ||
@@ -98,7 +147,8 @@ console.error = (...args) => {
 async function main() {
   let failures = 0
 
-  for (const [route, expected] of ROUTES) {
+  for (const [route, expected, mode = 'public'] of ROUTES) {
+    setSession(mode === 'guest')
     const container = document.createElement('div')
     document.body.appendChild(container)
     const root = createRoot(container)
@@ -132,10 +182,10 @@ async function main() {
       const newWarnings = consoleErrors.slice(before)
       if (newWarnings.length > 0) throw new Error(`react warning: ${newWarnings[0]}`)
 
-      console.log(`  ok   ${route.padEnd(38)} ${text.length} chars`)
+      console.log(`  ok   ${route.padEnd(34)} ${mode.padEnd(6)} ${text.length} chars`)
     } catch (error) {
       failures += 1
-      console.log(`  FAIL ${route.padEnd(38)} ${error.message}`)
+      console.log(`  FAIL ${route.padEnd(34)} ${mode.padEnd(6)} ${error.message}`)
     } finally {
       // eslint-disable-next-line no-await-in-loop
       await act(async () => {

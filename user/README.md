@@ -29,9 +29,12 @@ npm run dev          # http://localhost:5173
 | `npm test` | Route smoke test + interaction tests (see [Testing](#testing)) |
 | `npm run test:images` | Checks every remote image URL still resolves |
 
-Start at `/` and pick a demo guest, or go straight to **`/guest/demo`** (Sarah at Rosemary Beach
-House, 20–27 August 2026). A second link, `/guest/daniel`, resolves a different guest and property so
-you can see the app adapt.
+**Two layers, one app.** `/` is the public destination experience — anyone can browse the beaches,
+bonfires, golf carts, partners, map, and Vitoria without an account. The property layer (My Stay,
+groceries, transfers, trip) unlocks with the access code a host sends: try **`MY30A-8842`** on
+[`/access`](http://localhost:5173/access), or open the link form directly at **`/guest/demo`**
+(Sarah at Rosemary Beach House, 20–27 August 2026). `/guest/daniel` resolves a different guest and
+property so you can see the app adapt.
 
 ---
 
@@ -53,7 +56,9 @@ user/
     │   ├── cards/              # PlaceCard, CategoryCard, EventCard, ServiceCard, …
     │   ├── chat/               # ChatBubble, ChatComposer, TypingIndicator
     │   ├── map/MapPanel.jsx
-    │   ├── nav/Navigation.jsx  # Sidebar, TopBar, MobileBottomNav
+    │   ├── nav/Navigation.jsx  # Sidebar, TopBar, MobileBottomNav (app shell)
+    │   ├── nav/SiteHeader.jsx  # public website header + full-screen menu
+    │   ├── SiteFooter.jsx      # public website footer
     │   ├── service/PaymentPanel.jsx
     │   ├── ui/                 # design-system primitives
     │   ├── ContextRail.jsx
@@ -61,7 +66,9 @@ user/
     ├── context/AppContext.jsx  # guest session, notifications, saved places, toasts
     ├── data/                   # all mock data, one file per entity
     ├── hooks/                  # useAsync, useVisualViewport, useMediaQuery, …
-    ├── layouts/AppLayout.jsx   # responsive shell
+    ├── layouts/
+    │   ├── MarketingLayout.jsx # public website shell: header + page + footer
+    │   └── AppLayout.jsx       # app shell: sidebar / top bar / tab bar
     ├── pages/                  # one file per route
     ├── services/               # mockApi, vitoriaService, analytics
     ├── styles/                 # tokens, base, layout, components, chat, pages
@@ -77,34 +84,64 @@ user/
 
 All routes are implemented and tested — none are placeholders.
 
+There are **two shells**, and the split matters:
+
+- **`MarketingLayout`** — the public website. Site header floating over the video
+  hero, content, site footer. No sidebar, no tab bar. This is `/`.
+- **`AppLayout`** — the product. Sidebar on desktop, top bar + bottom tabs on
+  mobile. Everything from `/discover` onwards.
+
+A visitor lands on the website, unlocks their stay at `/access`, and is handed
+to `/discover` inside the app. Signing out returns them to `/`.
+
+**The public website.**
+
 | Route | Page |
 | --- | --- |
-| `/` | Landing / guest-link entry |
-| `/guest/:guestId` | Resolves the guest link and seeds the session |
-| `/home` | Guest dashboard |
-| `/vitoria` | AI concierge conversation |
+| `/` | Landing page: full-bleed auto-playing video hero, experience grid, spotlights, watchable video section, how it works, Vitoria band, restaurants, events, service catalogue, testimonials, conversion band |
+
+**Browsing the destination (app shell).** No code required.
+
+| Route | Page |
+| --- | --- |
+| `/discover` | App home: stay header when unlocked, Vitoria prompt, quick actions, in-progress services, personal picks, nearby restaurants, events |
 | `/explore` | Explore 30A (categories, search, list/map) |
-| `/map` | Full map experience with layer filters |
+| `/experiences/:slug` | Lifestyle pages — bonfires, golf-carts, biking, boating, wellness, family, photography, golf, shopping, outdoor |
+| `/map` | Map experience with layer filters |
+| `/search` | Global search across places and experiences |
+| `/favorites` | Saved places (stored on the device) |
+| `/help` | FAQs and contact |
+| `/vitoria` | AI concierge conversation |
 | `/restaurants` · `/restaurants/:id` | Restaurant list and detail |
 | `/partners` · `/partners/:id` | Partner directory and detail (`?category=` supported) |
 | `/beaches` · `/beaches/:id` | Beach guide and detail |
 | `/events` · `/events/:id` | Events by day and detail |
+| `/notifications` · `/settings` | Notification centre, settings + prototype tools |
+| `*` | Not-found page |
+
+**Guest — their stay.** Behind the access code; visiting without one shows an explanation and a way
+in, never a dead end or a silent redirect.
+
+| Route | Page |
+| --- | --- |
+| `/access` | Enter an access code, scan concept, demo stays |
+| `/guest/:guestId` | Resolves a host link and unlocks the stay |
+| `/my-stay` | Property information |
 | `/services` | Service catalogue + My Services |
 | `/groceries` · `/groceries/new` · `/groceries/:id` | Grocery list, request wizard, tracking |
 | `/transfers` · `/transfers/new` · `/transfers/:id` | Transfer list, request form, tracking |
-| `/my-stay` | Property information |
-| `/my-trip` | Trip overview, saved places, preferences, stay rating |
-| `/notifications` | Notification centre |
-| `/profile` · `/settings` | Guest profile and settings |
-| `/orders` → `/services`, `/property` → `/my-stay` | Convenience redirects |
-| `*` | Not-found page |
+| `/my-trip` · `/profile` | Trip overview, saved places, preferences, stay rating |
+
+Aliases: `/home` → `/discover`, `/login` → `/access`, `/orders` → `/services`, `/property` →
+`/my-stay`.
 
 ---
 
 ## 3. Major components
 
-**Layout & navigation** — `AppLayout`, `Sidebar`, `TopBar`, `MobileBottomNav`, `PageHeader`,
-`Breadcrumbs`, `StickyBar`, `ContextRail`, `ErrorBoundary`
+**Layout & navigation** — `AppLayout`, `Sidebar`, `TopBar`, `MobileBottomNav`, `MobileDrawer`,
+`PageHeader`, `Breadcrumbs`, `StickyBar`, `ContextRail`, `SiteFooter`, `RequireGuest`,
+`ErrorBoundary`
 
 **UI primitives** (`components/ui`) — `Button` (+`PrimaryButton`/`SecondaryButton`/`GhostButton`/
 `IconButton`), `SmartImage`, `Modal`, `ConfirmModal`, `BottomSheet`, `Lightbox`, `Toaster`,
@@ -114,8 +151,8 @@ All routes are implemented and tested — none are placeholders.
 `PriceDisplay`, `MetaRow`, `Avatar`, `CopyField`, `DefinitionList`, `Timeline`, `Section`, `Callout`,
 `ScrollRow`, `ImageGallery`, `Icon`
 
-**Cards** — `PlaceCard` (+ `RestaurantCard`, `PartnerCard`, `BeachCard`), `CategoryCard`,
-`EventCard`, `ServiceCard`, `OrderCard`, `NotificationItem`, `RecommendationCard`
+**Cards** — `ExperienceTile`, `PlaceCard` (+ `RestaurantCard`, `PartnerCard`, `BeachCard`),
+`CategoryCard`, `EventCard`, `ServiceCard`, `OrderCard`, `NotificationItem`, `RecommendationCard`
 
 **Chat** — `ChatBubble` (with entity mini-cards and inline actions), `TypingIndicator`,
 `DateSeparator`, `ChatComposer`, `SuggestedPrompts`
@@ -133,10 +170,11 @@ components.
 
 | Export | Contents |
 | --- | --- |
-| `mockGuests` | Guests, stay window, preferences, **Vitoria memories**, saved places |
+| `experiences` | 13 lifestyle categories: hero photo, invitation copy, highlights, and which partner categories to list |
+| `mockGuests` | Guests, stay window, preferences, **Vitoria memories**, saved places, access codes |
 | `mockProperties` | Property, WiFi, access codes, check-in/out steps, rules, host, emergency |
 | `mockRestaurants` | 14 restaurants with cuisine, hours, price level, distance |
-| `mockPartners` | 21 partners across Golf, Boating, Photography, Bonfires, Bike Rentals, Wellness & Spa, Family Services, Babysitters, Activities, Transportation, Shopping |
+| `mockPartners` | 23 partners across Golf Carts, Bike Rentals, Bonfires, Boating, Golf, Photography, Wellness & Spa, Family Services, Babysitters, Activities, Transportation, Shopping |
 | `mockBeaches` | 6 accesses with parking, amenities, walk time |
 | `mockEvents` | 8 events inside the demo stay window |
 | `mockGroceryOrders` / `mockTransfers` | Requests with timelines and payment state |
@@ -224,7 +262,7 @@ restores the shipped fixtures.
 Two harnesses run the real application in jsdom.
 
 ```bash
-npm test                                  # 37 routes + 21 interaction flows
+npm test                                  # 59 routes + 40 interaction flows
 SMOKE_VIEWPORT=desktop npm run test:routes # same routes at desktop widths
 ```
 
@@ -236,44 +274,102 @@ nesting are treated as failures.
 suggested prompts with entity cards, both request wizards including every validation branch, status
 progression, mock card authorisation, tipping, rating, cancellation with confirmation, filters,
 search empty states, map list/map toggle, map pin sheets, Escape-to-close dialogs, saving places,
-marking notifications read, editing preferences, and API-failure/retry recovery.
+marking notifications read, editing preferences, and API-failure/retry recovery. It also guards the
+website/app split: `/` must render the site header and footer and must *not* leak the sidebar, top
+bar or tab bar; unlocking a code must hand the guest to `/discover` inside the app shell; and signing
+out must return them to the public landing page with the app chrome gone.
 
 **Images** (`scripts/check-images.mjs`) — verifies all 67 registry URLs still return an image.
 
-Current status: **37/37 routes (mobile and desktop), 21/21 flows, 67/67 images**, clean console,
+Current status: **59/59 routes (mobile and desktop), 40/40 flows, 88/88 images**, clean console,
 production build succeeds.
 
 ---
 
 ## 8. Responsive & mobile notes
 
-- **Mobile** — bottom tab bar, full-width cards, bottom sheets, ≥44px touch targets, safe-area insets
-  on every fixed surface.
-- **Tablet** — the mobile shell with multi-column grids.
+- **Mobile** — top bar with a **slide-in drawer** for everything the five bottom tabs cannot hold,
+  full-width cards, bottom sheets, ≥44px touch targets, safe-area insets on every fixed surface.
+  The drawer traps focus, closes on Escape, on backdrop tap, and on navigation.
+- **Tablet** — the mobile shell (drawer included) with multi-column grids. iPad portrait uses the
+  drawer; landscape crosses 1024px and gets the sidebar.
 - **Desktop (≥1024px)** — persistent sidebar, scrollable main column, sticky detail asides. Not a
   stretched mobile layout.
-- **Wide (≥1360px)** — a contextual right rail on Home and Vitoria (conditions, stay, in-progress
-  services, remembered preferences).
+- **Wide (≥1360px)** — a contextual right rail on Discover and Vitoria (conditions, stay,
+  in-progress services, remembered preferences).
+
+Icons emit explicit `width`/`height` attributes, so a glyph dropped into a container without a
+sizing rule renders at 20px rather than expanding to fill the row — CSS rules and the `size` prop
+still override it.
 
 The chat deserves specific mention. `useVisualViewport` publishes the *visual* viewport height and
 offset to CSS, and the chat screen is pinned to it. That means the composer sits directly above the
-software keyboard rather than behind it, the thread stays scrollable, the tab bar hides while typing,
-the textarea uses a 16px font so iOS never zooms on focus, message text is selectable, long messages
-wrap, and Enter sends while Shift+Enter inserts a newline.
+software keyboard rather than behind it, the thread stays scrollable, the tab bar hides while
+typing, the textarea uses a 16px font so iOS never zooms on focus, message text is selectable, long
+messages wrap, and Enter sends while Shift+Enter inserts a newline.
+
+---
+
+## 8a. Landing page
+
+`/` is a standalone public website page inside `MarketingLayout` — **not** the app with a hero
+bolted on. It has its own fixed header (transparent over the video, solid once you scroll past it),
+its own full-screen mobile menu, and the site footer. The app sidebar and tab bar do not exist here.
+
+Order: full-bleed video hero → guest strip if unlocked → experiences grid → three editorial
+spotlights → **watch** → **how it works** → Vitoria band → restaurants → events →
+grocery/transfer pair → **everything in one place** (all 16 services, grouped) → **what guests say**
+→ unlock CTA → footer. Copy lives in [`src/data/mockLanding.js`](src/data/mockLanding.js) so it can
+be edited without touching layout.
+
+`/discover` is the *app* home and lives inside `AppLayout`. Its two-column layout (`page--railed`)
+is applied by React **only when the context rail actually renders** — a visitor without a stay gets
+the full width instead of an empty 336px column.
+
+**No sideways scrolling:** `body { overflow-x: hidden }` covers mobile, and `overflow-x: clip` on
+`.app-main` covers desktop — applied *inside* the 1024px block, because pairing `clip` with a
+`visible` axis coerces that axis to `auto` and would turn the element into a scroll container. Grid
+tracks use `minmax(0, …)` and grid children carry `min-width: 0`, since the default `min-width: auto`
+is what lets a wide child push a track past its container in the first place.
+
+## 8b. Landing page video
+
+Both players on `/` use the same YouTube video and read it from **one place**:
+[`src/config/video.js`](src/config/video.js).
+
+| Where | Behaviour |
+| --- | --- |
+| Hero background | Autoplays muted, loops, no controls, no keyboard, not a tab stop |
+| Video section (`#watch`) | Full controls, sound, `loading="lazy"`, fullscreen allowed |
+
+Both embeds carry `cc_load_policy=0` and `iv_load_policy=3`.
+
+**To swap in the client's own drone footage:** change `VIDEO_ID` in `src/config/video.js`. Both
+players update automatically — there is no second copy of the id anywhere.
+
+Two details worth keeping if the markup is ever touched: the still photograph stays painted
+underneath the hero video (so the headline is readable from the first frame and nothing breaks if
+the embed is blocked), and `.video-bg` sits at `z-index: -2` so the scrim at `-1` still darkens the
+footage. `loop=1` also requires `playlist=<same id>` — that is a YouTube quirk, not a typo. Visitors
+with reduced-motion enabled get the photograph alone.
 
 ---
 
 ## 9. Assumptions
 
-1. **The link is the credential.** `/guest/:guestId` resolves a guest from mock data with no auth, as
-   specified. Real token exchange belongs in `AppContext.loadSession`.
+1. **The code is the credential.** `/access` and `/guest/:guestId` resolve a guest from mock data
+   with no real auth. Token exchange belongs in `AppContext.unlockWithCode` / `loadSession`.
+   Everything about the destination stays public on purpose — the app has to sell 30A to someone who
+   has not booked yet.
 2. **Business details are illustrative.** Real 30A business names are used so the prototype reads
    authentically, but phone numbers are reserved fictional `555-01xx` numbers, and ratings, prices,
    and hours are invented. Replace them with licensed partner data before anything public.
-3. **Imagery is remote and unverified by eye.** All photos are Unsplash CDN URLs chosen per subject
-   and verified to resolve (`npm run test:images`); nothing copyrighted is committed. Every image
-   renders through `SmartImage`, so a failure degrades to a branded placeholder rather than a broken
-   layout. Worth one visual pass before a client demo.
+3. **Imagery is remote and subject-checked.** Every photo carrying a category (hero, bonfires, golf
+   carts, biking, boating, family, wellness, beaches) was sourced from Unsplash by subject and
+   *looked at* before being used — an earlier pass of guessed ids produced a studio bicycle and a
+   scuba diver, which is exactly the failure mode this brief cannot afford. All 88 URLs are checked
+   by `npm run test:images`, nothing copyrighted is committed, and `SmartImage` degrades to a
+   branded placeholder if one ever 404s.
 4. **The map is illustrative.** Real coordinates are projected onto a stylised coastal plan so the
    prototype needs no API key. `MapPanel`'s props are the same ones a Mapbox layer would take.
 5. **Weather, tides, and beach flags are static mock values**, not a live feed.

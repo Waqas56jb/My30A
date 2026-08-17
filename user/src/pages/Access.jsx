@@ -41,13 +41,17 @@ export default function Access() {
       return
     }
     pushToast({ tone: 'success', title: 'Stay unlocked', message: 'Everything is ready for you.' })
-    navigate('/my-stay')
+    /* Unlocking is the step that takes a visitor off the public website and
+       into the app, so land them on the app home rather than a sub-page. */
+    navigate('/discover')
   }
 
   const useDemo = (slug) => {
     unlockWithCode(slug)
     pushToast({ tone: 'success', title: 'Stay unlocked' })
-    navigate('/my-stay')
+    /* Unlocking is the step that takes a visitor off the public website and
+       into the app, so land them on the app home rather than a sub-page. */
+    navigate('/discover')
   }
 
   return (
@@ -84,8 +88,11 @@ export default function Access() {
                 This device is unlocked for {guest.firstName}&apos;s stay.
               </p>
             </div>
-            <Button to="/my-stay" size="lg" block iconRight="arrowRight">
-              Go to My Stay
+            <Button to="/discover" size="lg" block iconRight="arrowRight">
+              Continue to your stay
+            </Button>
+            <Button to="/my-stay" variant="secondary" block icon="key">
+              Property details
             </Button>
           </>
         ) : (

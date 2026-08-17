@@ -44,6 +44,9 @@ export function clearAll() {
 }
 
 export const STORAGE_KEYS = {
+  session: 'session',
+  accounts: 'accounts',
+  resetTokens: 'resetTokens',
   guestSlug: 'guestSlug',
   messages: 'messages',
   groceryOrders: 'groceryOrders',
