@@ -5,7 +5,7 @@
   "functions": {
     "api/index.ts": {
       "maxDuration": 10,
-      "includeFiles": "src/prompts/**"
+      "includeFiles": "src/**"
     }
   }
 }
