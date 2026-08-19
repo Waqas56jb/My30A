@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import helmetImport from 'helmet';
+import rateLimitImport from 'express-rate-limit';
 import { resolve } from 'node:path';
 import { corsOrigins, env } from './config/env.js';
 import { requestId } from './middleware/requestId.js';
@@ -12,6 +12,10 @@ import { openaiHealth } from './integrations/openai/openai.js';
 import { emailVerified } from './integrations/email/emailService.js';
 import { hasServiceRole } from './config/env.js';
 import { getIo } from './sockets/io.js';
+import { middlewareFactory } from './utils/middlewareFactory.js';
+
+const helmet = middlewareFactory(helmetImport);
+const rateLimit = middlewareFactory(rateLimitImport);
 
 export function createApp() {
   const app = express();
