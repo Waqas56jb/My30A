@@ -86,30 +86,68 @@ export const guestById = (list, id) => list.find((g) => g.id === id) ?? null
  * records exist for them, so the timeline can never claim something the rest
  * of the panel disagrees with.
  */
-export function buildGuestTimeline(guest, { orders = [], transfers = [], conversations = [], payments = [] }) {
+const asLabel = (value, fallback = '') => {
+  if (value == null || value === '') return fallback
+  return String(value).replace(/_/g, ' ')
+}
+
+export function buildGuestTimeline(guest, { orders = [], transfers = [], conversations = [], payments = [] } = {}) {
+  if (!guest) return []
+  const stats = guest.stats ?? {}
   const events = [
     { at: guest.joinedAt, icon: 'user', title: 'Guest account created', body: `${guest.name} · ${guest.email}` },
-    { at: shiftTime(0, 9, 0, guest.checkIn), icon: 'mail', title: 'Welcome message sent', body: `Access details for ${guest.propertyName}` },
-  ]
+    guest.checkIn && {
+      at: shiftTime(0, 9, 0, guest.checkIn),
+      icon: 'mail',
+      title: 'Welcome message sent',
+      body: `Access details for ${guest.propertyName ?? 'the property'}`,
+    },
+  ].filter(Boolean)
 
-  conversations.slice(0, 3).forEach((c) => {
-    events.push({ at: c.createdAt, icon: 'sparkles', title: `Asked Vitoria about ${c.topic.toLowerCase()}`, body: `${c.messageCount} messages · ${c.status === 'escalated' ? 'escalated to the team' : 'resolved automatically'}` })
+  ;(Array.isArray(conversations) ? conversations : []).slice(0, 3).forEach((c) => {
+    events.push({
+      at: c.createdAt,
+      icon: 'sparkles',
+      title: `Asked Vitoria about ${asLabel(c.topic, 'the stay').toLowerCase()}`,
+      body: `${c.messageCount ?? 0} messages · ${c.status === 'escalated' ? 'escalated to the team' : 'resolved automatically'}`,
+    })
   })
 
-  orders.forEach((o) => {
-    events.push({ at: o.createdAt, icon: 'bag', title: 'Requested grocery delivery', body: `${o.id} · ${o.items.length} items · ${o.status.replace(/_/g, ' ')}` })
+  ;(Array.isArray(orders) ? orders : []).forEach((o) => {
+    const items = Array.isArray(o.items) ? o.items : []
+    events.push({
+      at: o.createdAt,
+      icon: 'bag',
+      title: 'Requested grocery delivery',
+      body: `${o.id} · ${items.length} items · ${asLabel(o.status, 'pending')}`,
+    })
   })
 
-  transfers.forEach((t) => {
-    events.push({ at: t.createdAt, icon: 'car', title: 'Requested an airport transfer', body: `${t.airport} · ${t.flightNumber} · ${t.status.replace(/_/g, ' ')}` })
+  ;(Array.isArray(transfers) ? transfers : []).forEach((t) => {
+    events.push({
+      at: t.createdAt,
+      icon: 'car',
+      title: 'Requested an airport transfer',
+      body: `${t.airport ?? ''} · ${t.flightNumber ?? ''} · ${asLabel(t.status, 'pending')}`.replace(/\s·\s·/g, ' · '),
+    })
   })
 
-  if (guest.stats.partnerViews > 0) {
-    events.push({ at: shiftTime(1, 15, 20, guest.checkIn), icon: 'eye', title: 'Browsed local partners', body: `${guest.stats.partnerViews} listings viewed, ${guest.stats.partnerClicks} outbound clicks` })
+  if (Number(stats.partnerViews) > 0 && guest.checkIn) {
+    events.push({
+      at: shiftTime(1, 15, 20, guest.checkIn),
+      icon: 'eye',
+      title: 'Browsed local partners',
+      body: `${stats.partnerViews} listings viewed, ${stats.partnerClicks ?? 0} outbound clicks`,
+    })
   }
 
-  payments.slice(0, 3).forEach((p) => {
-    events.push({ at: p.createdAt, icon: 'creditCard', title: `Payment ${p.status}`, body: `${p.id} · ${p.type.replace(/_/g, ' ')}` })
+  ;(Array.isArray(payments) ? payments : []).slice(0, 3).forEach((p) => {
+    events.push({
+      at: p.createdAt,
+      icon: 'creditCard',
+      title: `Payment ${asLabel(p.status, '')}`,
+      body: `${p.id} · ${asLabel(p.type, 'charge')}`,
+    })
   })
 
   if (guestStatus(guest) === 'checked_out') {

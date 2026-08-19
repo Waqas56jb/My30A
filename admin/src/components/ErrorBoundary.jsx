@@ -1,10 +1,7 @@
-import { Component } from 'react'
+import { Component, useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 
-/**
- * Last line of defence. A render error in one page should never leave the
- * guest staring at a white screen mid-holiday.
- */
-export default class ErrorBoundary extends Component {
+export class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
     this.state = { error: null }
@@ -16,47 +13,61 @@ export default class ErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     // eslint-disable-next-line no-console
-    console.error('[My30A] Unhandled UI error', error, info)
+    console.error('[My30A Admin] Unhandled UI error', error, info)
+  }
+
+  componentDidUpdate(prevProps) {
+    if (this.props.resetKey !== prevProps.resetKey && this.state.error) {
+      this.setState({ error: null })
+    }
   }
 
   render() {
     if (!this.state.error) return this.props.children
 
+    const message = this.state.error?.message || String(this.state.error)
+
     return (
       <div className="apage">
-        <div className="inline-empty" style={{ paddingTop: 'var(--sp-8)' }}>
-          {/* Deliberately distinct from ErrorState's "Something went wrong" — a
-              crashed screen and a failed request are different problems, and
-              the tests need to tell them apart. */}
-          <h1 style={{ fontSize: 'var(--fs-h1)', margin: 0 }}>This screen crashed</h1>
-          <p className="inline-empty__body">
-            An unexpected error stopped the page rendering. Reloading usually fixes it — if it keeps
-            happening, send the details below to the engineering team.
+        <div className="nf">
+          <h1 style={{ fontSize: 'var(--fs-h1)' }}>Something went wrong</h1>
+          <p className="u-small u-muted" style={{ maxWidth: '44ch' }}>
+            This screen hit an unexpected error. Try again or go back to operations.
           </p>
-          <div className="tone-row" style={{ justifyContent: 'center', marginTop: 'var(--sp-3)' }}>
-            <button type="button" className="btn" onClick={() => window.location.reload()}>
-              Reload the panel
+          {message && (
+            <p className="u-xs u-muted" style={{ maxWidth: '52ch', fontFamily: 'monospace' }}>
+              {message}
+            </p>
+          )}
+          <div className="u-row u-wrap" style={{ justifyContent: 'center' }}>
+            <button type="button" className="btn" onClick={() => this.setState({ error: null })}>
+              Try this page again
             </button>
-            <a className="btn btn--secondary" href="/admin/dashboard">
-              Back to the dashboard
+            <a className="btn btn--secondary" href="/admin">
+              Back to overview
             </a>
           </div>
-          {import.meta.env.DEV && (
-            <pre
-              style={{
-                marginTop: 24,
-                textAlign: 'left',
-                fontSize: '0.72rem',
-                color: 'var(--danger)',
-                whiteSpace: 'pre-wrap',
-                maxWidth: 720,
-              }}
-            >
-              {String(this.state.error?.stack ?? this.state.error)}
-            </pre>
-          )}
         </div>
       </div>
     )
   }
+}
+
+export default function RouteErrorBoundary({ children }) {
+  const location = useLocation()
+  const [gen, setGen] = useState(0)
+
+  useEffect(() => {
+    const hot = import.meta.hot
+    if (!hot) return undefined
+    const bump = () => setGen((n) => n + 1)
+    hot.on('vite:afterUpdate', bump)
+    return () => hot.off('vite:afterUpdate', bump)
+  }, [])
+
+  return (
+    <ErrorBoundary resetKey={`${location.pathname}${location.search}:${gen}`}>
+      {children}
+    </ErrorBoundary>
+  )
 }

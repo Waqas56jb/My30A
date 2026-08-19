@@ -1,19 +1,17 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import PageHeader from '../components/ui/PageHeader'
 import Icon from '../components/ui/Icon'
 import Button from '../components/ui/Button'
-import { Section, Callout, DefinitionList } from '../components/ui/Display'
+import { Section, DefinitionList } from '../components/ui/Display'
 import { Field, Input, Textarea } from '../components/ui/Form'
 import { SuccessState } from '../components/ui/States'
-import SiteFooter from '../components/SiteFooter'
 import { useApp } from '../context/AppContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const FAQS = [
   {
     q: 'How do I get an access code?',
-    a: 'Your host sends one with your booking confirmation, and there is usually a QR sticker inside the front door. It looks like MY30A-8842. Without it you can still browse everything about 30A — you just will not see your property details.',
+    a: 'Your host sends one with your booking confirmation, and there is usually a QR sticker inside the front door. It looks like MY30A-8842. Sign in first, then enter the code to see your property details.',
   },
   {
     q: 'Is Vitoria a real person?',
@@ -38,7 +36,7 @@ const FAQS = [
 ]
 
 export default function Help() {
-  const { property, pushToast, hasGuest } = useApp()
+  const { property, pushToast, hasGuest, isAuthed } = useApp()
   const [form, setForm] = useState({ name: '', email: '', message: '' })
   const [errors, setErrors] = useState({})
   const [sent, setSent] = useState(false)
@@ -64,7 +62,7 @@ export default function Help() {
   }
 
   return (
-    <div className="page">
+    <div className="site-page site-section">
       <PageHeader
         title="Help & contact"
         subtitle="How this works, and how to reach a human when you need one."
@@ -116,7 +114,12 @@ export default function Help() {
               ]}
             />
             <div className="u-row u-wrap" style={{ marginTop: 'var(--sp-4)' }}>
-              <Button size="sm" icon="sparkles" to="/vitoria">
+              <Button
+                size="sm"
+                icon="sparkles"
+                to={isAuthed ? '/vitoria' : '/login'}
+                state={isAuthed ? undefined : { from: '/vitoria' }}
+              >
                 Ask Vitoria first
               </Button>
               <Button
@@ -155,7 +158,13 @@ export default function Help() {
                   Unlock your stay with the code from your booking and your host&apos;s details appear
                   here, along with your WiFi, door code, and check-out steps.
                 </p>
-                <Button size="sm" to="/access" icon="key" style={{ marginTop: 'var(--sp-4)' }}>
+                <Button
+                  size="sm"
+                  to={isAuthed ? '/access' : '/login'}
+                  state={isAuthed ? undefined : { from: '/access' }}
+                  icon="key"
+                  style={{ marginTop: 'var(--sp-4)' }}
+                >
                   Enter your code
                 </Button>
               </>
@@ -217,16 +226,6 @@ export default function Help() {
         )}
       </Section>
 
-      <Callout icon="info" className="section">
-        This is a prototype — the contact form does not send anything yet, and no data leaves your
-        browser. See{' '}
-        <Link to="/settings" style={{ textDecoration: 'underline' }}>
-          Settings
-        </Link>{' '}
-        for the mock analytics log.
-      </Callout>
-
-      <SiteFooter />
     </div>
   )
 }

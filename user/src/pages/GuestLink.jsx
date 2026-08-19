@@ -4,39 +4,42 @@ import { useApp } from '../context/AppContext'
 import { SkeletonPage } from '../components/ui/Skeleton'
 import { ErrorState } from '../components/ui/States'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { getGuestBySlug } from '../data/mockGuests'
 
-/**
- * /guest/:guestId — the unique link a host shares after booking.
- *
- * There is no authentication yet: the slug resolves a guest + property from
- * mock data and seeds the session. When real auth lands, this component is
- * where the token exchange belongs.
- */
 export default function GuestLink() {
   const { guestId } = useParams()
-  const { setGuestSlug, guestSlug, status, error, reloadSession, isAuthed } = useApp()
-  const [ready, setReady] = useState(false)
+  const { unlockWithCode, status, error, reloadSession, isAuthed, hasGuest } = useApp()
+  const [failed, setFailed] = useState(false)
+  const [busy, setBusy] = useState(true)
   useDocumentTitle('Opening your stay')
 
-  const known = !!getGuestBySlug(guestId)
-
   useEffect(() => {
-    if (!known) return
-    if (guestId !== guestSlug) setGuestSlug(guestId)
-    setReady(true)
-  }, [guestId, guestSlug, setGuestSlug, known])
+    if (!isAuthed || !guestId) {
+      setBusy(false)
+      return
+    }
+    let cancelled = false
+    setBusy(true)
+    unlockWithCode(guestId).then((ok) => {
+      if (cancelled) return
+      setFailed(!ok)
+      setBusy(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [guestId, isAuthed, unlockWithCode])
 
-  if (!known) {
+  if (!isAuthed) return <Navigate to="/login" replace state={{ from: `/guest/${guestId}` }} />
+
+  if (failed) {
     return (
       <div className="page">
         <ErrorState
           title="This link is not active"
           error={{
-            message:
-              'We could not find a stay for this link. Check the link your host sent you, or open the demo stay.',
+            message: 'We could not find a stay for this link. Check the link your host sent you.',
           }}
-          onRetry={() => window.location.assign('/guest/demo')}
+          onRetry={reloadSession}
         />
       </div>
     )
@@ -50,13 +53,9 @@ export default function GuestLink() {
     )
   }
 
-  if (!ready || status === 'loading') return <SkeletonPage />
+  if (busy || status === 'loading') return <SkeletonPage />
 
-  /* The stay is now attached to this device. Someone arriving from a host's
-     link usually has no account yet, so send them to log in or sign up — the
-     stay is waiting on the other side, and `from` returns them to it. */
-  if (!isAuthed) return <Navigate to="/login" replace state={{ from: '/my-stay' }} />
+  if (!hasGuest) return <Navigate to="/access" replace />
 
-  // Land on the property, since that is what the link unlocked.
   return <Navigate to="/my-stay" replace />
 }

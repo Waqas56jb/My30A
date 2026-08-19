@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import Icon from './ui/Icon'
 import StatusBadge from './ui/StatusBadge'
-import { mockLocalConditions } from '../data/mockRecommendations'
 import { useApp } from '../context/AppContext'
+import { useAsync } from '../hooks/useAsync'
+import * as api from '../services/mockApi'
+import { EMPTY_CONDITIONS } from '../services/liveApi'
 import { formatShortDate, formatDateRange } from '../utils/format'
 
 /**
@@ -12,7 +14,8 @@ import { formatShortDate, formatDateRange } from '../utils/format'
  */
 export default function ContextRail({ activeOrders = [] }) {
   const { guest, property } = useApp()
-  const { weather, water, beachFlag, sunset, sunrise, tide } = mockLocalConditions
+  const conditions = useAsync(() => api.getWeather(), [])
+  const { weather, water, beachFlag, sunset, sunrise, tide } = conditions.data ?? EMPTY_CONDITIONS
 
   return (
     <aside className="rail" aria-label="Trip context">

@@ -51,7 +51,7 @@ export default function Restaurants() {
     <div className="page">
       <PageHeader
         title="Restaurants"
-        subtitle="From a two-minute walk to the drive that’s worth it."
+        subtitle="Each restaurant has its own reservation path. Restaurants are not My30A partners."
         back
         backTo="/explore"
         breadcrumbs={[{ label: 'Explore', to: '/explore' }, { label: 'Restaurants' }]}

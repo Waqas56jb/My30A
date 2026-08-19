@@ -85,6 +85,12 @@
   margin-left: 2px;
 }
 
+@media (max-width: 420px) {
+  .htop__brand-tag {
+    display: none;
+  }
+}
+
 .htop__actions {
   margin-left: auto;
   display: flex;

@@ -1,9 +1,13 @@
 import { useState } from 'react'
+import { SkeletonGrid } from '../../components/ui/Skeleton'
+import { ErrorState } from '../../components/ui/States'
 import { PageHeader, Panel, Grid, Stat, ReferralNote } from '../../components/common/AdminUI'
 import { TrendChart, BarChart } from '../../components/charts/Charts'
 import RangeFilter, { ChartNote } from '../../components/charts/RangeFilter'
+import { useLoad } from '../../hooks/useTable'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { series, seriesDelta, GUEST_FUNNEL, SERVICE_FUNNEL } from '../../data/analytics'
+import * as api from '../../services/adminApi'
+import { topicBreakdown } from '../../data/conversations'
 import { formatNumber } from '../../utils/format'
 import { cx } from '../../utils/format'
 
@@ -33,14 +37,46 @@ function Funnel({ steps, note }) {
   )
 }
 
+const sumSeries = (rows) => (rows ?? []).reduce((total, point) => total + (Number(point.value) || 0), 0)
+
 export default function GuestAnalytics() {
   useDocumentTitle('Guest analytics')
   const [range, setRange] = useState('30d')
 
-  const visits = seriesDelta('visits', range)
-  const conversations = seriesDelta('conversations', range)
-  const clicks = seriesDelta('partnerClicks', range)
-  const requests = seriesDelta('requests', range)
+  const overview = useLoad(() => api.getOverview(), [])
+  const convos = useLoad(() => api.getAllConversations(), [])
+  const orders = useLoad(() => api.getOrders({ pageSize: 500 }), [])
+  const transfers = useLoad(() => api.getTransfers({ pageSize: 500 }), [])
+  const visitSeries = useLoad(() => api.getInsightSeries('visits', range), [range])
+  const convoSeries = useLoad(() => api.getInsightSeries('conversations', range), [range])
+  const clickSeries = useLoad(() => api.getInsightSeries('partnerClicks', range), [range])
+  const requestSeries = useLoad(() => api.getInsightSeries('requests', range), [range])
+
+  const loading = [overview, convos, orders, transfers].some((item) => item.loading)
+  if (loading) return <SkeletonGrid count={6} columns="grid--3" />
+  if (overview.error) return <ErrorState error={overview.error} onRetry={overview.reload} />
+
+  const t = overview.data?.totals ?? {}
+  const conversations = convos.data ?? []
+  const grocery = orders.data?.rows ?? []
+  const rides = transfers.data?.rows ?? []
+
+  const guestFunnel = [
+    { label: 'Guests with an active stay', value: t.activeGuests ?? 0 },
+    { label: 'Talked to Vitoria', value: conversations.length },
+    { label: 'Partner interactions', value: t.partnerClicks ?? 0 },
+    { label: 'Service requests', value: grocery.length + rides.length, terminal: true },
+  ]
+
+  const serviceFunnel = [
+    { label: 'Talked to Vitoria', value: conversations.length },
+    { label: 'Created a service request', value: grocery.length + rides.length },
+    { label: 'Request confirmed', value: [...grocery, ...rides].filter((r) => !['pending', 'cancelled', 'no_show'].includes(r.status)).length },
+    { label: 'Service completed', value: grocery.filter((r) => r.status === 'delivered').length + rides.filter((r) => r.status === 'completed').length },
+    { label: 'Left a tip', value: [...grocery, ...rides].filter((r) => Number(r.tipAmount) > 0).length, terminal: true },
+  ]
+
+  const topics = topicBreakdown(conversations)
 
   return (
     <div className="apage">
@@ -51,18 +87,19 @@ export default function GuestAnalytics() {
       />
 
       <div className="astats">
-        <Stat label="App visits" value={visits.now} change={visits.change} icon="eye" tone="sea" />
-        <Stat label="Conversations" value={conversations.now} change={conversations.change} icon="message" tone="gold" />
-        <Stat label="Partner interactions" value={clicks.now} change={clicks.change} icon="navigation" tone="info" />
-        <Stat label="Service requests" value={requests.now} change={requests.change} icon="clock" tone="success" />
+        <Stat label="App visits" value={sumSeries(visitSeries.data) || t.guests} icon="eye" tone="sea" />
+        <Stat label="Conversations" value={sumSeries(convoSeries.data) || conversations.length} icon="message" tone="gold" />
+        <Stat label="Partner interactions" value={sumSeries(clickSeries.data) || t.partnerClicks} icon="navigation" tone="info" />
+        <Stat label="Service requests" value={sumSeries(requestSeries.data) || grocery.length + rides.length} icon="clock" tone="success" />
       </div>
 
       <Grid cols={2}>
         <Panel title="App visits">
-          <TrendChart data={series('visits', range)} label="Visits" height={180} />
+          <TrendChart data={visitSeries.data ?? []} label="Visits" height={180} />
+          <ChartNote>Recorded guest app events in this range. Empty until the guest app posts analytics events.</ChartNote>
         </Panel>
         <Panel title="Vitoria conversations">
-          <TrendChart data={series('conversations', range)} label="Conversations" height={180} />
+          <TrendChart data={convoSeries.data ?? []} label="Conversations" height={180} />
         </Panel>
       </Grid>
 
@@ -72,7 +109,7 @@ export default function GuestAnalytics() {
           subtitle="From arriving in the app to leaving it for a local business."
         >
           <Funnel
-            steps={GUEST_FUNNEL}
+            steps={guestFunnel}
             note="The funnel stops at the outbound click on purpose. What happens on the partner's phone line or website is not ours to measure."
           />
           <div style={{ marginTop: 'var(--sp-4)' }}>
@@ -85,30 +122,18 @@ export default function GuestAnalytics() {
           subtitle="From a question to a completed job with a tip and a review."
         >
           <Funnel
-            steps={SERVICE_FUNNEL}
-            note="These are services My30A runs itself, so every step is observable — including whether the guest tipped and rated."
+            steps={serviceFunnel}
+            note="These are services My30A runs itself, so every step is observable — including whether the guest tipped."
           />
         </Panel>
       </Grid>
 
-      <Panel title="Local Guide views by section">
-        <BarChart
-          data={[
-            { label: 'Restaurants', value: 4820 },
-            { label: 'Beaches', value: 4210 },
-            { label: 'Golf carts', value: 3640 },
-            { label: 'Bikes', value: 2910 },
-            { label: 'Bonfires', value: 2380 },
-            { label: 'Boating', value: 1940 },
-            { label: 'Family', value: 1620 },
-            { label: 'Wellness', value: 1180 },
-            { label: 'Photography', value: 940 },
-            { label: 'Events', value: 780 },
-          ]}
-          label="Local Guide section views"
-          height={200}
-        />
-        <ChartNote>Screen views inside the guest app, not outbound clicks.</ChartNote>
+      <Panel title="What guests ask Vitoria" subtitle="Topics inferred from live conversation messages.">
+        {topics.length === 0 ? (
+          <ChartNote>No conversations yet.</ChartNote>
+        ) : (
+          <BarChart data={topics} label="Conversation topics" height={200} />
+        )}
       </Panel>
     </div>
   )

@@ -20,8 +20,8 @@ export default function ServiceAnalytics() {
   if (orders.loading || transfers.loading) return <SkeletonGrid count={6} columns="grid--3" />
   if (orders.error) return <ErrorState error={orders.error} onRetry={orders.reload} />
 
-  const o = orders.data.rows
-  const t = transfers.data.rows
+  const o = orders.data?.rows ?? []
+  const t = transfers.data?.rows ?? []
 
   const deliveredOrders = o.filter((x) => x.status === 'delivered')
   const cancelledOrders = o.filter((x) => x.status === 'cancelled')
@@ -29,13 +29,13 @@ export default function ServiceAnalytics() {
   const cancelledTransfers = t.filter((x) => ['cancelled', 'no_show'].includes(x.status))
 
   const orderValue = deliveredOrders.reduce(
-    (sum, x) => sum + (x.actualAmount ?? x.estimatedAmount) + x.serviceFee,
+    (sum, x) => sum + (Number(x.actualAmount ?? x.estimatedAmount) || 0) + (Number(x.serviceFee) || 0),
     0,
   )
-  const transferValue = completedTransfers.reduce((sum, x) => sum + x.amount, 0)
+  const transferValue = completedTransfers.reduce((sum, x) => sum + (Number(x.amount) || 0), 0)
   const tips =
-    deliveredOrders.reduce((sum, x) => sum + x.tipAmount, 0) +
-    completedTransfers.reduce((sum, x) => sum + x.tipAmount, 0)
+    deliveredOrders.reduce((sum, x) => sum + (Number(x.tipAmount) || 0), 0) +
+    completedTransfers.reduce((sum, x) => sum + (Number(x.tipAmount) || 0), 0)
 
   const completionRate =
     (deliveredOrders.length + completedTransfers.length) / Math.max(1, o.length + t.length)
@@ -47,9 +47,18 @@ export default function ServiceAnalytics() {
     value: t.filter((x) => x.airport === code).length,
   }))
 
-  const groceryStatuses = ['pending', 'confirmed', 'paid', 'shopping', 'on_the_way', 'delivered', 'cancelled'].map(
-    (status) => ({ label: status.replace(/_/g, ' '), value: o.filter((x) => x.status === status).length }),
-  )
+  const groceryStatuses = [
+    ['pending', 'Pending'],
+    ['confirmed', 'Confirmed'],
+    ['paid', 'Paid'],
+    ['shopping', 'Shopping'],
+    ['on_the_way', 'En route'],
+    ['delivered', 'Delivered'],
+    ['cancelled', 'Cancelled'],
+  ].map(([status, label]) => ({
+    label,
+    value: o.filter((x) => x.status === status).length,
+  }))
 
   return (
     <div className="apage">

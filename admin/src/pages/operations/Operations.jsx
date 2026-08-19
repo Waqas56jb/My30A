@@ -83,11 +83,11 @@ export default function Operations() {
           {schedule.loading && <SkeletonList count={4} />}
           {schedule.error && <ErrorState error={schedule.error} onRetry={schedule.reload} />}
           {schedule.data && (
-            schedule.data.transfers.length === 0 ? (
+            (schedule.data.transfers ?? []).length === 0 ? (
               <InlineEmpty icon="car" title="No transfers scheduled" />
             ) : (
               <ul className="activity">
-                {schedule.data.transfers.map((t) => (
+                {(schedule.data.transfers ?? []).map((t) => (
                   <li className="activity__row" key={t.id}>
                     <span className="activity__icon" aria-hidden="true"><Icon name="car" size={15} /></span>
                     <span style={{ minWidth: 0, flex: '1 1 auto' }}>
@@ -115,11 +115,11 @@ export default function Operations() {
         >
           {schedule.loading && <SkeletonList count={4} />}
           {schedule.data && (
-            schedule.data.deliveries.length === 0 ? (
+            (schedule.data.deliveries ?? []).length === 0 ? (
               <InlineEmpty icon="bag" title="No deliveries scheduled" />
             ) : (
               <ul className="activity">
-                {schedule.data.deliveries.map((o) => (
+                {(schedule.data.deliveries ?? []).map((o) => (
                   <li className="activity__row" key={o.id}>
                     <span className="activity__icon" aria-hidden="true"><Icon name="bag" size={15} /></span>
                     <span style={{ minWidth: 0, flex: '1 1 auto' }}>
@@ -127,7 +127,7 @@ export default function Operations() {
                         {o.id} · {o.guestName}
                       </Link>
                       <span className="activity__body">
-                        {formatShortDate(o.deliveryDate)} · {o.deliveryWindow} · {o.items.length} items ·{' '}
+                        {formatShortDate(o.deliveryDate)} · {o.deliveryWindow} · {o.items?.length ?? 0} items ·{' '}
                         {o.propertyName}
                       </span>
                     </span>
@@ -149,15 +149,15 @@ export default function Operations() {
         >
           {pendingOrders.loading && <SkeletonList count={3} />}
           {pendingOrders.data && (
-            pendingOrders.data.rows.length === 0 ? (
+            (pendingOrders.data.rows ?? []).length === 0 ? (
               <InlineEmpty icon="checkCircle" title="Nothing waiting to be confirmed" />
             ) : (
               <ActivityList
-                items={pendingOrders.data.rows.map((o) => ({
+                items={(pendingOrders.data.rows ?? []).map((o) => ({
                   id: o.id,
                   icon: 'bag',
                   title: `${o.id} · ${o.guestName}`,
-                  body: `${o.items.length} items · delivery ${formatShortDate(o.deliveryDate)} · ${o.store}`,
+                  body: `${o.items?.length ?? 0} items · delivery ${formatShortDate(o.deliveryDate)} · ${o.store}`,
                   meta: formatRelative(o.createdAt),
                 }))}
               />
@@ -172,11 +172,11 @@ export default function Operations() {
         >
           {pendingTransfers.loading && <SkeletonList count={3} />}
           {pendingTransfers.data && (
-            pendingTransfers.data.rows.length === 0 ? (
+            (pendingTransfers.data.rows ?? []).length === 0 ? (
               <InlineEmpty icon="checkCircle" title="Nothing waiting to be confirmed" />
             ) : (
               <ActivityList
-                items={pendingTransfers.data.rows.map((t) => ({
+                items={(pendingTransfers.data.rows ?? []).map((t) => ({
                   id: t.id,
                   icon: 'car',
                   title: `${t.id} · ${t.guestName}`,
@@ -199,11 +199,11 @@ export default function Operations() {
       >
         {activeOrders.loading && <SkeletonList count={4} />}
         {activeOrders.data && (
-          activeOrders.data.rows.length === 0 ? (
+          (activeOrders.data.rows ?? []).length === 0 ? (
             <InlineEmpty icon="bag" title="No orders in flight" />
           ) : (
             <ul className="activity">
-              {activeOrders.data.rows.map((o) => (
+              {(activeOrders.data.rows ?? []).map((o) => (
                 <li className="activity__row" key={o.id}>
                   <span className="activity__icon" aria-hidden="true"><Icon name="bag" size={15} /></span>
                   <span style={{ minWidth: 0, flex: '1 1 auto' }}>
@@ -211,7 +211,7 @@ export default function Operations() {
                       {o.id} · {o.guestName}
                     </Link>
                     <span className="activity__body">
-                      {o.propertyName} · <Money amount={(o.actualAmount ?? o.estimatedAmount) + o.serviceFee} />
+                      {o.propertyName} · <Money amount={Number(o.actualAmount ?? o.estimatedAmount ?? 0) + Number(o.serviceFee ?? 0)} />
                       {o.shopper ? ` · ${o.shopper}` : ''}
                     </span>
                   </span>
@@ -232,7 +232,7 @@ export default function Operations() {
         {activity.loading && <SkeletonList count={6} />}
         {activity.data && (
           <ActivityList
-            items={activity.data.map((row) => ({
+            items={(Array.isArray(activity.data) ? activity.data : []).map((row) => ({
               id: row.id,
               icon: row.status === 'failed' ? 'alert' : 'check',
               title: `${row.userName} · ${row.action}`,

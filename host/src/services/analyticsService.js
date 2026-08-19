@@ -1,5 +1,4 @@
-import { request, clone } from './mockClient'
-import { mockAnalytics, mockPartnerClicks, mockSatisfaction } from '../data/analytics'
+import { api } from './api'
 
 const EMPTY = {
   totals: {
@@ -16,25 +15,27 @@ const EMPTY = {
   experiences: [],
 }
 
-export async function getAnalytics(propertyId, range = '30d') {
-  return request(
-    () => clone(mockAnalytics[propertyId]?.[range] ?? EMPTY),
-    { label: 'your analytics' },
-  )
+export async function getAnalytics() {
+  const data = await api('/hosts/me/analytics')
+  return {
+    ...EMPTY,
+    totals: {
+      ...EMPTY.totals,
+      guestSessions: { value: data.guests ?? 0, delta: 0 },
+      propertyViews: { value: data.properties ?? 0, delta: 0 },
+      conversations: { value: data.conversations ?? 0, delta: 0 },
+    },
+  }
 }
 
-export async function getPartnerEngagement(propertyId) {
-  return request(() => clone(mockPartnerClicks[propertyId] ?? []), { label: 'partner engagement' })
+export async function getPartnerEngagement() {
+  return []
 }
 
-export async function getSatisfaction(propertyId) {
-  return request(
-    () => clone(mockSatisfaction[propertyId] ?? { average: null, responses: 0, breakdown: [0, 0, 0, 0, 0] }),
-    { label: 'guest satisfaction' },
-  )
+export async function getSatisfaction() {
+  return { average: null, responses: 0, breakdown: [0, 0, 0, 0, 0] }
 }
 
-/** Dashboard headline numbers, pulled from the property record itself. */
 export async function getPropertySnapshot(property) {
-  return request(() => clone(property?.stats ?? EMPTY.totals), { label: 'your dashboard' })
+  return property?.stats ?? EMPTY.totals
 }

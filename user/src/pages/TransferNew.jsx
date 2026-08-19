@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PageHeader, { StickyBar } from '../components/ui/PageHeader'
 import Icon from '../components/ui/Icon'
@@ -10,19 +10,8 @@ import { useApp } from '../context/AppContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
 import { track, ANALYTICS_EVENTS } from '../services/analytics'
-import { AIRPORTS, VEHICLE_CLASSES } from '../data/mockCategories'
 import { formatCurrency, formatLongDate } from '../utils/format'
-
-/** Bags beyond the vehicle's comfortable capacity add a surcharge. */
-const priceFor = (airportCode, vehicleId, bags) => {
-  const airport = AIRPORTS.find((a) => a.code === airportCode)
-  const vehicle = VEHICLE_CLASSES.find((v) => v.id === vehicleId)
-  if (!airport || !vehicle) return 0
-  const base = Math.round(airport.basePrice * vehicle.multiplier)
-  const included = vehicle.id === 'sedan' ? 3 : vehicle.id === 'suv' ? 6 : 14
-  const extraBags = Math.max(0, bags - included)
-  return base + extraBags * 15
-}
+import { useAsync } from '../hooks/useAsync'
 
 export default function TransferNew() {
   const navigate = useNavigate()
@@ -32,6 +21,11 @@ export default function TransferNew() {
   const [submitting, setSubmitting] = useState(false)
   const [created, setCreated] = useState(null)
   const [errors, setErrors] = useState({})
+
+  const airportsQuery = useAsync(() => api.getAirports(), [])
+  const vehiclesQuery = useAsync(() => api.getVehicleClasses(), [])
+  const AIRPORTS = airportsQuery.data ?? []
+  const VEHICLE_CLASSES = vehiclesQuery.data ?? []
 
   const [form, setForm] = useState({
     direction: 'arrival',
@@ -54,10 +48,21 @@ export default function TransferNew() {
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }))
 
-  const quotedPrice = useMemo(
-    () => priceFor(form.airport, form.vehicleClass, form.bags),
+  const quote = useAsync(
+    () =>
+      api.quoteTransfer({
+        airport: form.airport,
+        vehicleClass: form.vehicleClass,
+        bags: form.bags,
+      }),
     [form.airport, form.vehicleClass, form.bags],
   )
+  const quotedDollars =
+    quote.data?.quotedPrice != null
+      ? Number(quote.data.quotedPrice)
+      : quote.data?.quoted_fare_cents != null
+        ? Number(quote.data.quoted_fare_cents) / 100
+        : 0
 
   const airport = AIRPORTS.find((a) => a.code === form.airport)
   const vehicle = VEHICLE_CLASSES.find((v) => v.id === form.vehicleClass)
@@ -94,7 +99,7 @@ export default function TransferNew() {
         pickupAddress: isArrival ? `${form.airport} · Baggage Claim` : property?.address,
         dropoffAddress: isArrival ? property?.address : `${form.airport} · Departures`,
         specialRequests: form.specialRequests,
-        quotedPrice,
+        quotedPrice: quotedDollars,
       })
       setCreated(transfer)
       pushToast({
@@ -265,7 +270,7 @@ export default function TransferNew() {
               options={VEHICLE_CLASSES.map((v) => ({
                 value: v.id,
                 label: v.name,
-                sub: `${v.capacity} · ${formatCurrency(priceFor(form.airport, v.id, form.bags))}`,
+                sub: `${v.capacity}${v.id === form.vehicleClass && quotedDollars ? ` · ${formatCurrency(quotedDollars)}` : ''}`,
               }))}
             />
           </Field>
@@ -320,7 +325,7 @@ export default function TransferNew() {
                 </div>
               </div>
               <span className="price price--lg">
-                <span className="price__amount">{formatCurrency(quotedPrice)}</span>
+                <span className="price__amount">{formatCurrency(quotedDollars)}</span>
               </span>
             </div>
 
@@ -345,7 +350,7 @@ export default function TransferNew() {
           Cancel
         </Button>
         <Button onClick={submit} loading={submitting} icon="car">
-          Request transfer · {formatCurrency(quotedPrice)}
+          Request transfer · {formatCurrency(quotedDollars)}
         </Button>
       </StickyBar>
     </div>

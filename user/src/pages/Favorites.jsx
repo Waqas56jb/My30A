@@ -2,12 +2,14 @@ import { useMemo, useState } from 'react'
 import PageHeader from '../components/ui/PageHeader'
 import { FilterChips } from '../components/ui/Form'
 import { Section } from '../components/ui/Display'
-import { EmptyState } from '../components/ui/States'
+import { EmptyState, ErrorState } from '../components/ui/States'
+import { SkeletonGrid } from '../components/ui/Skeleton'
 import PlaceCard from '../components/cards/PlaceCard'
 import EventCard from '../components/cards/EventCard'
 import { useApp } from '../context/AppContext'
+import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
-import { resolveEntity } from '../services/mockApi'
+import * as api from '../services/mockApi'
 
 const FILTERS = ['All', 'Restaurants', 'Beaches', 'Partners', 'Events']
 
@@ -37,7 +39,8 @@ export default function Favorites() {
   const [filter, setFilter] = useState('All')
   useDocumentTitle('Saved places')
 
-  const saved = useMemo(() => savedIds.map(resolveEntity).filter(Boolean), [savedIds])
+  const savedQuery = useAsync(() => api.getSavedPlaces(savedIds), [savedIds.join('|')])
+  const saved = savedQuery.data ?? []
   const visible = useMemo(
     () => (filter === 'All' ? saved : saved.filter((entity) => kindOf(entity) === filter)),
     [saved, filter],
@@ -56,11 +59,14 @@ export default function Favorites() {
         backTo="/explore"
       />
 
-      {saved.length > 0 && (
+      {savedQuery.loading && <SkeletonGrid count={3} columns="grid--3" />}
+      {savedQuery.error && <ErrorState error={savedQuery.error} onRetry={savedQuery.reload} />}
+
+      {!savedQuery.loading && saved.length > 0 && (
         <FilterChips options={FILTERS} value={filter} onChange={setFilter} label="Filter saved places" />
       )}
 
-      {saved.length === 0 ? (
+      {!savedQuery.loading && !savedQuery.error && saved.length === 0 ? (
         <div style={{ marginTop: 'var(--sp-6)' }}>
           <EmptyState
             icon="heart"

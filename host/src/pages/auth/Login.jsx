@@ -7,7 +7,6 @@ import { Callout } from '../../components/ui/Display'
 import Icon from '../../components/ui/Icon'
 import { useAuth } from '../../context/AuthContext'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { DEMO_CREDENTIALS } from '../../data/host'
 import { PHOTO } from '../../assets/images'
 
 export default function Login() {
@@ -36,8 +35,6 @@ export default function Login() {
       setBusy(false)
     }
   }
-
-  const useDemo = () => setForm((f) => ({ ...f, ...DEMO_CREDENTIALS }))
 
   // Already signed in — do not show the form again.
   if (isAuthed) return <Navigate to={redirectTo} replace />
@@ -120,18 +117,6 @@ export default function Login() {
       <Button to="/host/signup" variant="secondary" block>
         Create a host account
       </Button>
-
-      <Callout icon="info">
-        Prototype build — no real authentication. Use{' '}
-        <button
-          type="button"
-          onClick={useDemo}
-          style={{ color: 'var(--sea-700)', textDecoration: 'underline', fontWeight: 600 }}
-        >
-          the demo account
-        </button>{' '}
-        ({DEMO_CREDENTIALS.email}) with any password.
-      </Callout>
     </AuthShell>
   )
 }

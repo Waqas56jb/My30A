@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Icon from './Icon'
 import { cx } from '../../utils/format'
-import { img } from '../../assets/images'
+import { resolveImageSrc } from '../../assets/images'
 
 /**
  * Every image in the app renders through here so that:
@@ -11,7 +11,7 @@ import { img } from '../../assets/images'
  *    broken icon or a collapsed box,
  *  - alt text is mandatory in practice (decorative images pass alt="").
  *
- * `photoId` accepts an Unsplash id from the registry; `src` takes a full URL.
+ * `photoId` accepts an Unsplash id or a full http(s) URL; `src` takes a URL.
  */
 export default function SmartImage({
   photoId,
@@ -25,7 +25,7 @@ export default function SmartImage({
   eager = false,
   ...rest
 }) {
-  const resolved = src ?? (photoId ? img(photoId, width, ratioToNumber(ratio)) : null)
+  const resolved = resolveImageSrc(photoId, src, width, ratioToNumber(ratio))
   const [state, setState] = useState(resolved ? 'loading' : 'error')
 
   useEffect(() => {
@@ -52,6 +52,7 @@ export default function SmartImage({
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
           fetchpriority={eager ? 'high' : undefined}
+          referrerPolicy="no-referrer"
           onLoad={() => setState('ready')}
           onError={() => setState('error')}
           draggable="false"

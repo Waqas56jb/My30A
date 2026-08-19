@@ -56,7 +56,7 @@ export default function Reports() {
         transfers: transfers.data?.rows ?? [],
         payments: payments.data?.rows ?? [],
         conversations: conversations.data?.rows ?? [],
-        categories: categories.data ?? [],
+        categories: Array.isArray(categories.data) ? categories.data : [],
       })
       setResult(output)
       pushToast({ tone: 'success', title: `${output.report.name} generated`, message: `${output.rows.length} rows.` })

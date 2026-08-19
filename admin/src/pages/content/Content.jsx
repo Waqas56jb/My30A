@@ -78,7 +78,7 @@ export default function Content() {
     reload()
   }
 
-  const rows = data ?? []
+  const rows = Array.isArray(data) ? data : []
 
   return (
     <div className="apage">
@@ -135,7 +135,7 @@ export default function Content() {
                 return (
                   <li className="activity__row" key={block.id} style={{ alignItems: 'center' }}>
                     <span style={{ width: 62, flex: 'none' }}>
-                      <SmartImage photoId={block.image} alt="" ratio="4x3" width={140} radius="sm" />
+                      <SmartImage photoId={block.image} alt="" ratio="4x3" width={140} radius="sm" label={block.title} />
                     </span>
 
                     <span style={{ minWidth: 0, flex: '1 1 auto' }}>

@@ -2,7 +2,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import * as propertyService from '../services/propertyService'
 import * as notificationService from '../services/notificationService'
 import * as recommendationService from '../services/recommendationService'
-import { subscribe, setFailureMode } from '../services/mockClient'
 import { readStore, writeStore, STORAGE_KEYS } from '../utils/storage'
 import { makeId } from '../utils/format'
 import { useAuth } from './AuthContext'
@@ -17,7 +16,7 @@ const DEFAULT_SETTINGS = { simulateErrors: false, maskSecrets: true }
  * a page so any screen can raise one.
  */
 export function WorkspaceProvider({ children }) {
-  const { isAuthed } = useAuth()
+  const { isAuthed, signOut } = useAuth()
 
   const [properties, setProperties] = useState([])
   const [activePropertyId, setActivePropertyId] = useState(
@@ -60,11 +59,16 @@ export function WorkspaceProvider({ children }) {
       setStatus('ready')
       return list
     } catch (err) {
+      if (err?.code === 'AUTH_REQUIRED' || err?.code === 'AUTH_INVALID' || err?.code === 'AUTH_EXPIRED') {
+        await signOut()
+        setStatus('idle')
+        return []
+      }
       setError(err)
       setStatus('error')
       return []
     }
-  }, [])
+  }, [signOut])
 
   useEffect(() => {
     if (!isAuthed) {
@@ -75,15 +79,6 @@ export function WorkspaceProvider({ children }) {
     loadProperties()
     recommendationService.listRecommendations().then(setRecommendations).catch(() => {})
     notificationService.listNotifications().then(setNotifications).catch(() => {})
-
-    const offProps = subscribe('properties', (next) => setProperties(next))
-    const offNotifs = subscribe('notifications', (next) => setNotifications(next))
-    const offRecs = subscribe('recommendations', (next) => setRecommendations(next))
-    return () => {
-      offProps()
-      offNotifs()
-      offRecs()
-    }
   }, [isAuthed, loadProperties])
 
   // Keep a valid property selected at all times.
@@ -137,22 +132,17 @@ export function WorkspaceProvider({ children }) {
     setSettings((prev) => {
       const merged = { ...prev, ...patch }
       writeStore(STORAGE_KEYS.settings, merged)
-      setFailureMode(merged.simulateErrors)
       return merged
     })
   }, [])
 
-  useEffect(() => {
-    setFailureMode(settings.simulateErrors)
-  }, [settings.simulateErrors])
-
   const resetDemoData = useCallback(async () => {
-    propertyService.resetProperties()
-    recommendationService.resetRecommendations()
-    notificationService.resetNotifications()
     await loadProperties()
-    pushToast({ tone: 'success', title: 'Demo data reset', message: 'The shipped fixtures are back.' })
-  }, [loadProperties, pushToast])
+    const next = await recommendationService.listRecommendations().catch(() => [])
+    setRecommendations(next)
+    const notes = await notificationService.listNotifications().catch(() => [])
+    setNotifications(notes)
+  }, [loadProperties])
 
   const recommendationCount = useCallback(
     (propertyId) => recommendations.filter((rec) => rec.propertyId === propertyId).length,

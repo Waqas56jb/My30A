@@ -1,5 +1,3 @@
-import { PHOTO } from '../assets/images'
-
 /**
  * Landing page marketing content.
  *
@@ -68,32 +66,7 @@ export const serviceCatalogue = [
   },
 ]
 
-export const testimonials = [
-  {
-    id: 't1',
-    quote:
-      'Asked for a table for six on a Friday in August and had one in four minutes. I have been coming to 30A for nine years and never managed that myself.',
-    name: 'Sarah W.',
-    detail: 'Rosemary Beach · August',
-    image: PHOTO.guestSarah,
-  },
-  {
-    id: 't2',
-    quote:
-      'We landed at nine, the driver was waiting, and the fridge was full when we walked in. The holiday started at the airport instead of the supermarket.',
-    name: 'The Thompsons',
-    detail: 'Alys Beach · July',
-    image: null,
-  },
-  {
-    id: 't3',
-    quote:
-      'The bonfire recommendation made the trip. Someone else pulled the permit, lit it at seven, and cleared it away. The kids still talk about it.',
-    name: 'Daniel O.',
-    detail: 'Seacrest · June',
-    image: null,
-  },
-]
+export const testimonials = []
 
 /** Small trust line under the hero CTAs. */
 export const heroProof = [

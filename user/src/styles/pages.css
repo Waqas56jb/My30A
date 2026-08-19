@@ -254,18 +254,42 @@
   align-items: center;
   gap: var(--sp-3);
   width: 100%;
-  padding: var(--sp-3) var(--sp-3) var(--sp-3) var(--sp-4);
-  border-radius: var(--r-pill);
+  max-width: 36rem;
+  margin: var(--sp-5) 0 0;
+  padding: 14px 14px 14px 16px;
+  border-radius: 20px;
   background: var(--surface);
-  border: 1px solid var(--line);
-  box-shadow: var(--sh-2);
+  border: 0;
+  box-shadow: 0 10px 32px rgba(16, 38, 44, 0.08);
   text-align: left;
   transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
 }
 
+.ask-card--overlap {
+  margin-top: calc(var(--sp-6) * -1);
+  position: relative;
+  z-index: 3;
+}
+
 .ask-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sh-3);
+  transform: translateY(-1px);
+  box-shadow: 0 14px 36px rgba(16, 38, 44, 0.12);
+}
+
+.ask-card__mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--surface-ink);
+  color: var(--sand-300);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+
+.ask-card__mark svg {
+  width: 18px;
+  height: 18px;
 }
 
 .ask-card__text {
@@ -274,30 +298,40 @@
 }
 
 .ask-card__title {
+  display: block;
   font-weight: 600;
   color: var(--ink-900);
-  font-size: var(--fs-sm);
+  font-size: 0.98rem;
+  line-height: 1.25;
 }
 
 .ask-card__sub {
+  display: block;
   font-size: var(--fs-xs);
   color: var(--ink-500);
+  margin-top: 2px;
 }
 
 .ask-card__go {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: var(--surface-ink);
-  color: var(--on-dark);
+  background: var(--sea-50);
+  color: var(--sea-700);
   display: grid;
   place-items: center;
   flex: none;
 }
 
 .ask-card__go svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+}
+
+@media (min-width: 1024px) {
+  .ask-card--overlap {
+    margin-top: calc(var(--sp-7) * -1);
+  }
 }
 
 .home-float {
@@ -333,20 +367,23 @@
 /* ---------------- Quick actions ---------------- */
 .qa-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--sp-2);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-2) var(--sp-1);
 }
 
 @media (max-width: 400px) {
   .qa-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
+    gap: 8px 4px;
+  }
+  .qa__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
   }
 }
 
 @media (min-width: 720px) {
   .qa-grid {
-    grid-template-columns: repeat(8, 1fr);
     gap: var(--sp-3);
   }
 }
@@ -375,12 +412,12 @@
 .qa__icon {
   width: 52px;
   height: 52px;
-  border-radius: 18px;
+  border-radius: 16px;
   display: grid;
   place-items: center;
   background: var(--surface);
-  border: 1px solid var(--line-soft);
-  box-shadow: var(--sh-1);
+  border: 0;
+  box-shadow: 0 4px 14px rgba(16, 38, 44, 0.06);
   color: var(--sea-700);
 }
 
@@ -401,6 +438,7 @@
   text-align: center;
   line-height: 1.25;
   color: var(--ink-600);
+  overflow-wrap: anywhere;
 }
 
 /* ---------------- Stay summary card ---------------- */

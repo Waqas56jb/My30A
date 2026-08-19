@@ -26,6 +26,7 @@ const PropertyDetail = lazy(() => import('./pages/properties/PropertyDetail'))
 
 const Categories = lazy(() => import('./pages/localGuide/Categories'))
 const Listings = lazy(() => import('./pages/localGuide/Listings'))
+const Restaurants = lazy(() => import('./pages/localGuide/Restaurants'))
 const Featured = lazy(() => import('./pages/localGuide/Featured'))
 
 const GroceryOrders = lazy(() => import('./pages/grocery/GroceryOrders'))
@@ -59,6 +60,7 @@ const Media = lazy(() => import('./pages/media/Media'))
 const Reports = lazy(() => import('./pages/reports/Reports'))
 const Audit = lazy(() => import('./pages/audit/Audit'))
 const AdminUsers = lazy(() => import('./pages/adminUsers/AdminUsers'))
+const Profile = lazy(() => import('./pages/settings/Profile'))
 const Settings = lazy(() => import('./pages/settings/Settings'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
@@ -96,6 +98,7 @@ export default function App() {
             <Route path="/admin/local-guide" element={<Navigate to="/admin/local-guide/categories" replace />} />
             <Route path="/admin/local-guide/categories" element={<Categories />} />
             <Route path="/admin/local-guide/listings" element={<Listings />} />
+            <Route path="/admin/local-guide/restaurants" element={<Restaurants />} />
             <Route path="/admin/local-guide/featured" element={<Featured />} />
 
             <Route path="/admin/grocery" element={<GroceryOrders />} />
@@ -129,6 +132,7 @@ export default function App() {
             <Route path="/admin/reports" element={<Reports />} />
             <Route path="/admin/audit" element={<Audit />} />
             <Route path="/admin/admin-users" element={<AdminUsers />} />
+            <Route path="/admin/profile" element={<Profile />} />
             <Route path="/admin/settings" element={<Settings />} />
 
             <Route path="*" element={<NotFound />} />

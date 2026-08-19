@@ -20,7 +20,7 @@ import { howItWorks, serviceCatalogue, testimonials, heroProof } from '../data/m
 
 const STATS = [
   { k: '26', v: 'miles of coast' },
-  { k: '16', v: 'beach accesses' },
+  { k: '50+', v: 'beach accesses' },
   { k: '19', v: 'miles of bike trail' },
   { k: '4', v: 'rare dune lakes' },
 ]
@@ -61,10 +61,22 @@ export default function Landing() {
           </p>
 
           <div className="dhero__ctas">
-            <Button to="/explore" size="lg" variant="light" iconRight="arrowRight">
+            <Button
+              to={isAuthed ? '/explore' : '/login'}
+              state={isAuthed ? undefined : { from: '/explore' }}
+              size="lg"
+              variant="light"
+              iconRight="arrowRight"
+            >
               Explore 30A
             </Button>
-            <Button to="/vitoria" size="lg" variant="onDark" icon="sparkles">
+            <Button
+              to={isAuthed ? '/vitoria' : '/login'}
+              state={isAuthed ? undefined : { from: '/vitoria' }}
+              size="lg"
+              variant="onDark"
+              icon="sparkles"
+            >
               Meet Vitoria
             </Button>
           </div>
@@ -347,6 +359,7 @@ export default function Landing() {
         </Section>
 
         {/* ---------------------------- Guests say --------------------------- */}
+        {testimonials.length > 0 && (
         <Section title="What guests say" subtitle="From stays this summer" id="quotes">
           <div className="quotes">
             {testimonials.map((item) => (
@@ -366,6 +379,7 @@ export default function Landing() {
             ))}
           </div>
         </Section>
+        )}
 
         {/* ----------------------------- Final CTA --------------------------- */}
         <div className="band band--sand">

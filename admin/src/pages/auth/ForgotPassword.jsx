@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import { Field, Input } from '../../components/ui/Form'
-import { Callout } from '../../components/ui/Display'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { requestPasswordReset } from '../../services/authService'
 import { hero, PHOTO } from '../../assets/images'
@@ -37,13 +36,24 @@ export default function ForgotPassword() {
 
   return (
     <div className="alogin">
-      <div className="alogin__aside">
+      <header className="alogin__mobile">
+        <span className="alogin__mark" aria-hidden="true">
+          <Icon name="waves" />
+        </span>
+        <span>
+          <strong>My30A</strong>
+          <em>Admin</em>
+        </span>
+      </header>
+
+      <aside className="alogin__aside">
         <img src={hero(PHOTO.duneWalkover)} alt="" />
-        <p className="u-eyebrow" style={{ color: 'var(--sand-300)' }}>My30A</p>
-        <h2 style={{ color: '#fff', fontSize: '1.8rem', maxWidth: '16ch', lineHeight: 1.12, marginTop: 6 }}>
-          Operations never stops for a forgotten password.
-        </h2>
-      </div>
+        <span className="alogin__mark" aria-hidden="true">
+          <Icon name="waves" />
+        </span>
+        <p className="alogin__kicker">My30A Host</p>
+        <h2>Reset your operations password</h2>
+      </aside>
 
       <div className="alogin__panel">
         <Link to="/admin/login" className="u-row" style={{ gap: 8, alignSelf: 'flex-start' }}>
@@ -63,9 +73,6 @@ export default function ForgotPassword() {
                 password is on its way. It expires in one hour.
               </p>
             </div>
-            <Callout icon="info">
-              Nothing is actually sent in this build — there is no mail service connected yet.
-            </Callout>
             <Button to="/admin/login" size="lg" block iconRight="arrowRight">
               Back to sign in
             </Button>

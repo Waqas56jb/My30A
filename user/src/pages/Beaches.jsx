@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import PageHeader from '../components/ui/PageHeader'
-import { SearchBar } from '../components/ui/Form'
+import { SearchBar, FilterChips } from '../components/ui/Form'
 import { Section, Callout } from '../components/ui/Display'
 import { SkeletonGrid } from '../components/ui/Skeleton'
 import { EmptyState, ErrorState } from '../components/ui/States'
@@ -11,22 +11,39 @@ import { useApp } from '../context/AppContext'
 import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
-import { mockLocalConditions } from '../data/mockRecommendations'
+import { EMPTY_CONDITIONS } from '../services/liveApi'
+
+const ACCESS_FILTERS = [
+  { value: 'all', label: 'All access' },
+  { value: 'full_public', label: 'Full Public Use' },
+  { value: 'limited_public', label: 'Limited Public Use' },
+  { value: 'private', label: 'Private' },
+]
 
 export default function Beaches() {
   const { property } = useApp()
   const [query, setQuery] = useState('')
+  const [useClass, setUseClass] = useState('all')
   useDocumentTitle('Beach guide')
 
-  const { data, loading, error, reload } = useAsync(() => api.getBeaches({ search: query }), [query])
+  const { data, loading, error, reload } = useAsync(
+    () => api.getBeaches({ search: query, useClass }),
+    [query, useClass],
+  )
+  const conditions = useAsync(() => api.getBeachConditions().catch(() => null), [])
+  const weather = useAsync(() => api.getWeather(), [])
   const beaches = data ?? []
-  const { beachFlag, water, sunset } = mockLocalConditions
+  const official = conditions.data
+  const { beachFlag, water, sunset } = weather.data ?? EMPTY_CONDITIONS
+  const flag = official?.estimatedFlag
+    ? { label: official.estimatedFlag.label, meaning: official.estimatedFlag.meaning, color: official.estimatedFlag.color }
+    : beachFlag
 
   return (
     <div className="page">
       <PageHeader
         title="Beach guide"
-        subtitle="Where to go, where to park, and which access will actually be quiet."
+        subtitle="Official Walton County access types — public info, never gated."
         back
         backTo="/explore"
         breadcrumbs={[{ label: 'Explore', to: '/explore' }, { label: 'Beaches' }]}
@@ -34,12 +51,12 @@ export default function Beaches() {
 
       <div className="card card--pad" style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
         <div className="u-row" style={{ gap: 'var(--sp-3)' }}>
-          <span className="flag-swatch" style={{ background: beachFlag.color }} aria-hidden="true" />
+          <span className="flag-swatch" style={{ background: flag.color }} aria-hidden="true" />
           <div>
             <div className="u-small" style={{ fontWeight: 600 }}>
-              {beachFlag.label} flying today
+              {flag.label}
             </div>
-            <div className="u-xs u-muted">{beachFlag.meaning}</div>
+            <div className="u-xs u-muted">{flag.meaning}</div>
           </div>
         </div>
         <div className="u-row" style={{ gap: 'var(--sp-3)', marginLeft: 'auto' }}>
@@ -61,8 +78,17 @@ export default function Beaches() {
         <SearchBar
           value={query}
           onChange={setQuery}
-          placeholder="Search beach accesses"
+          placeholder="Search beach and bay accesses"
           label="Search beaches"
+        />
+      </div>
+      <div style={{ marginTop: 'var(--sp-3)' }}>
+        <FilterChips
+          wrap
+          options={ACCESS_FILTERS}
+          value={useClass}
+          onChange={(next) => setUseClass(next === 'All' ? 'all' : next)}
+          label="Access type"
         />
       </div>
 
@@ -114,8 +140,9 @@ export default function Beaches() {
           </Section>
 
           <Callout icon="alert" className="section">
-            Beach flags are posted daily by South Walton Fire District. Double red means the water is
-            closed — swimming when it flies carries a fine, and the currents are the reason.
+            Flags fly at Regional Beach Accesses. Double red means the water is closed — entering it
+            can carry a $500 fine. For live Gulf conditions, text SAFETY to 31279. Source: Visit
+            South Walton / Walton County Tourism.
           </Callout>
         </>
       )}

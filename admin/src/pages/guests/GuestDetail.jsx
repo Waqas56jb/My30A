@@ -22,15 +22,21 @@ export default function GuestDetail() {
   const { id } = useParams()
   const { data, loading, error, reload } = useLoad(() => api.getGuest(id), [id])
 
-  useDocumentTitle(data ? data.guest.name : 'Guest')
+  useDocumentTitle(data?.guest?.name || 'Guest')
 
   if (loading) return <SkeletonPage />
-  if (error) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
+  if (error || !data?.guest) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
 
-  const { guest, orders, transfers, payments, conversations, reviews } = data
+  const guest = data.guest
+  const orders = Array.isArray(data.orders) ? data.orders : []
+  const transfers = Array.isArray(data.transfers) ? data.transfers : []
+  const payments = Array.isArray(data.payments) ? data.payments : []
+  const conversations = Array.isArray(data.conversations) ? data.conversations : []
+  const reviews = Array.isArray(data.reviews) ? data.reviews : []
+  const stats = guest.stats ?? {}
   const timeline = buildGuestTimeline(guest, { orders, transfers, conversations, payments })
-  const spend = payments.filter((p) => p.status === 'captured').reduce((sum, p) => sum + p.amount, 0)
-  const tips = payments.filter((p) => p.type === 'tip').reduce((sum, p) => sum + p.amount, 0)
+  const spend = payments.filter((p) => p.status === 'captured').reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+  const tips = payments.filter((p) => p.type === 'tip').reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
 
   return (
     <div className="apage">
@@ -41,15 +47,17 @@ export default function GuestDetail() {
         actions={
           <>
             <StatusPill map={GUEST_STATUSES} value={guest.status} />
-            <Button to={`/admin/properties/${guest.propertyId}`} variant="secondary" size="sm" icon="key">
-              Property
-            </Button>
+            {guest.propertyId ? (
+              <Button to={`/admin/properties/${guest.propertyId}`} variant="secondary" size="sm" icon="key">
+                Property
+              </Button>
+            ) : null}
           </>
         }
       />
 
       <div className="astats">
-        <Stat label="Conversations" value={guest.stats.conversations} icon="message" tone="sea" />
+        <Stat label="Conversations" value={stats.conversations ?? 0} icon="message" tone="sea" />
         <Stat label="Service requests" value={orders.length + transfers.length} icon="clock" tone="info" />
         <Stat label="Total spend" value={<Money amount={spend} />} icon="creditCard" tone="success" />
         <Stat label="Tips given" value={<Money amount={tips} />} icon="heart" tone="gold" />
@@ -119,7 +127,7 @@ export default function GuestDetail() {
                 key: 'total',
                 label: 'Total',
                 align: 'right',
-                render: (r) => <Money amount={(r.actualAmount ?? r.estimatedAmount) + r.serviceFee} />,
+                render: (r) => <Money amount={(Number(r.actualAmount ?? r.estimatedAmount) || 0) + (Number(r.serviceFee) || 0)} />,
               },
               { key: 'status', label: 'Status', render: (r) => <StatusPill map={GROCERY_STATUSES} value={r.status} /> },
             ]}
@@ -167,7 +175,7 @@ export default function GuestDetail() {
       <Grid cols={2}>
         <Panel
           title="Vitoria conversations"
-          subtitle={`${formatNumber(guest.stats.messages)} messages across ${conversations.length} conversations.`}
+          subtitle={`${formatNumber(stats.messages ?? 0)} messages across ${conversations.length} conversations.`}
           flush
         >
           <DataTable
@@ -188,11 +196,11 @@ export default function GuestDetail() {
           <div className="astats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 120px), 1fr))' }}>
             <div className="stat" style={{ padding: 'var(--sp-3)' }}>
               <span className="stat__label">Listings viewed</span>
-              <span className="stat__value" style={{ fontSize: '1.3rem' }}>{guest.stats.partnerViews}</span>
+              <span className="stat__value" style={{ fontSize: '1.3rem' }}>{stats.partnerViews ?? 0}</span>
             </div>
             <div className="stat" style={{ padding: 'var(--sp-3)' }}>
               <span className="stat__label">Clicked through</span>
-              <span className="stat__value" style={{ fontSize: '1.3rem' }}>{guest.stats.partnerClicks}</span>
+              <span className="stat__value" style={{ fontSize: '1.3rem' }}>{stats.partnerClicks ?? 0}</span>
             </div>
           </div>
           <div style={{ marginTop: 'var(--sp-4)' }}>
@@ -210,7 +218,7 @@ export default function GuestDetail() {
             items={reviews.map((r) => ({
               id: r.id,
               icon: 'star',
-              title: `${r.rating} out of 5 · ${r.subject.replace(/_/g, ' ')}`,
+              title: `${r.rating} out of 5 · ${String(r.subject ?? 'stay').replace(/_/g, ' ')}`,
               body: r.comment,
               meta: formatShortDate(r.createdAt),
             }))}

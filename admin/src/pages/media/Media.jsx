@@ -82,7 +82,7 @@ export default function Media() {
     reload()
   }
 
-  const rows = data ?? []
+  const rows = Array.isArray(data) ? data : []
 
   return (
     <div className="apage">

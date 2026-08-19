@@ -47,17 +47,32 @@ export const some = (random, list, count) => {
  */
 export const TODAY = '2026-08-17'
 
+function dayKey(from = TODAY) {
+  if (!from) return TODAY
+  if (from instanceof Date) {
+    return Number.isNaN(from.getTime()) ? TODAY : from.toISOString().slice(0, 10)
+  }
+  const match = String(from).match(/^(\d{4}-\d{2}-\d{2})/)
+  return match ? match[1] : TODAY
+}
+
 export function shiftDate(days, from = TODAY) {
-  const date = new Date(`${from}T12:00:00Z`)
+  const date = new Date(`${dayKey(from)}T12:00:00Z`)
+  if (Number.isNaN(date.getTime())) return TODAY
   date.setUTCDate(date.getUTCDate() + days)
   return date.toISOString().slice(0, 10)
 }
 
 export function shiftTime(days, hour = 9, minute = 0, from = TODAY) {
-  const date = new Date(`${from}T00:00:00Z`)
+  const date = new Date(`${dayKey(from)}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return null
   date.setUTCDate(date.getUTCDate() + days)
   date.setUTCHours(hour, minute, 0, 0)
-  return date.toISOString()
+  try {
+    return date.toISOString()
+  } catch {
+    return null
+  }
 }
 
 /* --------------------------- Name pools --------------------------------- */

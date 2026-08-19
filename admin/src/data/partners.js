@@ -212,15 +212,17 @@ function statsFor(random, status) {
 export const mockPartners = buildPartners()
 
 /** Interactions = every tracked event. It is a traffic number, not a sales number. */
+const statNum = (partner, key) => Number(partner?.stats?.[key]) || 0
+
 export const partnerInteractions = (partner) =>
-  partner.stats.views +
-  partner.stats.websiteClicks +
-  partner.stats.phoneClicks +
-  partner.stats.directionsClicks
+  statNum(partner, 'views') +
+  statNum(partner, 'websiteClicks') +
+  statNum(partner, 'phoneClicks') +
+  statNum(partner, 'directionsClicks')
 
 /** Of the guests who saw the listing, how many acted on it. */
 export const partnerCtr = (partner) => {
-  const { views, websiteClicks, phoneClicks, directionsClicks } = partner.stats
+  const views = statNum(partner, 'views')
   if (!views) return 0
-  return (websiteClicks + phoneClicks + directionsClicks) / views
+  return (statNum(partner, 'websiteClicks') + statNum(partner, 'phoneClicks') + statNum(partner, 'directionsClicks')) / views
 }

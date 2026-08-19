@@ -79,7 +79,7 @@ export default function Categories() {
     reload()
   }
 
-  const rows = data ?? []
+  const rows = Array.isArray(data) ? data : []
 
   return (
     <div className="apage">
@@ -93,7 +93,12 @@ export default function Categories() {
         <Stat label="Categories" value={rows.length} icon="list" tone="sea" />
         <Stat label="Enabled" value={rows.filter((c) => c.enabled).length} icon="checkCircle" tone="success" />
         <Stat label="Hidden" value={rows.filter((c) => !c.enabled).length} icon="eyeOff" tone="danger" />
-        <Stat label="Listings" value={rows.reduce((sum, c) => sum + c.listings, 0)} icon="sparkles" tone="gold" />
+        <Stat
+          label="Listings"
+          value={rows.reduce((sum, c) => sum + (Number(c.listings) || 0), 0)}
+          icon="sparkles"
+          tone="gold"
+        />
       </div>
 
       <Panel flush>
@@ -107,23 +112,29 @@ export default function Categories() {
           {!loading && !error && rows.length > 0 && (
             <ul className="activity">
               {rows.map((category, i) => (
-                <li className="activity__row" key={category.id} style={{ alignItems: 'center' }}>
-                  <span style={{ width: 44, flex: 'none' }}>
-                    <SmartImage photoId={category.image} alt="" ratio="1x1" width={88} radius="sm" />
+                <li className="activity__row catrow" key={category.id}>
+                  <span className="catrow__thumb">
+                    {category.image ? (
+                      <SmartImage photoId={category.image} alt="" ratio="1x1" width={88} radius="sm" label={category.name} />
+                    ) : (
+                      <span className="catrow__icon" aria-hidden="true">
+                        <Icon name={category.icon || 'compass'} size={18} />
+                      </span>
+                    )}
                   </span>
 
-                  <span style={{ minWidth: 0, flex: '1 1 auto' }}>
+                  <span className="catrow__copy">
                     <span className="activity__title">{category.name}</span>
                     <span className="activity__body">{category.description}</span>
                     <span className="chiplist" style={{ marginTop: 6 }}>
                       <Badge tone={category.listings ? 'sea' : 'muted'}>
-                        {category.listings} listing{category.listings === 1 ? '' : 's'}
+                        {Number(category.listings) || 0} listing{Number(category.listings) === 1 ? '' : 's'}
                       </Badge>
                       {!category.enabled && <Badge tone="muted">Hidden from guests</Badge>}
                     </span>
                   </span>
 
-                  <span className="tone-row" style={{ flex: 'none' }}>
+                  <span className="catrow__actions">
                     <button
                       type="button"
                       className="pager__btn"
@@ -224,7 +235,7 @@ export default function Categories() {
         title="Delete this category?"
         message={
           confirmDelete
-            ? `${confirmDelete.name} has ${confirmDelete.listings} listing${confirmDelete.listings === 1 ? '' : 's'}. Categories in use cannot be deleted — move the listings first, or disable the category instead.`
+            ? `${confirmDelete.name} has ${Number(confirmDelete.listings) || 0} listing${Number(confirmDelete.listings) === 1 ? '' : 's'}. Categories in use cannot be deleted — move the listings first, or disable the category instead.`
             : ''
         }
         confirmLabel="Delete category"

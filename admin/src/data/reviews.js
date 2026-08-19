@@ -90,7 +90,8 @@ function buildReviews() {
 export const mockReviews = buildReviews()
 
 export function reviewSummary(reviews) {
-  const visible = reviews.filter((r) => r.status === 'published')
+  const list = Array.isArray(reviews) ? reviews : reviews?.rows ?? []
+  const visible = list.filter((r) => r.status === 'published')
   const total = visible.length
   const average = total ? visible.reduce((sum, r) => sum + r.rating, 0) / total : 0
   /* Ascending, so index 0 is the 1-star count. `StarBreakdown` reads
@@ -102,7 +103,7 @@ export function reviewSummary(reviews) {
     total,
     average,
     breakdown,
-    flagged: reviews.filter((r) => r.status === 'flagged').length,
-    hidden: reviews.filter((r) => r.status === 'hidden').length,
+    flagged: list.filter((r) => r.status === 'flagged').length,
+    hidden: list.filter((r) => r.status === 'hidden').length,
   }
 }

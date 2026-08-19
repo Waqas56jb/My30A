@@ -3,6 +3,7 @@ import SmartImage from '../ui/SmartImage'
 import { MetaRow } from '../ui/Display'
 import { Badge } from '../ui/StatusBadge'
 import { formatDate, toDate, cx } from '../../utils/format'
+import { eventCover } from '../../utils/listingImages'
 
 /** Event card — date block on the left, image above on the stacked variant. */
 export default function EventCard({ event, layout = 'row', className }) {
@@ -14,7 +15,7 @@ export default function EventCard({ event, layout = 'row', className }) {
     return (
       <Link to={`/events/${event.id}`} className={cx('card place-card', className)} aria-label={event.title}>
         <div className="place-card__media">
-          <SmartImage photoId={event.image} alt={event.title} ratio="3x2" width={640} zoom />
+          <SmartImage photoId={eventCover(event)} alt={event.title} ratio="3x2" width={640} zoom />
           <div className="place-card__badges">
             <Badge tone="glass">{formatDate(event.date, { weekday: 'short', month: 'short', day: 'numeric' })}</Badge>
             {event.price === 'Free' && <Badge tone="ok">Free</Badge>}
@@ -47,7 +48,7 @@ export default function EventCard({ event, layout = 'row', className }) {
         <MetaRow items={[event.time, event.location]} />
       </span>
       <SmartImage
-        photoId={event.image}
+        photoId={eventCover(event)}
         alt=""
         ratio="1x1"
         width={200}

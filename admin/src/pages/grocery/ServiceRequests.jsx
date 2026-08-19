@@ -41,36 +41,43 @@ export default function ServiceRequests() {
   const error = orders.error ?? transfers.error
 
   const rows = [
-    ...(orders.data?.rows ?? []).map((o) => ({
-      id: o.id,
-      kind: 'grocery',
-      kindLabel: 'Grocery',
-      guestId: o.guestId,
-      guestName: o.guestName,
-      propertyName: o.propertyName,
-      status: o.status,
-      when: o.deliveryDate,
-      amount: (o.actualAmount ?? o.estimatedAmount) + o.serviceFee,
-      createdAt: o.createdAt,
-      source: 'guest',
-      open: ACTIVE_GROCERY.includes(o.status),
-      to: `/admin/grocery/${o.id}`,
-    })),
-    ...(transfers.data?.rows ?? []).map((t) => ({
-      id: t.id,
-      kind: 'transfer',
-      kindLabel: 'Airport transfer',
-      guestId: t.guestId,
-      guestName: t.guestName,
-      propertyName: t.propertyName,
-      status: t.status,
-      when: t.pickupDate,
-      amount: t.amount,
-      createdAt: t.createdAt,
-      source: t.createdBy,
-      open: ACTIVE_TRANSFER.includes(t.status),
-      to: `/admin/transfers/${t.id}`,
-    })),
+    ...(orders.data?.rows ?? []).filter(Boolean).map((o) => {
+      const estimated = Number(o.actualAmount ?? o.estimatedAmount ?? o.estimatedTotal ?? 0)
+      const fee = Number(o.serviceFee ?? 0)
+      return {
+        id: o.id,
+        kind: 'grocery',
+        kindLabel: 'Grocery',
+        guestId: o.guestId,
+        guestName: o.guestName || 'Guest',
+        propertyName: o.propertyName || '—',
+        status: o.status,
+        when: o.deliveryDate,
+        amount: (Number.isFinite(estimated) ? estimated : 0) + (Number.isFinite(fee) ? fee : 0),
+        createdAt: String(o.createdAt ?? o.created_at ?? ''),
+        source: o.createdBy ?? o.created_by ?? 'guest',
+        open: ACTIVE_GROCERY.includes(o.status),
+        to: `/admin/grocery/${o.id}`,
+      }
+    }),
+    ...(transfers.data?.rows ?? []).filter(Boolean).map((t) => {
+      const amount = Number(t.amount ?? t.quotedPrice ?? 0)
+      return {
+        id: t.id,
+        kind: 'transfer',
+        kindLabel: 'Airport transfer',
+        guestId: t.guestId,
+        guestName: t.guestName || 'Guest',
+        propertyName: t.propertyName || '—',
+        status: t.status,
+        when: t.pickupDate ?? t.date,
+        amount: Number.isFinite(amount) ? amount : 0,
+        createdAt: String(t.createdAt ?? t.created_at ?? ''),
+        source: t.createdBy ?? t.created_by ?? 'guest',
+        open: ACTIVE_TRANSFER.includes(t.status),
+        to: `/admin/transfers/${t.id}`,
+      }
+    }),
   ]
     .filter((row) => (kind === 'all' ? true : row.kind === kind))
     .filter((row) => (state === 'all' ? true : state === 'open' ? row.open : !row.open))
@@ -78,10 +85,10 @@ export default function ServiceRequests() {
       if (!search.trim()) return true
       const needle = search.trim().toLowerCase()
       return [row.id, row.guestName, row.propertyName].some((f) =>
-        String(f).toLowerCase().includes(needle),
+        String(f ?? '').toLowerCase().includes(needle),
       )
     })
-    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))
 
   const columns = [
     {
@@ -148,7 +155,7 @@ export default function ServiceRequests() {
         />
         <Stat
           label="Total value"
-          value={<Money amount={rows.reduce((sum, r) => sum + r.amount, 0)} />}
+          value={<Money amount={rows.reduce((sum, r) => sum + (Number(r.amount) || 0), 0)} />}
           icon="dollar"
           tone="success"
         />

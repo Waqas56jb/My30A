@@ -62,11 +62,17 @@ export default function SiteHeader() {
           </Link>
 
           <nav className="site-head__nav" aria-label="Site">
-            {NAV.map((item) => (
-              <NavLink key={item.to} to={item.to} className="site-head__link">
-                {item.label}
-              </NavLink>
-            ))}
+            {NAV.map((item) =>
+              isAuthed ? (
+                <NavLink key={item.to} to={item.to} className="site-head__link">
+                  {item.label}
+                </NavLink>
+              ) : (
+                <Link key={item.to} to="/login" state={{ from: item.to }} className="site-head__link">
+                  {item.label}
+                </Link>
+              ),
+            )}
           </nav>
 
           <div className="site-head__actions">
@@ -122,12 +128,19 @@ export default function SiteHeader() {
             </div>
 
             <nav className="site-menu__nav" aria-label="Site">
-              {NAV.map((item) => (
-                <NavLink key={item.to} to={item.to} className="site-menu__link">
-                  {item.label}
-                  <Icon name="arrowRight" size={18} />
-                </NavLink>
-              ))}
+              {NAV.map((item) =>
+                isAuthed ? (
+                  <NavLink key={item.to} to={item.to} className="site-menu__link">
+                    {item.label}
+                    <Icon name="arrowRight" size={18} />
+                  </NavLink>
+                ) : (
+                  <Link key={item.to} to="/login" state={{ from: item.to }} className="site-menu__link">
+                    {item.label}
+                    <Icon name="arrowRight" size={18} />
+                  </Link>
+                ),
+              )}
             </nav>
 
             <div className="site-menu__foot">
@@ -145,7 +158,13 @@ export default function SiteHeader() {
                   </Button>
                 </>
               )}
-              <Button to="/vitoria" block variant="ghost" icon="sparkles">
+              <Button
+                to={isAuthed ? '/vitoria' : '/login'}
+                state={isAuthed ? undefined : { from: '/vitoria' }}
+                block
+                variant="ghost"
+                icon="sparkles"
+              >
                 Ask Vitoria
               </Button>
               <Link to="/help" className="u-small u-muted" style={{ textAlign: 'center' }}>

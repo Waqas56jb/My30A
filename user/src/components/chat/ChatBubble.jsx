@@ -1,10 +1,14 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import Markdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
 import SmartImage from '../ui/SmartImage'
 import Icon from '../ui/Icon'
 import { Avatar } from '../ui/Display'
 import { resolveEntity } from '../../services/mockApi'
 import { track, ANALYTICS_EVENTS } from '../../services/analytics'
 import { cx, formatTime, formatDistance } from '../../utils/format'
+import { eventCover, placeCover } from '../../utils/listingImages'
 
 const routeFor = (kind, id) => {
   switch (kind) {
@@ -21,20 +25,38 @@ const routeFor = (kind, id) => {
 
 /** Rich entity card attached to one of Vitoria's replies. */
 function MiniCard({ card }) {
-  const entity = resolveEntity(card.refId)
-  if (!entity) return null
-  const name = entity.name ?? entity.title
-  const sub =
-    entity.type === 'beach'
-      ? `${entity.walkTime ?? ''} · ${entity.location}`
-      : entity.title
-        ? `${entity.time} · ${entity.location}`
-        : `${entity.cuisine ?? entity.category} · ${formatDistance(entity.distance)}`
+  const [entity, setEntity] = useState(card?.name ? card : null)
+
+  useEffect(() => {
+    let cancelled = false
+    if (card?.name && card?.image) {
+      setEntity(card)
+      return undefined
+    }
+    resolveEntity(card.refId).then((row) => {
+      if (!cancelled && row) setEntity({ ...card, ...row })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [card])
+
+  if (!entity && !card?.name) return null
+  const item = entity ?? card
+  const kind = card.kind ?? item.type
+  const name = item.name ?? item.title
+  const isEvent = kind === 'event' || Boolean(item.title && item.date)
+  const cover = isEvent ? eventCover(item) : placeCover({ ...item, type: kind })
+  const sub = isEvent
+    ? [item.time, item.location].filter(Boolean).join(' · ')
+    : [item.subtitle ?? item.cuisine ?? item.category, item.distance !== undefined ? formatDistance(item.distance) : item.location]
+        .filter(Boolean)
+        .join(' · ')
 
   return (
-    <Link to={routeFor(card.kind, card.refId)} className="mini-card">
+    <Link to={routeFor(kind, card.refId)} className="mini-card">
       <span className="mini-card__media">
-        <SmartImage photoId={entity.image} alt="" ratio="1x1" width={180} />
+        <SmartImage photoId={cover} alt="" ratio="1x1" width={180} />
       </span>
       <span className="mini-card__body">
         <span className="mini-card__title u-clamp-2">{name}</span>
@@ -45,18 +67,38 @@ function MiniCard({ card }) {
   )
 }
 
-/**
- * Renders a very small subset of markdown (**bold**) so replies can emphasise
- * names and prices without pulling in a parser.
- */
-function RichText({ text }) {
-  const parts = String(text).split(/(\*\*[^*]+\*\*)/g)
-  return parts.map((part, i) =>
-    part.startsWith('**') && part.endsWith('**') ? (
-      <strong key={i}>{part.slice(2, -2)}</strong>
-    ) : (
-      <span key={i}>{part}</span>
-    ),
+function MarkdownLink({ href, children }) {
+  if (!href) return <span>{children}</span>
+  if (href.startsWith('/')) {
+    return <Link to={href}>{children}</Link>
+  }
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  )
+}
+
+function MarkdownImage({ src, alt }) {
+  if (!src) return null
+  return (
+    <span className="bubble-md__photo">
+      <SmartImage photoId={src} alt={alt || ''} ratio="16x9" width={720} />
+    </span>
+  )
+}
+
+function MarkdownMessage({ text }) {
+  return (
+    <Markdown
+      remarkPlugins={[remarkBreaks]}
+      components={{
+        a: MarkdownLink,
+        img: MarkdownImage,
+      }}
+    >
+      {text}
+    </Markdown>
   )
 }
 
@@ -79,8 +121,8 @@ export default function ChatBubble({ message, guest, showAvatar = true }) {
       )}
 
       <div className="bubble-col">
-        <div className={cx('bubble', isUser ? 'bubble--user' : 'bubble--ai')}>
-          <RichText text={message.text} />
+        <div className={cx('bubble', isUser ? 'bubble--user' : 'bubble--ai bubble-md')}>
+          {isUser ? message.text : <MarkdownMessage text={message.text ?? ''} />}
         </div>
 
         {message.cards?.length > 0 && (

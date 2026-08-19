@@ -75,6 +75,63 @@ export const DEFAULT_SETTINGS = {
   },
 }
 
+function asObject(value) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed
+    } catch {
+      /* ignore malformed jsonb strings */
+    }
+  }
+  return null
+}
+
+function asList(value, fallback) {
+  const fallbackList = Array.isArray(fallback) ? fallback : []
+  if (Array.isArray(value)) return value.filter((item) => item != null)
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value)
+      if (Array.isArray(parsed)) return parsed.filter((item) => item != null)
+    } catch {
+      /* ignore */
+    }
+  }
+  return fallbackList
+}
+
+function asScalar(value, fallback) {
+  if (Array.isArray(fallback)) return asList(value, fallback)
+  if (value == null || value === '') return fallback
+  if (typeof fallback === 'boolean') return value === true || value === 'true' || value === 1 || value === '1'
+  if (typeof fallback === 'number') {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : fallback
+  }
+  if (typeof fallback === 'string') {
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+    return fallback
+  }
+  return value ?? fallback
+}
+
+/** Fill every settings section from defaults so a sparse live API cannot crash a tab. */
+export function mergeSettings(raw) {
+  const source = asObject(raw) ?? {}
+  const next = {}
+  for (const [key, defaults] of Object.entries(DEFAULT_SETTINGS)) {
+    const incoming = asObject(source[key]) ?? {}
+    const merged = {}
+    for (const [field, fallback] of Object.entries(defaults)) {
+      merged[field] = asScalar(incoming[field], fallback)
+    }
+    next[key] = { ...incoming, ...merged }
+  }
+  return next
+}
+
 export const SETTINGS_SECTIONS = [
   { id: 'general', label: 'General', icon: 'settings', blurb: 'Platform name, support contacts, timezone.' },
   { id: 'business', label: 'Business', icon: 'building', blurb: 'Host plans, trials and approval requirements.' },

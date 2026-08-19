@@ -9,6 +9,7 @@ import { DefinitionList, Callout } from '../components/ui/Display'
 import { SuccessState } from '../components/ui/States'
 import { useApp } from '../context/AppContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { useAsync } from '../hooks/useAsync'
 import * as api from '../services/mockApi'
 import { track, ANALYTICS_EVENTS } from '../services/analytics'
 import { GROCERY_STORES, GROCERY_TEMPLATES } from '../data/mockCategories'
@@ -25,8 +26,8 @@ const WINDOWS = [
 
 const STEPS = ['When', 'Store', 'Your list', 'Review']
 
-const SERVICE_FEE = 39
-const DELIVERY_FEE = 15
+const FALLBACK_SERVICE_FEE = 0
+const FALLBACK_DELIVERY_FEE = 0
 
 /**
  * Grocery request wizard.
@@ -44,6 +45,10 @@ export default function GroceryNew() {
   const [submitting, setSubmitting] = useState(false)
   const [created, setCreated] = useState(null)
   const [errors, setErrors] = useState({})
+
+  const fees = useAsync(() => api.getGroceryFees(0), [])
+  const SERVICE_FEE = fees.data?.serviceFee ?? FALLBACK_SERVICE_FEE
+  const DELIVERY_FEE = fees.data?.deliveryFee ?? FALLBACK_DELIVERY_FEE
 
   const [form, setForm] = useState({
     deliveryDate: guest?.stay?.checkInDate ?? '',

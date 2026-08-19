@@ -138,15 +138,26 @@ export const conversationById = (list, id) => list.find((c) => c.id === id) ?? n
  * Headline AI numbers, computed rather than typed, so they always agree with
  * the conversation table underneath them.
  */
-export function vitoriaSummary(conversations) {
-  const total = conversations.length
-  const escalated = conversations.filter((c) => c.status === 'escalated').length
-  const resolved = conversations.filter((c) => c.status === 'resolved').length
-  const active = conversations.filter((c) => c.status === 'active').length
-  const messages = conversations.reduce((sum, c) => sum + c.messageCount, 0)
-  const rated = conversations.filter((c) => c.satisfaction)
-  const avgResponse =
-    conversations.reduce((sum, c) => sum + c.responseSeconds, 0) / Math.max(1, total)
+export function vitoriaSummary(conversations = []) {
+  const list = Array.isArray(conversations) ? conversations : []
+  const num = (value) => {
+    const n = Number(value)
+    return Number.isFinite(n) ? n : 0
+  }
+  const total = list.length
+  const escalated = list.filter((c) => c.status === 'escalated').length
+  const resolved = list.filter((c) => c.status === 'resolved').length
+  const active = list.filter((c) => c.status === 'active').length
+  const messages = list.reduce((sum, c) => {
+    const fromCount = num(c.messageCount)
+    const fromList = Array.isArray(c.messages) ? c.messages.length : 0
+    return sum + (fromCount || fromList)
+  }, 0)
+  const withReply = list.filter((c) => num(c.responseSeconds) > 0)
+  const avgResponse = withReply.length
+    ? withReply.reduce((sum, c) => sum + num(c.responseSeconds), 0) / withReply.length
+    : 0
+  const rated = list.filter((c) => num(c.satisfaction) > 0)
 
   return {
     total,
@@ -158,16 +169,19 @@ export function vitoriaSummary(conversations) {
     escalationRate: total ? escalated / total : 0,
     avgResponse,
     satisfaction: rated.length
-      ? rated.reduce((sum, c) => sum + c.satisfaction, 0) / rated.length
+      ? rated.reduce((sum, c) => sum + num(c.satisfaction), 0) / rated.length
       : 0,
-    languages: [...new Set(conversations.map((c) => c.language))],
-    requestsCreated: conversations.filter((c) => c.createdRequest).length,
+    languages: [...new Set(list.map((c) => c.language).filter(Boolean))],
+    requestsCreated: list.filter((c) => c.createdRequest).length,
   }
 }
 
-export function topicBreakdown(conversations) {
+export function topicBreakdown(conversations = []) {
   const counts = new Map()
-  conversations.forEach((c) => counts.set(c.topic, (counts.get(c.topic) ?? 0) + 1))
+  ;(Array.isArray(conversations) ? conversations : []).forEach((c) => {
+    const topic = c.topic || 'General'
+    counts.set(topic, (counts.get(topic) ?? 0) + 1)
+  })
   return [...counts.entries()]
     .map(([label, value]) => ({ label, value }))
     .sort((a, b) => b.value - a.value)

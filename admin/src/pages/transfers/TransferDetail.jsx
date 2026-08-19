@@ -34,20 +34,22 @@ export default function TransferDetail() {
   const [driverOpen, setDriverOpen] = useState(false)
   const [driver, setDriver] = useState(DRIVERS[0])
 
-  useDocumentTitle(data ? `Transfer ${data.transfer.id}` : 'Transfer')
+  useDocumentTitle(data?.transfer?.id ? `Transfer ${data.transfer.id}` : 'Transfer')
 
   if (loading) return <SkeletonPage />
-  if (error) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
+  if (error || !data?.transfer) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
 
   const { transfer, payments, refund } = data
-  const meta = TRANSFER_STATUSES[transfer.status]
+  const meta = TRANSFER_STATUSES[transfer.status] ?? {}
   const stopped = ['cancelled', 'no_show'].includes(transfer.status)
   const airport = AIRPORTS.find((a) => a.code === transfer.airport)
+  const fare = Number(transfer.amount ?? transfer.quotedPrice ?? 0) || 0
+  const tipAmount = Number(transfer.tipAmount ?? 0) || 0
 
   /* Which cancellation tier applies right now — the fee follows from it. */
   const hours = hoursUntilPickup(transfer)
-  const rule = cancellationFor(DEFAULT_CANCELLATION_RULES, Math.max(0, hours))
-  const refundIfCancelled = Math.max(0, transfer.amount - rule.fee)
+  const rule = cancellationFor(DEFAULT_CANCELLATION_RULES, Math.max(0, hours)) ?? { label: '—', fee: 0, note: '' }
+  const refundIfCancelled = Math.max(0, fare - Number(rule.fee || 0))
 
   const advance = async (status, extra = {}) => {
     setBusy(true)
@@ -55,7 +57,7 @@ export default function TransferDetail() {
       await api.setTransferStatus(transfer.id, status, extra)
       pushToast({
         tone: 'success',
-        title: `${transfer.id} is now ${TRANSFER_STATUSES[status].label.toLowerCase()}`,
+        title: `${transfer.id} is now ${(TRANSFER_STATUSES[status]?.label ?? status).toLowerCase()}`,
         message: status === 'completed' ? 'The card hold has been captured.' : undefined,
       })
       reload()
@@ -77,7 +79,7 @@ export default function TransferDetail() {
         actions={
           <>
             <StatusPill map={TRANSFER_STATUSES} value={transfer.status} />
-            {meta.next && !stopped && (
+            {meta?.next && !stopped && (
               <Button
                 icon="arrowRight"
                 loading={busy}
@@ -114,7 +116,7 @@ export default function TransferDetail() {
           statuses={TRANSFER_STATUSES}
           current={transfer.status}
           cancelled={stopped}
-          cancelledLabel={`${TRANSFER_STATUSES[transfer.status].label} — ${transfer.cancelReason ?? 'no reason recorded'}`}
+          cancelledLabel={`${TRANSFER_STATUSES[transfer.status]?.label ?? transfer.status} — ${transfer.cancelReason ?? 'no reason recorded'}`}
         />
       </Panel>
 
@@ -159,17 +161,17 @@ export default function TransferDetail() {
           <div className="refund-preview" style={{ marginTop: 'var(--sp-4)' }}>
             <div className="refund-preview__row">
               <span>Fare</span>
-              <strong>{formatCurrency(transfer.amount)}</strong>
+              <strong>{formatCurrency(fare)}</strong>
             </div>
-            {transfer.tipAmount > 0 && (
+            {tipAmount > 0 && (
               <div className="refund-preview__row">
                 <span>Tip ({transfer.tipPercent}%)</span>
-                <strong>{formatCurrency(transfer.tipAmount)}</strong>
+                <strong>{formatCurrency(tipAmount)}</strong>
               </div>
             )}
             <div className="refund-preview__row refund-preview__row--total">
               <span>Total</span>
-              <strong>{formatCurrency(transfer.amount + transfer.tipAmount)}</strong>
+              <strong>{formatCurrency(fare + tipAmount)}</strong>
             </div>
           </div>
 
@@ -198,7 +200,7 @@ export default function TransferDetail() {
             </div>
             <div className="refund-preview__row">
               <span>Original amount</span>
-              <strong>{formatCurrency(transfer.amount)}</strong>
+              <strong>{formatCurrency(fare)}</strong>
             </div>
             <div className="refund-preview__row">
               <span>Cancellation fee</span>
@@ -307,7 +309,7 @@ export default function TransferDetail() {
         <div className="refund-preview">
           <div className="refund-preview__row">
             <span>Original amount</span>
-            <strong>{formatCurrency(transfer.amount)}</strong>
+            <strong>{formatCurrency(fare)}</strong>
           </div>
           <div className="refund-preview__row">
             <span>Cancellation fee ({rule.label})</span>

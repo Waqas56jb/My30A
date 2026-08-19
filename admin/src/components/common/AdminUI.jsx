@@ -215,10 +215,11 @@ export function InlineEmpty({ icon = 'search', title, body, action }) {
 /* ------------------------------- Activity -------------------------------- */
 
 export function ActivityList({ items, empty = 'Nothing yet.' }) {
-  if (!items.length) return <InlineEmpty icon="clock" title={empty} />
+  const list = Array.isArray(items) ? items : []
+  if (!list.length) return <InlineEmpty icon="clock" title={empty} />
   return (
     <ul className="activity">
-      {items.map((item, i) => (
+      {list.map((item, i) => (
         <li className="activity__row" key={item.id ?? `${item.title}-${i}`}>
           <span className="activity__icon" aria-hidden="true">
             <Icon name={item.icon ?? 'circle'} size={15} />

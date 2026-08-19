@@ -19,6 +19,18 @@ export function img(id, w = 1200, ratio = 1.5) {
   return `${BASE}${id}?auto=format&fit=crop&w=${w}&h=${h}&q=72`
 }
 
+/** Unsplash ids go through `img()`; http(s) and local paths render as-is. */
+export function resolveImageSrc(photoId, src, w = 1200, ratio = 1.5) {
+  if (src) return src
+  if (!photoId) return null
+  const value = String(photoId).trim()
+  if (!value) return null
+  if (/^https?:\/\//i.test(value)) return value
+  if (value.startsWith('//')) return `https:${value}`
+  if (value.startsWith('/')) return value
+  return img(value, w, ratio)
+}
+
 /**
  * Ids grouped by subject so pages never reach for an unrelated stock photo.
  *

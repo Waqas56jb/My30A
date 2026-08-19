@@ -1,14 +1,5 @@
-import { request, clone } from './mockClient'
 import { readStore, writeStore, removeStore, STORAGE_KEYS } from '../utils/storage'
-import { mockHost, DEMO_CREDENTIALS } from '../data/host'
-
-/**
- * Mock authentication.
- *
- * No provider, no tokens, no password checking beyond shape. The session is a
- * localStorage record so a refresh keeps you signed in. Everything here is the
- * seam where a real auth SDK will land.
- */
+import { api, setToken } from './api'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -24,134 +15,91 @@ export function validatePassword(password) {
 export const getSession = () => readStore(STORAGE_KEYS.session, null)
 
 export async function login({ email, password, remember = true }) {
-  return request(
-    () => {
-      if (!validateEmail(email)) {
-        throw Object.assign(new Error('Enter a valid email address.'), { field: 'email' })
-      }
-      if (!password) {
-        throw Object.assign(new Error('Enter your password.'), { field: 'password' })
-      }
-      // The prototype accepts any password for the demo account, and any
-      // well-formed credentials for an account created in this session.
-      const created = readStore(STORAGE_KEYS.profile, null)
-      const known =
-        email.trim().toLowerCase() === DEMO_CREDENTIALS.email ||
-        (created && email.trim().toLowerCase() === created.email?.toLowerCase())
-
-      if (!known) {
-        throw Object.assign(
-          new Error('No host account matches that email. Check it, or create an account.'),
-          { field: 'email' },
-        )
-      }
-
-      const host = created ?? clone(mockHost)
-      const session = { host, signedInAt: new Date().toISOString(), remember }
-      writeStore(STORAGE_KEYS.session, session)
-      return clone(session)
-    },
-    { label: 'your account' },
-  )
+  if (!validateEmail(email)) throw Object.assign(new Error('Enter a valid email address.'), { field: 'email' })
+  if (!password) throw Object.assign(new Error('Enter your password.'), { field: 'password' })
+  const data = await api('/auth/login', { method: 'POST', body: { email, password, role: 'HOST', remember } })
+  setToken(data.token)
+  const p = data.profile ?? {}
+  const host = {
+    id: data.account.id,
+    firstName: p.first_name,
+    lastName: p.last_name,
+    email: data.account.email,
+    phone: p.phone,
+    company: p.company,
+    emailVerified: Boolean(p.email_verified),
+  }
+  const session = { host, signedInAt: new Date().toISOString(), remember }
+  writeStore(STORAGE_KEYS.session, session)
+  return session
 }
 
 export async function signUp({ firstName, lastName, email, phone, password }) {
-  return request(
-    () => {
-      const host = {
-        ...clone(mockHost),
-        id: 'host_new',
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone.trim(),
-        avatar: null,
-        company: '',
-        emailVerified: false,
-        createdAt: new Date().toISOString(),
-      }
-      writeStore(STORAGE_KEYS.profile, host)
-      const session = { host, signedInAt: new Date().toISOString(), remember: true }
-      writeStore(STORAGE_KEYS.session, session)
-      return clone(session)
-    },
-    { label: 'your new account' },
-  )
+  const data = await api('/auth/register', {
+    method: 'POST',
+    body: { role: 'HOST', firstName, lastName, email, phone, password },
+  })
+  setToken(data.token)
+  const p = data.profile ?? {}
+  const host = {
+    id: data.account.id,
+    firstName: p.first_name ?? firstName,
+    lastName: p.last_name ?? lastName,
+    email: data.account.email,
+    phone: p.phone ?? phone,
+    company: '',
+    emailVerified: false,
+  }
+  const session = { host, signedInAt: new Date().toISOString(), remember: true }
+  writeStore(STORAGE_KEYS.session, session)
+  writeStore(STORAGE_KEYS.profile, host)
+  return session
 }
 
 export async function signOut() {
+  try {
+    await api('/auth/logout', { method: 'POST', body: {} })
+  } catch {
+    /* ignore */
+  }
+  setToken(null)
   removeStore(STORAGE_KEYS.session)
   return { ok: true }
 }
 
 export async function requestPasswordReset(email) {
-  return request(
-    () => {
-      if (!validateEmail(email)) {
-        throw Object.assign(new Error('Enter a valid email address.'), { field: 'email' })
-      }
-      // Deliberately does not reveal whether the account exists.
-      return { ok: true, email: email.trim().toLowerCase() }
-    },
-    { label: 'the reset email' },
-  )
+  if (!validateEmail(email)) throw Object.assign(new Error('Enter a valid email address.'), { field: 'email' })
+  return api('/auth/forgot-password', { method: 'POST', body: { email, role: 'HOST' } })
 }
 
 export async function resetPassword({ token, password }) {
-  return request(
-    () => {
-      if (!token) throw new Error('This reset link is no longer valid. Request a new one.')
-      const problem = validatePassword(password)
-      if (problem) throw Object.assign(new Error(problem), { field: 'password' })
-      return { ok: true }
-    },
-    { label: 'your new password' },
-  )
+  return api('/auth/reset-password', { method: 'POST', body: { role: 'HOST', token, password } })
 }
 
-export async function verifyEmail(code) {
-  return request(
-    () => {
-      if (String(code ?? '').replace(/\s/g, '').length !== 6) {
-        throw Object.assign(new Error('Enter the 6-digit code from your email.'), { field: 'code' })
-      }
-      const session = getSession()
-      if (session) {
-        session.host.emailVerified = true
-        writeStore(STORAGE_KEYS.session, session)
-      }
-      const profile = readStore(STORAGE_KEYS.profile, null)
-      if (profile) writeStore(STORAGE_KEYS.profile, { ...profile, emailVerified: true })
-      return { ok: true }
-    },
-    { label: 'your verification code' },
-  )
+export async function verifyEmail() {
+  throw new Error('Email verification is sent from the My30A team.')
 }
 
 export async function updateProfile(patch) {
-  return request(
-    () => {
-      const session = getSession()
-      if (!session) throw new Error('You are signed out.')
-      const host = { ...session.host, ...patch }
-      writeStore(STORAGE_KEYS.session, { ...session, host })
-      writeStore(STORAGE_KEYS.profile, host)
-      return clone(host)
-    },
-    { label: 'your profile' },
-  )
+  const next = await api('/hosts/me', { method: 'PATCH', body: patch })
+  const session = getSession()
+  const host = {
+    ...(session?.host ?? {}),
+    firstName: next.first_name,
+    lastName: next.last_name,
+    phone: next.phone,
+    company: next.company,
+    email: next.email,
+    id: next.id,
+  }
+  writeStore(STORAGE_KEYS.session, { ...session, host })
+  return host
 }
 
 export async function updateSettings(patch) {
-  return request(
-    () => {
-      const session = getSession()
-      if (!session) throw new Error('You are signed out.')
-      const host = { ...session.host, settings: { ...session.host.settings, ...patch } }
-      writeStore(STORAGE_KEYS.session, { ...session, host })
-      writeStore(STORAGE_KEYS.profile, host)
-      return clone(host)
-    },
-    { label: 'your settings' },
-  )
+  const session = getSession()
+  if (!session) throw new Error('You are signed out.')
+  const host = { ...session.host, settings: { ...session.host.settings, ...patch } }
+  writeStore(STORAGE_KEYS.session, { ...session, host })
+  return host
 }

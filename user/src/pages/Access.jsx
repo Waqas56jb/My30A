@@ -7,56 +7,39 @@ import { Callout } from '../components/ui/Display'
 import { useApp } from '../context/AppContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { hero, PHOTO } from '../assets/images'
-import { mockGuests, ACCESS_CODES } from '../data/mockGuests'
-import { getPropertyById } from '../data/mockProperties'
-import { formatDateRange } from '../utils/format'
 
-/**
- * Guest access.
- *
- * The mock stand-in for authentication: a host prints a code on the welcome
- * card (or puts a QR sticker by the door), the guest enters it once, and the
- * property-specific layer unlocks. Real token exchange replaces `unlockWithCode`.
- */
 export default function Access() {
   const navigate = useNavigate()
-  const { unlockWithCode, pushToast, hasGuest, guest } = useApp()
+  const { unlockWithCode, pushToast, hasGuest, guest, isAuthed } = useApp()
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   useDocumentTitle('Unlock your stay')
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault()
     setError('')
     if (!code.trim()) {
       setError('Enter the code your host sent you.')
       return
     }
+    if (!isAuthed) {
+      navigate('/login', { state: { from: '/access' } })
+      return
+    }
     setBusy(true)
-    const ok = unlockWithCode(code)
+    const ok = await unlockWithCode(code)
     setBusy(false)
     if (!ok) {
       setError('We do not recognise that code. Check it against your booking confirmation.')
       return
     }
     pushToast({ tone: 'success', title: 'Stay unlocked', message: 'Everything is ready for you.' })
-    /* Unlocking is the step that takes a visitor off the public website and
-       into the app, so land them on the app home rather than a sub-page. */
-    navigate('/discover')
-  }
-
-  const useDemo = (slug) => {
-    unlockWithCode(slug)
-    pushToast({ tone: 'success', title: 'Stay unlocked' })
-    /* Unlocking is the step that takes a visitor off the public website and
-       into the app, so land them on the app home rather than a sub-page. */
     navigate('/discover')
   }
 
   return (
     <div className="access">
-      {/* --------------------------- Imagery ---------------------------- */}
       <div className="access__media">
         <img src={hero(PHOTO.duneWalkover)} alt="" />
         <div className="access__media-body">
@@ -73,7 +56,6 @@ export default function Access() {
         </div>
       </div>
 
-      {/* ---------------------------- Panel ----------------------------- */}
       <div className="access__panel">
         <Link to="/" className="u-row" style={{ gap: 10, alignSelf: 'flex-start' }}>
           <Icon name="arrowLeft" size={18} />
@@ -114,7 +96,7 @@ export default function Access() {
                     className="input access__code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    placeholder="MY30A-8842"
+                    placeholder="MY30A-0000"
                     autoComplete="one-time-code"
                     autoCapitalize="characters"
                     spellCheck="false"
@@ -133,39 +115,6 @@ export default function Access() {
               <span className="u-xs u-muted">
                 Scanning the QR code in your welcome pack opens this app already unlocked.
               </span>
-            </div>
-
-            <div className="divider">Or try a demo stay</div>
-
-            <div className="u-stack" style={{ gap: 'var(--sp-2)' }}>
-              {mockGuests.map((demoGuest) => {
-                const property = getPropertyById(demoGuest.propertyId)
-                const demoCode = Object.keys(ACCESS_CODES).find(
-                  (key) => ACCESS_CODES[key] === demoGuest.slug,
-                )
-                return (
-                  <button
-                    key={demoGuest.id}
-                    type="button"
-                    className="access__demo"
-                    onClick={() => useDemo(demoGuest.slug)}
-                  >
-                    <span className="drawer__unlock-icon" aria-hidden="true">
-                      <Icon name="key" />
-                    </span>
-                    <span className="u-grow" style={{ minWidth: 0 }}>
-                      <span className="drawer__guest-name">
-                        {demoGuest.firstName} · {property?.name}
-                      </span>
-                      <span className="drawer__guest-sub">
-                        {formatDateRange(demoGuest.stay.checkInDate, demoGuest.stay.checkOutDate)} ·{' '}
-                        {demoCode}
-                      </span>
-                    </span>
-                    <Icon name="arrowRight" size={18} style={{ flex: 'none', color: 'var(--ink-400)' }} />
-                  </button>
-                )
-              })}
             </div>
 
             <Callout icon="info">

@@ -33,22 +33,27 @@ export default function Discover() {
   const { guest, property, hasGuest, account } = useApp()
   useDocumentTitle('Home')
 
+  const stay = guest?.stay ?? null
   const recs = useAsync(() => api.getRecommendations(), [], { skip: !hasGuest })
   const orders = useAsync(() => api.getOrders(), [], { skip: !hasGuest })
   const restaurants = useAsync(() => api.getRestaurants({ sort: 'distance' }), [])
   const events = useAsync(() => api.getEvents(), [])
 
-  const phase = stayPhase(guest?.stay)
+  const phase = stayPhase(stay)
   const activeOrders = useMemo(
-    () => (orders.data ?? []).filter((o) => ACTIVE.includes(o.status)),
+    () => (Array.isArray(orders.data) ? orders.data : []).filter((o) => ACTIVE.includes(o.status)),
     [orders.data],
+  )
+  const picks = useMemo(
+    () => (Array.isArray(recs.data) ? recs.data : []).filter((rec) => rec && (rec.reason || rec.name || rec.title)),
+    [recs.data],
   )
 
   return (
     <div className={cx('page page--flush', hasGuest && 'page--railed')}>
       <div className="page__main">
         {/* --------------------------- Stay header --------------------------- */}
-        {hasGuest ? (
+        {hasGuest && stay ? (
           <header className="hero" style={{ minHeight: 260 }}>
             <div className="hero__media" aria-hidden="true">
               <SmartImage photoId={property?.heroImage} alt="" fill width={1400} eager />
@@ -62,7 +67,7 @@ export default function Discover() {
             <div className="hero__inner">
               <p className="hero__eyebrow">{phase.label}</p>
               <h1 className="hero__title" style={{ fontSize: 'var(--fs-h1)' }}>
-                Welcome back, {guest.firstName}
+                Welcome back, {guest?.firstName ?? account?.firstName ?? 'there'}
               </h1>
               <p className="hero__sub">{property?.name}</p>
 
@@ -70,18 +75,19 @@ export default function Discover() {
                 <div className="hero__fact">
                   <span className="hero__fact-k">Your stay</span>
                   <span className="hero__fact-v">
-                    {formatDateRange(guest.stay.checkInDate, guest.stay.checkOutDate)}
+                    {formatDateRange(stay.checkInDate, stay.checkOutDate) || 'Dates to confirm'}
                   </span>
                 </div>
                 <div className="hero__fact">
                   <span className="hero__fact-k">Check-in</span>
                   <span className="hero__fact-v">
-                    {formatDate(guest.stay.checkInDate)} · {property?.checkIn}
+                    {formatDate(stay.checkInDate) || '—'}
+                    {property?.checkIn ? ` · ${property.checkIn}` : ''}
                   </span>
                 </div>
                 <div className="hero__fact">
                   <span className="hero__fact-k">WiFi</span>
-                  <span className="hero__fact-v">{property?.wifi?.network}</span>
+                  <span className="hero__fact-v">{property?.wifi?.network ?? 'In your stay details'}</span>
                 </div>
               </div>
             </div>
@@ -107,27 +113,18 @@ export default function Discover() {
         )}
 
         <div className="home-inner">
-          {/* ------------------------ Ask Vitoria ------------------------ */}
-          <div className="home-float" style={{ padding: 0 }}>
-            <Link to="/vitoria" className="ask-card">
-              <span
-                className="avatar avatar--md avatar--vitoria"
-                aria-hidden="true"
-                style={{ display: 'grid', placeItems: 'center' }}
-              >
-                <Icon name="sparkles" style={{ width: 20, height: 20 }} />
-              </span>
-              <span className="ask-card__text">
-                <span className="ask-card__title">Ask Vitoria anything</span>
-                <span className="ask-card__sub u-truncate">
-                  “Where should we eat tonight?” · “Can you arrange airport pickup?”
-                </span>
-              </span>
-              <span className="ask-card__go" aria-hidden="true">
-                <Icon name="arrowRight" />
-              </span>
-            </Link>
-          </div>
+          <Link to="/vitoria" className={hasGuest ? 'ask-card ask-card--overlap' : 'ask-card'}>
+            <span className="ask-card__mark" aria-hidden="true">
+              <Icon name="sparkles" />
+            </span>
+            <span className="ask-card__text">
+              <span className="ask-card__title">Ask Vitoria anything</span>
+              <span className="ask-card__sub">Dinner, a ride, or what to do today</span>
+            </span>
+            <span className="ask-card__go" aria-hidden="true">
+              <Icon name="arrowRight" />
+            </span>
+          </Link>
 
           {/* ------------------------ Quick actions ---------------------- */}
           <Section title="Quick actions" id="quick-actions">
@@ -166,9 +163,9 @@ export default function Discover() {
           )}
 
           {/* ------------------------ Personal picks --------------------- */}
-          {hasGuest && (
+          {hasGuest && (recs.loading || picks.length > 0) && (
             <Section
-              title={`Picked for you, ${guest.firstName}`}
+              title={`Picked for you, ${guest?.firstName ?? ''}`}
               subtitle="Based on your last stay and who you are travelling with"
               linkTo="/explore"
               id="picks"
@@ -177,7 +174,7 @@ export default function Discover() {
               {recs.error && <ErrorState error={recs.error} onRetry={recs.reload} />}
               {!recs.loading && !recs.error && (
                 <ScrollRow label="Recommended for you">
-                  {(recs.data ?? []).map((rec) => (
+                  {picks.map((rec) => (
                     <RecommendationCard key={rec.id} recommendation={rec} />
                   ))}
                 </ScrollRow>
@@ -211,7 +208,7 @@ export default function Discover() {
             {restaurants.error && <ErrorState error={restaurants.error} onRetry={restaurants.reload} />}
             {!restaurants.loading && !restaurants.error && (
               <ScrollRow label="Restaurants near you">
-                {(restaurants.data ?? []).slice(0, 6).map((restaurant) => (
+                {(Array.isArray(restaurants.data) ? restaurants.data : []).slice(0, 6).map((restaurant) => (
                   <RestaurantCard key={restaurant.id} item={restaurant} />
                 ))}
               </ScrollRow>
@@ -223,7 +220,7 @@ export default function Discover() {
             {events.loading && <SkeletonGrid count={2} columns="grid--2" />}
             {!events.loading && !events.error && (
               <div className="u-stack">
-                {(events.data ?? []).slice(0, 3).map((event) => (
+                {(Array.isArray(events.data) ? events.data : []).slice(0, 3).map((event) => (
                   <EventCard key={event.id} event={event} />
                 ))}
               </div>

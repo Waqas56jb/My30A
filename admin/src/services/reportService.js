@@ -1,12 +1,10 @@
-import { request } from './mockClient'
 import { formatCurrency } from '../utils/format'
 
 /**
  * Report generation.
  *
- * The CSV is assembled in the browser from the same mock tables the screens
- * read, so a downloaded file always matches what was on screen. Nothing is
- * sent anywhere — the "export" builds a Blob and hands it to the browser.
+ * The CSV is assembled in the browser from the records already loaded on the
+ * screen, so a downloaded file matches what the operator is looking at.
  */
 
 export const REPORTS = [
@@ -154,9 +152,8 @@ export function downloadCsv(filename, csv) {
   }
 }
 
-export const generate = async (id, data) =>
-  request(() => {
-    const report = reportById(id)
-    const rows = buildReport(id, data)
-    return { report, rows, csv: toCsv(report.columns, rows), generatedAt: new Date().toISOString() }
-  }, { label: 'that report' })
+export const generate = async (id, data) => {
+  const report = reportById(id)
+  const rows = buildReport(id, data)
+  return { report, rows, csv: toCsv(report.columns, rows), generatedAt: new Date().toISOString() }
+}

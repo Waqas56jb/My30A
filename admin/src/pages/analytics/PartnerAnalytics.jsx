@@ -32,8 +32,8 @@ export default function PartnerAnalytics() {
   if (partners.loading || categories.loading) return <SkeletonGrid count={6} columns="grid--3" />
   if (partners.error) return <ErrorState error={partners.error} onRetry={partners.reload} />
 
-  const rows = partners.data.rows
-  const sum = (field) => rows.reduce((total, p) => total + p.stats[field], 0)
+  const rows = partners.data?.rows ?? []
+  const sum = (field) => rows.reduce((total, p) => total + (Number(p.stats?.[field]) || 0), 0)
   const views = sum('views')
   const website = sum('websiteClicks')
   const phone = sum('phoneClicks')
@@ -41,12 +41,16 @@ export default function PartnerAnalytics() {
   const outbound = website + phone + directions
   const total = views + outbound
 
-  const byCategory = (categories.data ?? [])
+  const byCategory = (Array.isArray(categories.data) ? categories.data : [])
     .map((category) => {
       const inCategory = rows.filter((p) => p.categoryId === category.id)
-      const catViews = inCategory.reduce((t, p) => t + p.stats.views, 0)
+      const catViews = inCategory.reduce((t, p) => t + (Number(p.stats?.views) || 0), 0)
       const catClicks = inCategory.reduce(
-        (t, p) => t + p.stats.websiteClicks + p.stats.phoneClicks + p.stats.directionsClicks,
+        (t, p) =>
+          t +
+          (Number(p.stats?.websiteClicks) || 0) +
+          (Number(p.stats?.phoneClicks) || 0) +
+          (Number(p.stats?.directionsClicks) || 0),
         0,
       )
       return {
@@ -134,15 +138,15 @@ export default function PartnerAnalytics() {
               label: 'Category',
               render: (r) => categories.data?.find((c) => c.id === r.categoryId)?.name ?? '—',
             },
-            { key: 'views', label: 'Profile views', align: 'right', render: (r) => formatNumber(r.stats.views) },
-            { key: 'website', label: 'Website', align: 'right', render: (r) => formatNumber(r.stats.websiteClicks) },
-            { key: 'phone', label: 'Phone', align: 'right', render: (r) => formatNumber(r.stats.phoneClicks) },
+            { key: 'views', label: 'Profile views', align: 'right', render: (r) => formatNumber(r.stats?.views) },
+            { key: 'website', label: 'Website', align: 'right', render: (r) => formatNumber(r.stats?.websiteClicks) },
+            { key: 'phone', label: 'Phone', align: 'right', render: (r) => formatNumber(r.stats?.phoneClicks) },
             {
               key: 'directions',
               label: 'Directions',
               align: 'right',
               hideOn: 'card',
-              render: (r) => formatNumber(r.stats.directionsClicks),
+              render: (r) => formatNumber(r.stats?.directionsClicks),
             },
             {
               key: 'ctr',

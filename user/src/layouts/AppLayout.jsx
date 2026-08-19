@@ -49,13 +49,18 @@ export default function AppLayout() {
         className={cx('app-main', isFullscreen && 'app-main--flush')}
         tabIndex={-1}
       >
-        {status === 'loading' && <SkeletonPage />}
-        {status === 'error' && (
-          <div className="page">
-            <ErrorState title="We could not open your stay" error={error} onRetry={reloadSession} />
-          </div>
+        {status === 'loading' ? (
+          <SkeletonPage />
+        ) : (
+          <>
+            {status === 'error' && (
+              <div className="page" style={{ paddingBottom: 0 }}>
+                <ErrorState title="We could not refresh your stay" error={error} onRetry={reloadSession} />
+              </div>
+            )}
+            <Outlet />
+          </>
         )}
-        {(status === 'ready' || status === 'public') && <Outlet />}
       </main>
 
       <MobileBottomNav />

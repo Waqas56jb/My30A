@@ -5,9 +5,11 @@ import { Toaster } from '../ui/Modal'
 import Sidebar from '../navigation/Sidebar'
 import AdminDrawer from '../navigation/AdminDrawer'
 import GlobalSearch from '../navigation/GlobalSearch'
+import NotificationBell from '../navigation/NotificationBell'
+import RouteErrorBoundary from '../ErrorBoundary'
 import { useAdmin } from '../../context/AdminContext'
 import { labelForPath } from '../navigation/navItems'
-import { initials } from '../../utils/format'
+import { Avatar } from '../ui/Display'
 
 /**
  * The shell: fixed rail on desktop, top bar plus a drawer below 1100px.
@@ -19,7 +21,7 @@ import { initials } from '../../utils/format'
 export default function AdminLayout() {
   const location = useLocation()
   const [drawerOpen, setDrawerOpen] = useState(false)
-  const { toasts, dismissToast, user, attentionCount } = useAdmin()
+  const { toasts, dismissToast, user } = useAdmin()
   const mainRef = useRef(null)
 
   /* A new page should start at the top, whichever element is scrolling.
@@ -61,26 +63,17 @@ export default function AdminLayout() {
           <GlobalSearch className="atopbar__search" />
 
           <div className="atopbar__actions">
-            <Link
-              to="/admin/operations"
-              className="icon-btn atopbar__alerts"
-              aria-label={
-                attentionCount > 0
-                  ? `${attentionCount} items need attention`
-                  : 'Nothing needs attention'
-              }
-            >
-              <Icon name="bell" />
-              {attentionCount > 0 && <span className="icon-btn__badge">{attentionCount}</span>}
-            </Link>
-            <Link to="/admin/settings" className="atopbar__avatar" aria-label="Your account">
-              {initials(user?.name ?? 'Admin')}
+            <NotificationBell />
+            <Link to="/admin/profile" className="atopbar__avatar" aria-label="Your profile">
+              <Avatar src={user?.avatarUrl} name={user?.name ?? 'Admin'} size="sm" />
             </Link>
           </div>
         </header>
 
         <main id="admin-content" className="ashell__main" ref={mainRef} tabIndex={-1}>
-          <Outlet />
+          <RouteErrorBoundary>
+            <Outlet />
+          </RouteErrorBoundary>
         </main>
       </div>
 

@@ -1,42 +1,34 @@
-import { request, clone } from './mockClient'
-import { mockAnalyticsFor, EMPTY_ANALYTICS, METRICS, TRACKED, NOT_TRACKED } from '../data/analytics'
+import { api } from './api'
+import { METRICS, TRACKED, NOT_TRACKED } from '../data/analytics'
 
-/**
- * Engagement, not revenue.
- *
- * Everything returned here is an event My30A can actually observe on its own
- * surfaces. There is no conversion or booking figure because a guest who taps
- * "Website" leaves for the partner's own site, and what happens there is not
- * visible to us. The UI states that plainly rather than inventing a number.
- */
-
-export async function getAnalytics(partnerId, range = '30d') {
-  return request(() => clone(mockAnalyticsFor(partnerId, range) ?? EMPTY_ANALYTICS), {
-    label: 'your analytics',
-  })
+export async function getAnalytics(_partnerId, range = '30d') {
+  const days = range === '7d' ? 7 : range === '90d' ? 90 : 30
+  const data = await api(`/partners/me/analytics?days=${days}`)
+  return {
+    totals: data.totals ?? {},
+    series: data.series ?? [],
+    tracked: data.tracked ?? TRACKED,
+    notTracked: data.notTracked ?? NOT_TRACKED,
+    interest: data.interest ?? [],
+    referrers: data.referrers ?? [],
+  }
 }
 
-export async function getInterest(partnerId) {
-  return request(() => clone(mockAnalyticsFor(partnerId, '30d').interest ?? []), {
-    label: 'guest interest',
-  })
+export async function getInterest() {
+  return []
 }
 
-export async function getReferrers(partnerId) {
-  return request(() => clone(mockAnalyticsFor(partnerId, '30d').referrers ?? []), {
-    label: 'where guests came from',
-  })
+export async function getReferrers() {
+  return []
 }
 
 export const trackingPolicy = () => ({ tracked: [...TRACKED], notTracked: [...NOT_TRACKED] })
 
-export const metricDefinitions = () => clone(METRICS)
+export const metricDefinitions = () => [...METRICS]
 
-/** Total engagement = every outbound action, views excluded. */
 export const totalEngagement = (totals = {}) =>
   Number(totals.website ?? 0) + Number(totals.phone ?? 0) + Number(totals.directions ?? 0)
 
-/** Share of viewers who did something. The one derived figure we can defend. */
 export function connectRate(totals = {}) {
   const views = Number(totals.views ?? 0)
   if (!views) return null

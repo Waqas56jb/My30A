@@ -3,7 +3,7 @@ import Icon from '../../components/ui/Icon'
 import { SearchBar, FilterChips, Select, Field } from '../../components/ui/Form'
 import { PageHeader, Panel, StatusPill, Money, ReferralNote, Stat } from '../../components/common/AdminUI'
 import DataTable, { Pagination, TableToolbar } from '../../components/tables/DataTable'
-import SmartImage from '../../components/ui/SmartImage'
+import { Thumb } from '../../components/ui/SmartImage'
 import { useTable, useLoad } from '../../hooks/useTable'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
@@ -39,9 +39,7 @@ export default function Partners() {
       primary: true,
       render: (row) => (
         <span className="tone-row" style={{ flexWrap: 'nowrap' }}>
-          <span style={{ width: 40, flex: 'none' }}>
-            <SmartImage photoId={row.images[0]} alt="" ratio="1x1" width={80} radius="sm" />
-          </span>
+          <Thumb photoId={row.images?.[0]} name={row.name} alt="" />
           <span style={{ minWidth: 0 }}>
             <Link to={`/admin/partners/${row.id}`} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
               {row.name}
@@ -64,13 +62,13 @@ export default function Partners() {
       hideOn: 'card',
       render: (row) => (row.startingPrice ? <Money amount={row.startingPrice} /> : <span className="u-muted">Contact for pricing</span>),
     },
-    { key: 'views', label: 'Views', align: 'right', render: (row) => formatNumber(row.stats.views) },
+    { key: 'views', label: 'Views', align: 'right', render: (row) => formatNumber(row.stats?.views) },
     {
       key: 'clicks',
       label: 'Outbound',
       align: 'right',
       render: (row) =>
-        formatNumber(row.stats.websiteClicks + row.stats.phoneClicks + row.stats.directionsClicks),
+        formatNumber((Number(row.stats?.websiteClicks) || 0) + (Number(row.stats?.phoneClicks) || 0) + (Number(row.stats?.directionsClicks) || 0)),
     },
     {
       key: 'featured',

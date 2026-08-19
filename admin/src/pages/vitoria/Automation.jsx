@@ -26,6 +26,8 @@ export default function Automation() {
   if (loading) return <SkeletonGrid count={4} columns="grid--2" />
   if (error) return <ErrorState error={error} onRetry={reload} />
 
+  const rows = Array.isArray(data) ? data : []
+
   const toggle = async (automation) => {
     try {
       await api.toggleAutomation(automation.id, !automation.enabled)
@@ -58,19 +60,19 @@ export default function Automation() {
       </Callout>
 
       <div className="astats">
-        <Stat label="Automations" value={data.length} icon="send" tone="sea" />
-        <Stat label="Enabled" value={data.filter((a) => a.enabled).length} icon="checkCircle" tone="success" />
-        <Stat label="Paused" value={data.filter((a) => !a.enabled).length} icon="circle" tone="danger" />
+        <Stat label="Automations" value={rows.length} icon="send" tone="sea" />
+        <Stat label="Enabled" value={rows.filter((a) => a.enabled).length} icon="checkCircle" tone="success" />
+        <Stat label="Paused" value={rows.filter((a) => !a.enabled).length} icon="circle" tone="danger" />
         <Stat
           label="Runs this month"
-          value={data.reduce((sum, a) => sum + a.runsThisMonth, 0)}
+          value={rows.reduce((sum, a) => sum + (Number(a.runsThisMonth) || 0), 0)}
           icon="refresh"
           tone="gold"
         />
       </div>
 
       <Grid cols={2}>
-        {data.map((automation) => (
+        {rows.map((automation) => (
           <Panel
             key={automation.id}
             title={automation.name}

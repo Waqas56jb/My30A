@@ -5,12 +5,10 @@ import Icon from '../components/ui/Icon'
 import Button from '../components/ui/Button'
 import { Switch } from '../components/ui/Form'
 import { Section, Callout, DefinitionList } from '../components/ui/Display'
-import { ConfirmModal, BottomSheet } from '../components/ui/Modal'
+import { BottomSheet } from '../components/ui/Modal'
 import { useApp } from '../context/AppContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { getAnalyticsLog, subscribeToAnalytics, clearAnalyticsLog } from '../services/analytics'
-import { listGuests } from '../services/mockApi'
-import { getPropertyById } from '../data/mockProperties'
 import { formatTime } from '../utils/format'
 
 function SettingRow({ icon, title, sub, control, onClick, as = 'div' }) {
@@ -38,27 +36,20 @@ export default function Settings() {
   const {
     settings,
     updateSettings,
-    resetDemoData,
     guestSlug,
-    setGuestSlug,
-    pushToast,
     leaveStay,
     account,
   } = useApp()
   const navigate = useNavigate()
-  const [resetOpen, setResetOpen] = useState(false)
   const [logOpen, setLogOpen] = useState(false)
-  const [switchOpen, setSwitchOpen] = useState(false)
   const [log, setLog] = useState(getAnalyticsLog())
   useDocumentTitle('Settings')
 
   useEffect(() => subscribeToAnalytics(() => setLog(getAnalyticsLog())), [])
 
-  const guests = listGuests()
-
   return (
     <div className="page">
-      <PageHeader title="Settings" subtitle="Notifications, personalisation, and prototype tools." back backTo="/profile" />
+      <PageHeader title="Settings" subtitle="Notifications and personalisation." back backTo="/profile" />
 
       <Section title="Notifications">
         <div className="card" style={{ overflow: 'hidden' }}>
@@ -100,8 +91,7 @@ export default function Settings() {
           />
         </div>
         <Callout icon="info" className="section">
-          Delivery is mocked in this prototype — nothing is actually sent. These toggles map onto the
-          notification preferences the backend will store.
+          These preferences are stored on your account and used when we send status updates.
         </Callout>
       </Section>
 
@@ -134,7 +124,7 @@ export default function Settings() {
             icon="key"
             title={guestSlug ? 'Guest link' : 'Unlock your stay'}
             sub={guestSlug ? `/guest/${guestSlug}` : 'Enter the access code from your host'}
-            onClick={() => (guestSlug ? setSwitchOpen(true) : navigate('/access'))}
+            onClick={() => navigate('/access')}
           />
           {guestSlug && (
             <SettingRow
@@ -176,38 +166,13 @@ export default function Settings() {
         </div>
       </Section>
 
-      <Section title="Prototype tools" subtitle="Not part of the guest experience">
+      <Section title="Activity">
         <div className="card" style={{ overflow: 'hidden' }}>
-          <SettingRow
-            icon="alert"
-            title="Simulate API failures"
-            sub="Forces every mock request to fail so you can see error states"
-            control={
-              <Switch
-                checked={settings.simulateErrors}
-                onChange={(value) => {
-                  updateSettings({ simulateErrors: value })
-                  pushToast({
-                    tone: value ? 'error' : 'success',
-                    title: value ? 'Failure mode on' : 'Failure mode off',
-                    message: value ? 'Requests will now fail on purpose.' : 'Requests are healthy again.',
-                  })
-                }}
-                label="Simulate API failures"
-              />
-            }
-          />
           <SettingRow
             icon="grid"
             title="Analytics log"
             sub={`${log.length} events captured this session`}
             onClick={() => setLogOpen(true)}
-          />
-          <SettingRow
-            icon="refresh"
-            title="Reset demo data"
-            sub="Restore the shipped requests, messages, and notifications"
-            onClick={() => setResetOpen(true)}
           />
         </div>
       </Section>
@@ -217,9 +182,9 @@ export default function Settings() {
           <DefinitionList
             rows={[
               { key: 'Application', value: 'My30A Guest Experience' },
-              { key: 'Version', value: '1.0.0 · frontend prototype' },
-              { key: 'Data', value: 'Mock data only — no backend connected' },
-              { key: 'Concierge', value: 'Vitoria (mock conversational service)' },
+              { key: 'Version', value: '1.0.0' },
+              { key: 'Data', value: 'Live My30A API' },
+              { key: 'Concierge', value: 'Vitoria' },
             ]}
           />
           <p className="u-xs u-muted" style={{ marginTop: 12 }}>
@@ -228,46 +193,6 @@ export default function Settings() {
           </p>
         </div>
       </Section>
-
-      {/* --------------------------- Guest switcher -------------------------- */}
-      <BottomSheet open={switchOpen} onClose={() => setSwitchOpen(false)} title="Open a different guest link">
-        <div className="u-stack">
-          <p className="u-small u-muted">
-            In production each guest receives their own link after booking. Switch between the demo
-            links below to see how the app adapts.
-          </p>
-          {guests.map((guest) => {
-            const property = getPropertyById(guest.propertyId)
-            return (
-              <button
-                key={guest.id}
-                type="button"
-                className="card order-card"
-                onClick={() => {
-                  setGuestSlug(guest.slug)
-                  setSwitchOpen(false)
-                  navigate('/discover')
-                }}
-              >
-                <span className="order-card__icon" aria-hidden="true">
-                  <Icon name="key" />
-                </span>
-                <span className="u-grow" style={{ minWidth: 0 }}>
-                  <span className="order-card__title">
-                    {guest.firstName} {guest.lastName}
-                  </span>
-                  <span className="order-card__meta">
-                    {property?.name} · /guest/{guest.slug}
-                  </span>
-                </span>
-                {guest.slug === guestSlug && (
-                  <Icon name="check" size={18} style={{ color: 'var(--sea-700)', flex: 'none' }} />
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </BottomSheet>
 
       {/* --------------------------- Analytics log --------------------------- */}
       <BottomSheet
@@ -321,19 +246,6 @@ export default function Settings() {
           </div>
         )}
       </BottomSheet>
-
-      <ConfirmModal
-        open={resetOpen}
-        onClose={() => setResetOpen(false)}
-        onConfirm={async () => {
-          await resetDemoData()
-          setResetOpen(false)
-        }}
-        title="Reset demo data?"
-        message="This restores the original mock requests, conversation, and notifications. Anything you created in this session is discarded."
-        confirmLabel="Reset"
-        tone="danger"
-      />
 
       <div style={{ height: 'var(--sp-8)' }} />
     </div>

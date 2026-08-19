@@ -9,6 +9,7 @@ import './styles/tokens.css'
 import './styles/base.css'
 import './styles/components.css'
 import './styles/host.css'
+import './styles/area-guide.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

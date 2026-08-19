@@ -155,12 +155,15 @@ body:not(.kb-open) .chat-screen {
   border-radius: 20px;
   font-size: 0.95rem;
   line-height: 1.55;
-  white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
   user-select: text;
   -webkit-user-select: text;
   -webkit-touch-callout: default;
+}
+
+.bubble--user {
+  white-space: pre-wrap;
 }
 
 .bubble--ai {
@@ -183,7 +186,75 @@ body:not(.kb-open) .chat-screen {
 }
 
 .bubble strong {
-  font-weight: 600;
+  font-weight: 650;
+}
+
+.bubble-md > *:first-child {
+  margin-top: 0;
+}
+
+.bubble-md > *:last-child {
+  margin-bottom: 0;
+}
+
+.bubble-md h1,
+.bubble-md h2,
+.bubble-md h3 {
+  margin: 0.7em 0 0.35em;
+  font-family: var(--font-display);
+  font-weight: 560;
+  letter-spacing: -0.02em;
+  color: var(--sea-900);
+  line-height: 1.25;
+}
+
+.bubble-md h1 {
+  font-size: 1.2rem;
+}
+
+.bubble-md h2 {
+  font-size: 1.12rem;
+}
+
+.bubble-md h3 {
+  font-size: 1.02rem;
+}
+
+.bubble-md p {
+  margin: 0 0 0.65em;
+}
+
+.bubble-md ul,
+.bubble-md ol {
+  margin: 0 0 0.7em;
+  padding-left: 1.15em;
+}
+
+.bubble-md li {
+  margin: 0.28em 0;
+}
+
+.bubble-md a {
+  color: var(--sea-700);
+  font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.bubble-md em {
+  font-style: italic;
+  color: var(--ink-700);
+}
+
+.bubble-md__photo {
+  display: block;
+  margin: 0.55em 0 0.75em;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.bubble-md__photo .simg {
+  display: block;
 }
 
 .bubble__time {

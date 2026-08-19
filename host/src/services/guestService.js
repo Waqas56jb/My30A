@@ -1,60 +1,55 @@
-import { request, clone, notFound } from './mockClient'
-import { mockGuests, mockGuestActivity, mockRecentActivity } from '../data/guests'
+import { api } from './api'
 
-const matches = (guest, query) => {
-  if (!query) return true
-  const needle = query.trim().toLowerCase()
-  return [guest.name, guest.email, guest.accessStatus]
-    .filter(Boolean)
-    .some((field) => String(field).toLowerCase().includes(needle))
+function shapeGuest(guest) {
+  return {
+    id: guest.id,
+    name: `${guest.first_name ?? ''} ${guest.last_name ?? ''}`.trim(),
+    email: guest.email,
+    phone: guest.phone,
+    propertyId: guest.property_id,
+    propertyName: guest.property_name,
+    checkIn: guest.check_in_date,
+    checkOut: guest.check_out_date,
+    accessStatus: guest.status,
+  }
 }
 
 export async function listGuests({ propertyId = null, search = '', status = 'All' } = {}) {
-  return request(
-    () =>
-      clone(mockGuests)
-        .filter((guest) => !propertyId || guest.propertyId === propertyId)
-        .filter((guest) => status === 'All' || guest.accessStatus === status)
-        .filter((guest) => matches(guest, search))
-        .sort((a, b) => String(b.checkIn).localeCompare(String(a.checkIn))),
-    { label: 'your guests' },
-  )
+  const rows = await api('/hosts/me/guests')
+  return rows
+    .map(shapeGuest)
+    .filter((guest) => !propertyId || guest.propertyId === propertyId)
+    .filter((guest) => status === 'All' || guest.accessStatus === status)
+    .filter((guest) => {
+      if (!search) return true
+      const needle = search.trim().toLowerCase()
+      return [guest.name, guest.email, guest.accessStatus].some((field) =>
+        String(field ?? '').toLowerCase().includes(needle),
+      )
+    })
 }
 
 export async function getGuest(id) {
-  return request(
-    () => {
-      const found = mockGuests.find((guest) => guest.id === id)
-      if (!found) throw notFound('that guest')
-      return clone(found)
-    },
-    { label: 'this guest' },
-  )
+  const rows = await listGuests()
+  const found = rows.find((guest) => guest.id === id)
+  if (!found) throw Object.assign(new Error('We could not find that guest.'), { code: 'NOT_FOUND' })
+  return found
 }
 
-export async function getGuestActivity(id) {
-  return request(() => clone(mockGuestActivity[id] ?? []), { label: 'guest activity' })
+export async function getGuestActivity() {
+  return []
 }
 
-export async function getRecentActivity({ propertyId = null, limit = 6 } = {}) {
-  return request(
-    () =>
-      clone(mockRecentActivity)
-        .filter((item) => !propertyId || item.propertyId === propertyId)
-        .slice(0, limit),
-    { label: 'recent activity' },
-  )
+export async function getRecentActivity() {
+  return []
 }
 
-/** Counts used by the guests page tabs. */
 export async function getGuestCounts(propertyId = null) {
-  return request(() => {
-    const list = mockGuests.filter((guest) => !propertyId || guest.propertyId === propertyId)
-    return {
-      all: list.length,
-      active: list.filter((guest) => guest.accessStatus === 'active').length,
-      invited: list.filter((guest) => guest.accessStatus === 'invited').length,
-      expired: list.filter((guest) => guest.accessStatus === 'expired').length,
-    }
-  }, { label: 'your guests' })
+  const list = await listGuests({ propertyId })
+  return {
+    all: list.length,
+    active: list.filter((guest) => guest.accessStatus === 'active').length,
+    invited: list.filter((guest) => guest.accessStatus === 'invited').length,
+    expired: list.filter((guest) => guest.accessStatus === 'expired').length,
+  }
 }

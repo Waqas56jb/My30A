@@ -337,6 +337,8 @@
   letter-spacing: 0.01em;
   transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
   -webkit-tap-highlight-color: transparent;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .tabbar__item svg {
@@ -414,8 +416,8 @@ body.kb-open .tabbar {
     flex: 0 0 var(--nav-w);
     height: 100vh;
     padding: var(--sp-6) var(--sp-4) var(--sp-5);
-    background: var(--surface);
-    border-right: 1px solid var(--line-soft);
+    background: var(--bg);
+    border-right: 1px solid var(--line);
     overflow-y: auto;
   }
 
@@ -424,6 +426,13 @@ body.kb-open .tabbar {
     align-items: center;
     gap: var(--sp-3);
     padding: 0 var(--sp-2);
+  }
+
+  .sidebar__brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
   }
 
   .sidebar__brand-mark {
@@ -438,17 +447,20 @@ body.kb-open .tabbar {
   }
 
   .sidebar__brand-name {
+    display: block;
     font-family: var(--font-display);
-    font-size: 1.12rem;
+    font-size: 1.2rem;
     color: var(--ink-900);
     line-height: 1.1;
   }
 
   .sidebar__brand-sub {
-    font-size: var(--fs-micro);
-    letter-spacing: 0.12em;
+    display: block;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--ink-400);
+    font-weight: 600;
   }
 
   .sidebar__group {

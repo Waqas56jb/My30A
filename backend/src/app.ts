@@ -1,0 +1,66 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { resolve } from 'node:path';
+import { corsOrigins, env } from './config/env.js';
+import { requestId } from './middleware/requestId.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { v1 } from './routes/v1.js';
+import { pingDatabase } from './config/db.js';
+import { openaiHealth } from './integrations/openai/openai.js';
+import { emailVerified } from './integrations/email/emailService.js';
+import { hasServiceRole } from './config/env.js';
+import { getIo } from './sockets/io.js';
+
+export function createApp() {
+  const app = express();
+  app.disable('x-powered-by');
+  app.use(requestId);
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  app.use(cors({ origin: corsOrigins, credentials: true }));
+  app.use('/uploads', express.static(resolve(process.cwd(), 'uploads')));
+  app.use('/api/v1/admin/me/avatar', express.json({ limit: '6mb' }));
+  app.use(express.json({ limit: '1mb' }));
+  app.use(
+    rateLimit({
+      windowMs: env.RATE_LIMIT_WINDOW_MS,
+      max: env.RATE_LIMIT_MAX,
+      standardHeaders: true,
+      legacyHeaders: false,
+    }),
+  );
+  app.use(
+    '/api/v1/auth',
+    rateLimit({ windowMs: 15 * 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false }),
+  );
+  app.use(
+    '/api/v1/vitoria',
+    rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false }),
+  );
+
+  app.get('/health', async (_req, res) => {
+    const database = (await pingDatabase()) ? 'connected' : 'down';
+    const openai = openaiHealth();
+    const email = emailVerified() ? 'verified' : 'unverified';
+    const storage = hasServiceRole ? 'configured' : 'service_role_missing';
+    const realtime = getIo() ? 'connected' : 'not_started';
+    const ok = database === 'connected';
+    res.status(ok ? 200 : 503).json({
+      status: ok && openai.status !== 'unavailable' && hasServiceRole ? 'ok' : 'degraded',
+      service: 'my30a-host-backend',
+      database,
+      openai: openai.status === 'ok' ? 'reachable' : openai.status === 'unavailable' ? 'model_unavailable' : 'unknown',
+      openaiModel: openai.configured,
+      email,
+      storage,
+      realtime,
+      version: '1.0.0',
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  app.use('/api/v1', v1);
+  app.use(errorHandler);
+  return app;
+}

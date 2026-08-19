@@ -22,6 +22,7 @@ export const EXPERIENCE_NAV = [
   { to: '/experiences/boating', label: 'Boating', icon: 'boat' },
   { to: '/events', label: 'Events', icon: 'ticket' },
   { to: '/partners', label: 'Local partners', icon: 'sparkles' },
+  { to: '/area', label: 'Area map & flyers', icon: 'map' },
 ]
 
 export const STAY_NAV = [
@@ -48,9 +49,9 @@ export function Sidebar() {
         <span className="sidebar__brand-mark" aria-hidden="true">
           <Icon name="waves" />
         </span>
-        <span>
+        <span className="sidebar__brand-text">
           <span className="sidebar__brand-name">My30A</span>
-          <span className="sidebar__brand-sub">30A Concierge</span>
+          <span className="sidebar__brand-sub">Concierge</span>
         </span>
       </Link>
 
@@ -120,25 +121,10 @@ export function Sidebar() {
                 session cannot race with RequireAuth. */}
             <Link to="/logout" className="sidebar__item">
               <Icon name="logout" />
-              Sign out
+              Log out
             </Link>
           </>
-        ) : (
-          <>
-            <Link to="/login" className="btn btn--sm btn--block">
-              <Icon name="user" />
-              Log in
-            </Link>
-            <Link to="/signup" className="sidebar__item">
-              <Icon name="plus" />
-              Create an account
-            </Link>
-            <Link to="/" className="sidebar__item">
-              <Icon name="waves" />
-              Back to the website
-            </Link>
-          </>
-        )}
+        ) : null}
       </div>
     </aside>
   )
@@ -175,11 +161,7 @@ export function TopBar({ onOpenMenu }) {
               size="sm"
             />
           </Link>
-        ) : (
-          <Link to="/login" className="btn btn--sm" style={{ marginLeft: 2 }}>
-            Log in
-          </Link>
-        )}
+        ) : null}
       </div>
     </header>
   )

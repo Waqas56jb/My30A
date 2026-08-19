@@ -22,10 +22,14 @@ export default function ConversationDetail() {
   const { id } = useParams()
   const { data, loading, error, reload } = useLoad(() => api.getConversation(id), [id])
 
-  useDocumentTitle(data ? `${data.topic} · ${data.guestName}` : 'Conversation')
+  useDocumentTitle(data?.topic ? `${data.topic} · ${data.guestName}` : 'Conversation')
 
   if (loading) return <SkeletonPage />
   if (error) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
+  if (!data) return <ErrorState error={{ message: 'Conversation not found' }} onRetry={reload} title="We could not open that" />
+
+  const messages = data.messages ?? []
+  const guestInitial = (data.guestName || 'G').slice(0, 1)
 
   return (
     <div className="apage">
@@ -54,7 +58,7 @@ export default function ConversationDetail() {
       {data.createdRequest && (
         <Callout icon="sparkles">
           <strong style={{ display: 'block', marginBottom: 2 }}>
-            This conversation created a {data.createdRequest.label.toLowerCase()}
+            This conversation created a {String(data.createdRequest.label ?? data.createdRequest.kind ?? 'request').toLowerCase()}
           </strong>
           Vitoria collected the details and raised the request. It appears in the operations queue
           for a human to confirm — she never confirms a booking or takes a payment herself.
@@ -64,14 +68,18 @@ export default function ConversationDetail() {
       <Grid cols={2}>
         <Panel title="Conversation">
           <div className="convo">
-            {data.messages.map((message) => (
-              <div key={message.id} className={`convo__msg convo__msg--${message.role}`}>
-                <span className="convo__avatar" aria-hidden="true">
-                  {message.role === 'vitoria' ? 'V' : data.guestName.slice(0, 1)}
-                </span>
-                <span className="convo__bubble">{message.text}</span>
-              </div>
-            ))}
+            {messages.length === 0 ? (
+              <p className="u-small u-muted">No messages stored for this conversation yet.</p>
+            ) : (
+              messages.map((message) => (
+                <div key={message.id} className={`convo__msg convo__msg--${message.role}`}>
+                  <span className="convo__avatar" aria-hidden="true">
+                    {message.role === 'vitoria' ? 'V' : guestInitial}
+                  </span>
+                  <span className="convo__bubble">{message.text}</span>
+                </div>
+              ))
+            )}
           </div>
         </Panel>
 
@@ -95,7 +103,7 @@ export default function ConversationDetail() {
               { label: 'Started', value: `${formatDate(data.createdAt)} at ${formatTime(data.createdAt)}` },
               {
                 label: 'Actions taken',
-                value: data.createdRequest ? data.createdRequest.label : 'Answered from the knowledge base',
+                value: data.createdRequest ? (data.createdRequest.label ?? 'Service request') : 'Answered from the knowledge base',
               },
             ]}
           />

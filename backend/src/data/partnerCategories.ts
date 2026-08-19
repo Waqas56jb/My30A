@@ -1,0 +1,23 @@
+/** The 20 categories from MY30A_App_Partners_For_Developer.xlsx — Summary tab. */
+export const PARTNER_CATEGORIES = [
+  { name: 'On the Water', slug: 'on-the-water', icon: 'boat', sort: 1 },
+  { name: 'Local Marketplace', slug: 'local-marketplace', icon: 'bag', sort: 2 },
+  { name: 'Weddings, Proposals & Events', slug: 'weddings', icon: 'sparkles', sort: 3 },
+  { name: 'Wellness & Spa', slug: 'wellness-spa', icon: 'leaf', sort: 4 },
+  { name: 'Golf Cart Rental', slug: 'golf-cart-rental', icon: 'car', sort: 5 },
+  { name: 'Golf', slug: 'golf', icon: 'flag', sort: 6 },
+  { name: 'Family & Entertainment', slug: 'family-entertainment', icon: 'users', sort: 7 },
+  { name: 'Real Estate', slug: 'real-estate', icon: 'building', sort: 8 },
+  { name: 'Arts & Culture', slug: 'arts-culture', icon: 'camera', sort: 9 },
+  { name: 'Medical / Urgent Care', slug: 'medical', icon: 'info', sort: 10 },
+  { name: 'Special Moments / Photography', slug: 'photography', icon: 'camera', sort: 11 },
+  { name: 'Bike Rental', slug: 'bike-rental', icon: 'bike', sort: 12 },
+  { name: 'Welcome Setup (Florist & Gifts)', slug: 'welcome-setup', icon: 'sparkles', sort: 13 },
+  { name: 'Private Chef', slug: 'private-chef', icon: 'utensils', sort: 14 },
+  { name: 'Beach Services', slug: 'beach-services', icon: 'umbrella', sort: 15 },
+  { name: 'Pet Services', slug: 'pet-services', icon: 'heart', sort: 16 },
+  { name: 'Pickleball', slug: 'pickleball', icon: 'flag', sort: 17 },
+  { name: 'Family / Babysitting', slug: 'babysitting', icon: 'users', sort: 18 },
+  { name: 'Baby & Kids Equipment', slug: 'baby-kids-equipment', icon: 'bag', sort: 19 },
+  { name: 'Kids Camps', slug: 'kids-camps', icon: 'ticket', sort: 20 },
+] as const;

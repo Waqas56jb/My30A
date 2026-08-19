@@ -33,6 +33,7 @@ export const NAV_TREE = [
     children: [
       { to: '/admin/local-guide/categories', label: 'Categories', icon: 'list' },
       { to: '/admin/local-guide/listings', label: 'Listings', icon: 'grid' },
+      { to: '/admin/local-guide/restaurants', label: 'Restaurants', icon: 'utensils' },
       { to: '/admin/local-guide/featured', label: 'Featured Places', icon: 'star' },
     ],
   },
@@ -91,6 +92,7 @@ export const NAV_TREE = [
   { to: '/admin/media', label: 'Media', icon: 'camera', permission: 'content' },
   { to: '/admin/reports', label: 'Reports', icon: 'upload', permission: 'analytics' },
   { to: '/admin/audit', label: 'Audit Logs', icon: 'shield' },
+  { to: '/admin/profile', label: 'Your Profile', icon: 'user' },
   { to: '/admin/settings', label: 'Settings', icon: 'settings', permission: 'settings' },
 ]
 

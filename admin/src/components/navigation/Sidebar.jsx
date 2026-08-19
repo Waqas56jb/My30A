@@ -3,7 +3,8 @@ import { Link, NavLink, useLocation } from 'react-router-dom'
 import Icon from '../ui/Icon'
 import { useAdmin } from '../../context/AdminContext'
 import { visibleTree } from './navItems'
-import { cx, initials } from '../../utils/format'
+import { cx } from '../../utils/format'
+import { Avatar } from '../ui/Display'
 
 /**
  * The navigation tree, shared by the desktop rail and the mobile drawer.
@@ -124,11 +125,11 @@ export function NavAccount({ onNavigate }) {
 
   return (
     <div className="asidebar__foot">
-      <Link to="/admin/settings" className="acct" onClick={onNavigate}>
-        <span className="acct__avatar" aria-hidden="true">{initials(user.name)}</span>
+      <Link to="/admin/profile" className="acct" onClick={onNavigate}>
+        <Avatar src={user.avatarUrl} name={user.name} size="sm" className="acct__avatar" />
         <span style={{ minWidth: 0 }}>
           <span className="acct__name u-truncate">{user.name}</span>
-          <span className="acct__role u-truncate">{user.role.replace(/_/g, ' ')}</span>
+          <span className="acct__role u-truncate">{user.title || user.role.replace(/_/g, ' ')}</span>
         </span>
       </Link>
       <Link to="/admin/logout" className="anav__item" onClick={onNavigate}>

@@ -14,6 +14,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
 import { track, ANALYTICS_EVENTS } from '../services/analytics'
 import { formatLongDate, formatDistance } from '../utils/format'
+import { eventCover } from '../utils/listingImages'
 
 /**
  * Events link out to whoever actually owns the reservation. We deliberately
@@ -58,7 +59,7 @@ export default function EventDetail() {
     <div className="page page--flush">
       <div className="detail-hero">
         <SmartImage
-          photoId={event.image}
+          photoId={eventCover(event)}
           alt={event.title}
           className="detail-hero__media"
           width={1600}
@@ -103,6 +104,11 @@ export default function EventDetail() {
               <p className="prose" style={{ marginTop: 'var(--sp-5)' }}>
                 {event.description}
               </p>
+              {event.sourceAttribution ? (
+                <p className="u-xs u-muted" style={{ marginTop: 'var(--sp-3)' }}>
+                  {event.sourceAttribution}
+                </p>
+              ) : null}
 
               {event.tags?.length > 0 && (
                 <Section title="Good to know" id="tags">

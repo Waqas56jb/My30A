@@ -74,6 +74,7 @@ const ROUTES = [
   ['/host/profile', 'Profile', 'auth'],
   ['/host/settings', 'Prototype tools', 'auth'],
   ['/host/help', 'Help centre', 'auth'],
+  ['/host/area', '30A - Santa Rosa Beach Area', 'auth'],
   ['/host/nope', 'find that page', 'auth'],
   ['/', 'Property setup', 'auth'],
   ['/host', 'Property setup', 'auth'],

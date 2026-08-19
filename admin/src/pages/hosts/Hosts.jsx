@@ -49,23 +49,23 @@ export default function Hosts() {
       render: (row) => (
         <span className="tone-row">
           <span style={{ textTransform: 'capitalize' }}>
-            {row.subscription.planId.replace('plan_', '')}
+            {row.subscription?.planId?.replace('plan_', '') ?? '—'}
           </span>
-          <Money amount={row.subscription.amount} />
+          <Money amount={row.subscription?.amount} />
         </span>
       ),
     },
     {
       key: 'subscription',
       label: 'Subscription',
-      render: (row) => <StatusPill map={SUBSCRIPTION_STATUSES} value={row.subscription.status} />,
+      render: (row) => <StatusPill map={SUBSCRIPTION_STATUSES} value={row.subscription?.status} />,
     },
     { key: 'status', label: 'Status', render: (row) => <StatusPill map={HOST_STATUSES} value={row.status} /> },
     {
       key: 'nextBilling',
       label: 'Next billing',
       hideOn: 'card',
-      render: (row) => formatShortDate(row.subscription.nextBillingDate),
+      render: (row) => formatShortDate(row.subscription?.nextBillingDate),
     },
   ]
 

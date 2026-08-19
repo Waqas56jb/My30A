@@ -36,9 +36,10 @@ export default function DataTable({
   const navigate = useNavigate()
   const isCards = useMediaQuery('(max-width: 899px)')
 
+  const list = Array.isArray(rows) ? rows : []
   if (loading) return <SkeletonList count={6} />
   if (error) return <ErrorState error={error} onRetry={onRetry} />
-  if (!rows.length) return <InlineEmpty {...empty} />
+  if (!list.length) return <InlineEmpty {...empty} />
 
   const activate = (row) => {
     if (onRowClick) onRowClick(row)
@@ -54,7 +55,7 @@ export default function DataTable({
 
     return (
       <div className="dcards">
-        {rows.map((row) => {
+        {list.map((row) => {
           const Wrapper = interactive ? 'button' : 'div'
           return (
             <Wrapper
@@ -121,7 +122,7 @@ export default function DataTable({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {list.map((row) => (
             <tr
               key={rowKey(row)}
               className={cx(interactive && 'is-clickable')}

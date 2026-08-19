@@ -130,7 +130,7 @@
   margin: 0 auto;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1100px) {
   .site-head__nav {
     display: flex;
   }
@@ -243,7 +243,7 @@
   border-color: var(--line);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1100px) {
   .site-head__menu {
     display: none;
   }
@@ -537,6 +537,21 @@
   min-width: 168px;
 }
 
+@media (max-width: 479px) {
+  .dhero__ctas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dhero__ctas .btn {
+    min-width: 0;
+    width: 100%;
+    justify-content: center;
+  }
+  .dhero--full {
+    min-height: min(88dvh, 720px);
+  }
+}
+
 .btn--onDark {
   --btn-bg: rgba(255, 255, 255, 0.14);
   --btn-fg: #fff;
@@ -669,6 +684,7 @@
 /* Inner pages have no hero, so they need to clear the fixed header. */
 .site-page {
   padding-top: calc(var(--safe-top) + 92px);
+  padding-bottom: calc(var(--sp-8) + var(--safe-bottom));
 }
 
 @media (min-width: 1024px) {

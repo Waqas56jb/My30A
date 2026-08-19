@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { SearchBar, FilterChips } from '../../components/ui/Form'
-import SmartImage from '../../components/ui/SmartImage'
+import { Thumb } from '../../components/ui/SmartImage'
 import { PageHeader, Panel, StatusPill } from '../../components/common/AdminUI'
 import DataTable, { Pagination, TableToolbar } from '../../components/tables/DataTable'
 import { useTable } from '../../hooks/useTable'
@@ -27,9 +27,7 @@ export default function Properties() {
       primary: true,
       render: (row) => (
         <span className="tone-row" style={{ flexWrap: 'nowrap' }}>
-          <span style={{ width: 44, flex: 'none' }}>
-            <SmartImage photoId={row.images[0]} alt="" ratio="1x1" width={88} radius="sm" />
-          </span>
+          <Thumb photoId={row.images?.[0]} name={row.name} alt="" size={44} />
           <span style={{ minWidth: 0 }}>
             <Link to={`/admin/properties/${row.id}`} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
               {row.name}

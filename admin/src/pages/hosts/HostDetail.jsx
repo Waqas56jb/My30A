@@ -26,15 +26,21 @@ export default function HostDetail() {
   const [decision, setDecision] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  useDocumentTitle(data ? data.host.name : 'Host')
+  useDocumentTitle(data?.host?.name || 'Host')
 
   if (loading) return <SkeletonPage />
-  if (error) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
+  if (error || !data?.host) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
 
-  const { host, properties, guests, payments, reviews } = data
-  const plan = DEFAULT_PLANS.find((p) => p.id === host.subscription.planId)
+  const host = data.host
+  const properties = Array.isArray(data.properties) ? data.properties : []
+  const guests = Array.isArray(data.guests) ? data.guests : []
+  const payments = Array.isArray(data.payments) ? data.payments : []
+  const reviews = Array.isArray(data.reviews) ? data.reviews : []
+  const subscription = host.subscription ?? {}
+  const vitoria = host.vitoria ?? {}
+  const plan = DEFAULT_PLANS.find((p) => p.id === subscription.planId)
   const satisfaction = reviews.length
-    ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(2)
+    ? (reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / reviews.length).toFixed(2)
     : null
 
   const decide = async (reason) => {
@@ -42,7 +48,7 @@ export default function HostDetail() {
     setBusy(true)
     try {
       await api.setHostStatus(id, nextStatus, reason)
-      pushToast({ tone: 'success', title: `${host.name} is now ${HOST_STATUSES[nextStatus].label.toLowerCase()}` })
+      pushToast({ tone: 'success', title: `${host.name} is now ${(HOST_STATUSES[nextStatus]?.label ?? nextStatus).toLowerCase()}` })
       setDecision(null)
       reload()
     } catch (err) {
@@ -82,7 +88,7 @@ export default function HostDetail() {
       {host.notes && host.status !== 'active' && (
         <Callout icon="alert" tone="warn">
           <strong style={{ display: 'block', marginBottom: 2 }}>
-            {HOST_STATUSES[host.status].label}
+            {HOST_STATUSES[host.status]?.label ?? host.status}
           </strong>
           {host.notes}
         </Callout>
@@ -91,7 +97,7 @@ export default function HostDetail() {
       <div className="astats">
         <Stat label="Properties" value={host.propertyCount} icon="key" tone="sea" />
         <Stat label="Guests hosted" value={guests.length} icon="users" tone="info" />
-        <Stat label="Vitoria conversations" value={host.vitoria.conversations} icon="sparkles" tone="gold" />
+        <Stat label="Vitoria conversations" value={vitoria.conversations ?? 0} icon="sparkles" tone="gold" />
         <Stat
           label="Guest satisfaction"
           value={satisfaction ?? '—'}
@@ -124,14 +130,14 @@ export default function HostDetail() {
         >
           <Facts
             items={[
-              { label: 'Plan', value: plan ? `${plan.name} — ${plan.blurb}` : host.subscription.planId },
-              { label: 'Amount', value: <Money amount={host.subscription.amount} /> },
-              { label: 'Status', value: <StatusPill map={SUBSCRIPTION_STATUSES} value={host.subscription.status} /> },
-              { label: 'Next billing', value: formatDate(host.subscription.nextBillingDate) },
-              { label: 'Started', value: formatDate(host.subscription.startedAt) },
-              { label: 'Method', value: host.subscription.method },
-              host.subscription.trialEndsAt && {
-                label: 'Trial ends', value: formatDate(host.subscription.trialEndsAt),
+              { label: 'Plan', value: plan ? `${plan.name} — ${plan.blurb}` : subscription.planId ?? '—' },
+              { label: 'Amount', value: <Money amount={subscription.amount} /> },
+              { label: 'Status', value: <StatusPill map={SUBSCRIPTION_STATUSES} value={subscription.status} /> },
+              { label: 'Next billing', value: formatDate(subscription.nextBillingDate) },
+              { label: 'Started', value: formatDate(subscription.startedAt) },
+              { label: 'Method', value: subscription.method },
+              subscription.trialEndsAt && {
+                label: 'Trial ends', value: formatDate(subscription.trialEndsAt),
               },
             ]}
           />

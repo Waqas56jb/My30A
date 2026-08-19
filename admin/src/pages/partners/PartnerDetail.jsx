@@ -32,12 +32,16 @@ export default function PartnerDetail() {
   const [decision, setDecision] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  useDocumentTitle(data ? data.partner.name : 'Partner')
+  useDocumentTitle(data?.partner?.name || 'Partner')
 
   if (loading) return <SkeletonPage />
-  if (error) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
+  if (error || !data?.partner) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
 
-  const { partner, category, reviews } = data
+  const partner = data.partner
+  const category = data.category
+  const reviews = Array.isArray(data.reviews) ? data.reviews : []
+  const images = Array.isArray(partner.images) ? partner.images : []
+  const stats = partner.stats ?? {}
   const ctr = partnerCtr(partner)
 
   const decide = async (reason) => {
@@ -47,7 +51,7 @@ export default function PartnerDetail() {
       await api.setPartnerStatus(id, nextStatus, reason)
       pushToast({
         tone: nextStatus === 'approved' ? 'success' : 'info',
-        title: `${partner.name} — ${PARTNER_STATUSES[nextStatus].label.toLowerCase()}`,
+        title: `${partner.name} — ${(PARTNER_STATUSES[nextStatus]?.label ?? nextStatus).toLowerCase()}`,
         message:
           nextStatus === 'approved'
             ? 'The listing is now visible to guests browsing the Local Guide.'
@@ -130,7 +134,7 @@ export default function PartnerDetail() {
       {partner.reason && partner.status !== 'approved' && (
         <Callout icon="alert" tone="warn">
           <strong style={{ display: 'block', marginBottom: 2 }}>
-            {PARTNER_STATUSES[partner.status].label}
+            {PARTNER_STATUSES[partner.status]?.label ?? partner.status}
           </strong>
           {partner.reason}
         </Callout>
@@ -155,7 +159,7 @@ export default function PartnerDetail() {
             <Stat
               key={event.key}
               label={event.label}
-              value={partner.stats[event.key]}
+              value={stats[event.key] ?? 0}
               icon={event.icon}
               tone={event.key === 'views' ? 'sea' : 'gold'}
             />
@@ -176,7 +180,7 @@ export default function PartnerDetail() {
               <RankBars
                 data={TRACKED_EVENTS.filter((e) => e.key !== 'views').map((e) => ({
                   label: e.label,
-                  value: partner.stats[e.key],
+                  value: stats[e.key] ?? 0,
                 }))}
                 valueLabel="clicks"
               />
@@ -241,17 +245,17 @@ export default function PartnerDetail() {
         </Panel>
 
         <Panel
-          title={`Photographs (${partner.images.length})`}
+          title={`Photographs (${images.length})`}
           subtitle="These are what a guest sees first. Stock imagery that does not show the actual service is the most common reason to reject."
         >
-          {partner.images.length === 0 ? (
+          {images.length === 0 ? (
             <InlineEmpty icon="camera" title="No photographs submitted" />
           ) : (
             <div className="mediagrid">
-              {partner.images.map((photoId, i) => (
+              {images.map((photoId, i) => (
                 <div className="mediacard" key={`${photoId}-${i}`}>
                   <div className="mediacard__img">
-                    <SmartImage photoId={photoId} alt={`${partner.name} photo ${i + 1}`} fill width={500} />
+                    <SmartImage photoId={photoId} alt={`${partner.name} photo ${i + 1}`} label={partner.name} fill width={500} />
                   </div>
                 </div>
               ))}

@@ -8,10 +8,12 @@ import { Callout } from '../components/ui/Display'
 import { SuccessState } from '../components/ui/States'
 import ListingPreview from '../components/ListingPreview'
 import { Panel, StatusPill, Journey } from '../components/PartnerUI'
+import { Toaster } from '../components/ui/Modal'
 import { usePartner } from '../context/PartnerContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { PARTNER_CATEGORIES } from '../data/partners'
 import { PHOTO_LIBRARY } from '../services/partnerService'
+import { validatePassword } from '../services/authService'
 import { cx } from '../utils/format'
 
 const STEPS = [
@@ -45,6 +47,8 @@ const blank = {
   hoursOpen: '9:00 AM',
   hoursClose: '6:00 PM',
   setHours: true,
+  password: '',
+  confirmPassword: '',
   terms: false,
 }
 
@@ -57,7 +61,7 @@ const blank = {
  */
 export default function Register() {
   const navigate = useNavigate()
-  const { apply, isAuthed, pushToast } = usePartner()
+  const { apply, isAuthed, pushToast, toasts, dismissToast } = usePartner()
   useDocumentTitle('Become a partner')
 
   const [step, setStep] = useState(0)
@@ -114,6 +118,9 @@ export default function Register() {
         next.website = 'Start the address with http:// or https://'
       if (!form.city.trim()) next.city = 'Where on 30A are you based?'
       if (form.zip && !/^\d{5}$/.test(form.zip)) next.zip = 'Use a 5-digit ZIP code.'
+      const passwordIssue = validatePassword(form.password)
+      if (passwordIssue) next.password = passwordIssue
+      if (form.password !== form.confirmPassword) next.confirmPassword = 'Those passwords do not match.'
     }
     if (index === 2) {
       if (form.description.trim().length < 60)
@@ -123,6 +130,11 @@ export default function Register() {
       if (form.photos.length === 0) next.photos = 'Add at least one photo. Three is better.'
     }
     if (index === 4 && !form.terms) next.terms = 'Please accept the partner terms to submit.'
+    if (index === 4) {
+      const passwordIssue = validatePassword(form.password)
+      if (passwordIssue) next.password = passwordIssue
+      if (form.password !== form.confirmPassword) next.confirmPassword = 'Those passwords do not match.'
+    }
     setErrors(next)
     return Object.keys(next).length === 0
   }
@@ -133,7 +145,17 @@ export default function Register() {
   }
 
   const submit = async () => {
-    if (!validate(4)) return
+    if (!validate(4)) {
+      if (validatePassword(form.password) || form.password !== form.confirmPassword) {
+        setStep(1)
+        pushToast({
+          tone: 'error',
+          title: 'Choose a password',
+          message: 'You need a password to submit this listing and to sign in afterwards.',
+        })
+      }
+      return
+    }
     setBusy(true)
     try {
       const partner = await apply({
@@ -145,7 +167,11 @@ export default function Register() {
       setCreated(partner)
       pushToast({ tone: 'success', title: 'Application submitted', message: 'We will review it shortly.' })
     } catch (error) {
-      pushToast({ tone: 'error', title: 'We could not submit that', message: error.message })
+      pushToast({
+        tone: 'error',
+        title: 'We could not submit that',
+        message: error.message || 'Please try again.',
+      })
     } finally {
       setBusy(false)
     }
@@ -158,7 +184,7 @@ export default function Register() {
         : [...form.photos, image],
     })
 
-  if (isAuthed && !created) return <Navigate to="/partner/dashboard" replace />
+  if (isAuthed && !created && !busy) return <Navigate to="/partner/dashboard" replace />
 
   /* ----------------------------- Success view ---------------------------- */
   if (created) {
@@ -312,6 +338,31 @@ export default function Register() {
                         value={form.phone}
                         placeholder="(850) 555-0100"
                         onChange={(e) => set({ phone: e.target.value })}
+                      />
+                    )}
+                  </Field>
+                </div>
+
+                <div className="field-row field-row--2">
+                  <Field label="Password" required error={errors.password} hint="At least 8 characters, with a letter and a number. You will use this to sign in.">
+                    {(props) => (
+                      <Input
+                        {...props}
+                        type="password"
+                        value={form.password}
+                        autoComplete="new-password"
+                        onChange={(e) => set({ password: e.target.value })}
+                      />
+                    )}
+                  </Field>
+                  <Field label="Confirm password" required error={errors.confirmPassword}>
+                    {(props) => (
+                      <Input
+                        {...props}
+                        type="password"
+                        value={form.confirmPassword}
+                        autoComplete="new-password"
+                        onChange={(e) => set({ confirmPassword: e.target.value })}
                       />
                     )}
                   </Field>
@@ -629,8 +680,8 @@ export default function Register() {
                 Continue
               </Button>
             ) : (
-              <Button onClick={submit} loading={busy} icon="send">
-                Submit for Approval
+              <Button onClick={submit} loading={busy} disabled={busy} icon={busy ? undefined : 'send'}>
+                {busy ? 'Submitting…' : 'Submit for Approval'}
               </Button>
             )}
           </div>
@@ -649,6 +700,7 @@ export default function Register() {
           </p>
         </div>
       </div>
+      <Toaster toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

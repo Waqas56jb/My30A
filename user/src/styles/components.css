@@ -1351,6 +1351,7 @@ button.card:active {
 .pagehead {
   display: flex;
   align-items: flex-start;
+  flex-wrap: wrap;
   gap: var(--sp-3);
   margin-bottom: var(--sp-5);
 }
@@ -1377,18 +1378,36 @@ button.card:active {
 .pagehead__actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: var(--sp-2);
   flex: none;
 }
 
+@media (max-width: 619px) {
+  .pagehead__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  .pagehead__actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
 .crumbs {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
   font-size: var(--fs-xs);
   color: var(--ink-400);
   margin-bottom: var(--sp-2);
+}
+
+@media (min-width: 720px) {
+  .crumbs {
+    display: flex;
+  }
 }
 
 .crumbs a:hover {
@@ -1404,12 +1423,13 @@ button.card:active {
 /* ---------------- Sticky action bar ---------------- */
 .stickybar {
   position: sticky;
-  bottom: 0;
+  bottom: calc(var(--tabbar-h) + var(--safe-bottom));
   z-index: 50;
   display: flex;
+  flex-wrap: wrap;
   gap: var(--sp-3);
   padding: var(--sp-3) max(var(--sp-4), var(--safe-left))
-    calc(var(--sp-3) + var(--safe-bottom)) max(var(--sp-4), var(--safe-right));
+    var(--sp-3) max(var(--sp-4), var(--safe-right));
   margin: var(--sp-6) calc(var(--sp-4) * -1) 0;
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(14px);
@@ -1837,10 +1857,10 @@ button.card:active {
 .callout {
   display: flex;
   gap: var(--sp-3);
-  padding: var(--sp-4);
-  border-radius: var(--r-md);
+  padding: var(--sp-5);
+  border-radius: var(--r-lg);
   background: var(--sand-100);
-  border: 1px solid var(--sand-300);
+  border: 0;
   color: var(--ink-700);
   font-size: var(--fs-sm);
   line-height: 1.55;

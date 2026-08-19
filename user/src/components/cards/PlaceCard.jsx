@@ -5,6 +5,8 @@ import { Badge } from '../ui/StatusBadge'
 import { RatingStars, PriceDisplay, MetaRow } from '../ui/Display'
 import { useApp } from '../../context/AppContext'
 import { cx, formatDistance, priceLevelLabel } from '../../utils/format'
+import { platformBadge } from '../../utils/restaurantBooking'
+import { placeCover } from '../../utils/listingImages'
 
 /**
  * The catalogue card used by restaurants, partners, and beaches. One
@@ -37,7 +39,7 @@ export default function PlaceCard({
     >
       <div className="place-card__media">
         <SmartImage
-          photoId={item.image}
+          photoId={placeCover(item)}
           alt={item.name}
           ratio={layout === 'row' ? '1x1' : '3x2'}
           width={layout === 'row' ? 320 : 640}
@@ -85,6 +87,8 @@ export default function PlaceCard({
           {footer ??
             (item.startingPrice ? (
               <PriceDisplay amount={item.startingPrice} />
+            ) : platformBadge(item) ? (
+              <span className="u-xs u-muted">{platformBadge(item)}</span>
             ) : item.priceLevel ? (
               <span className="u-xs u-muted" aria-label={`Price level ${item.priceLevel} of 4`}>
                 {priceLevelLabel(item.priceLevel)}

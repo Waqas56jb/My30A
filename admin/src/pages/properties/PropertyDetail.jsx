@@ -29,12 +29,25 @@ export default function PropertyDetail() {
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
 
-  useDocumentTitle(data ? data.property.name : 'Property')
+  useDocumentTitle(data?.property?.name || 'Property')
 
   if (loading) return <SkeletonPage />
-  if (error) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
+  if (error || !data?.property) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
 
-  const { property, host, guests, orders, transfers, conversations } = data
+  const property = data.property
+  const host = data.host
+  const guests = Array.isArray(data.guests) ? data.guests : []
+  const orders = Array.isArray(data.orders) ? data.orders : []
+  const transfers = Array.isArray(data.transfers) ? data.transfers : []
+  const conversations = Array.isArray(data.conversations) ? data.conversations : []
+  const wifi = property.wifi ?? {}
+  const checkIn = property.checkIn ?? {}
+  const checkOut = property.checkOut ?? {}
+  const emergency = property.emergency ?? {}
+  const vitoria = property.vitoria ?? {}
+  const rules = Array.isArray(property.rules) ? property.rules : []
+  const images = Array.isArray(property.images) ? property.images : []
+  const stats = property.stats ?? {}
   const inResidence = guests.filter((g) => g.status === 'active')
 
   const openEditor = () => {
@@ -43,20 +56,20 @@ export default function PropertyDetail() {
       status: property.status,
       type: property.type,
       address: property.address,
-      wifiNetwork: property.wifi.network,
-      wifiPassword: property.wifi.password,
-      checkIn: property.checkIn.time,
-      checkOut: property.checkOut.time,
-      accessInstructions: property.checkIn.instructions,
-      checkOutInstructions: property.checkOut.instructions,
-      parking: property.parking,
-      rules: property.rules.join('\n'),
-      emergencyName: property.emergency.contactName,
-      emergencyPhone: property.emergency.contactPhone,
-      hospital: property.emergency.hospital,
-      vitoriaEnabled: property.vitoria.enabled,
-      vitoriaTone: property.vitoria.tone,
-      vitoriaNotes: property.vitoria.specialNotes,
+      wifiNetwork: wifi.network ?? '',
+      wifiPassword: wifi.password ?? '',
+      checkIn: checkIn.time ?? '',
+      checkOut: checkOut.time ?? '',
+      accessInstructions: checkIn.instructions ?? '',
+      checkOutInstructions: checkOut.instructions ?? '',
+      parking: property.parking ?? '',
+      rules: rules.join('\n'),
+      emergencyName: emergency.contactName ?? '',
+      emergencyPhone: emergency.contactPhone ?? '',
+      hospital: emergency.hospital ?? '',
+      vitoriaEnabled: Boolean(vitoria.enabled),
+      vitoriaTone: vitoria.tone ?? 'Warm and local',
+      vitoriaNotes: vitoria.specialNotes ?? '',
     })
     setEditing(true)
   }
@@ -69,19 +82,19 @@ export default function PropertyDetail() {
         status: form.status,
         type: form.type,
         address: form.address,
-        wifi: { ...property.wifi, network: form.wifiNetwork, password: form.wifiPassword },
+        wifi: { ...wifi, network: form.wifiNetwork, password: form.wifiPassword },
         checkIn: { time: form.checkIn, instructions: form.accessInstructions },
         checkOut: { time: form.checkOut, instructions: form.checkOutInstructions },
         parking: form.parking,
         rules: form.rules.split('\n').map((r) => r.trim()).filter(Boolean),
         emergency: {
-          ...property.emergency,
+          ...emergency,
           contactName: form.emergencyName,
           contactPhone: form.emergencyPhone,
           hospital: form.hospital,
         },
         vitoria: {
-          ...property.vitoria,
+          ...vitoria,
           enabled: form.vitoriaEnabled,
           tone: form.vitoriaTone,
           specialNotes: form.vitoriaNotes,
@@ -119,8 +132,8 @@ export default function PropertyDetail() {
         <Stat label="Conversations" value={conversations.length} icon="sparkles" tone="gold" />
         <Stat
           label="Satisfaction"
-          value={property.stats.satisfaction ?? '—'}
-          suffix={property.stats.satisfaction ? ' / 5' : ''}
+          value={stats.satisfaction ?? '—'}
+          suffix={stats.satisfaction ? ' / 5' : ''}
           icon="star"
           tone="info"
         />
@@ -148,40 +161,44 @@ export default function PropertyDetail() {
         <Panel title="Arrival and departure">
           <Facts
             items={[
-              { label: 'Check-in', value: property.checkIn.time },
-              { label: 'Check-out', value: property.checkOut.time },
-              { label: 'WiFi network', value: property.wifi.network },
-              { label: 'WiFi password', value: property.wifi.password },
+              { label: 'Check-in', value: checkIn.time },
+              { label: 'Check-out', value: checkOut.time },
+              { label: 'WiFi network', value: wifi.network },
+              { label: 'WiFi password', value: wifi.password },
               { label: 'Parking', value: property.parking },
             ]}
           />
           <div style={{ marginTop: 'var(--sp-4)' }}>
             <p className="stat__label" style={{ marginBottom: 4 }}>Access instructions</p>
-            <p className="u-small" style={{ lineHeight: 1.6 }}>{property.checkIn.instructions}</p>
+            <p className="u-small" style={{ lineHeight: 1.6 }}>{checkIn.instructions}</p>
           </div>
           <div style={{ marginTop: 'var(--sp-3)' }}>
             <p className="stat__label" style={{ marginBottom: 4 }}>Check-out steps</p>
-            <p className="u-small" style={{ lineHeight: 1.6 }}>{property.checkOut.instructions}</p>
+            <p className="u-small" style={{ lineHeight: 1.6 }}>{checkOut.instructions}</p>
           </div>
         </Panel>
       </Grid>
 
       <Grid cols={2}>
         <Panel title="House rules">
-          <ul className="u-stack" style={{ gap: 8, margin: 0, paddingLeft: 18 }}>
-            {property.rules.map((rule) => (
-              <li key={rule} className="u-small" style={{ lineHeight: 1.55 }}>{rule}</li>
-            ))}
-          </ul>
+            {rules.length === 0 ? (
+              <p className="u-small u-muted">No house rules recorded.</p>
+            ) : (
+              <ul className="u-stack" style={{ gap: 8, margin: 0, paddingLeft: 18 }}>
+                {rules.map((rule) => (
+                  <li key={rule} className="u-small" style={{ lineHeight: 1.55 }}>{rule}</li>
+                ))}
+              </ul>
+            )}
         </Panel>
 
         <Panel title="Emergency contacts">
           <Facts
             items={[
-              { label: 'Primary contact', value: property.emergency.contactName },
-              { label: 'Phone', value: property.emergency.contactPhone },
-              { label: 'Property manager', value: property.emergency.managerPhone },
-              { label: 'Nearest hospital', value: property.emergency.hospital },
+              { label: 'Primary contact', value: emergency.contactName },
+              { label: 'Phone', value: emergency.contactPhone },
+              { label: 'Property manager', value: emergency.managerPhone },
+              { label: 'Nearest hospital', value: emergency.hospital },
             ]}
           />
         </Panel>
@@ -193,28 +210,32 @@ export default function PropertyDetail() {
       >
         <Facts
           items={[
-            { label: 'Enabled', value: property.vitoria.enabled ? 'Yes' : 'No' },
-            { label: 'Tone', value: property.vitoria.tone },
-            { label: 'Escalate after', value: `${property.vitoria.escalateAfter} unresolved replies` },
-            { label: 'Local recommendations', value: `${property.recommendations} from the host` },
+            { label: 'Enabled', value: vitoria.enabled ? 'Yes' : 'No' },
+            { label: 'Tone', value: vitoria.tone },
+            { label: 'Escalate after', value: `${vitoria.escalateAfter ?? 2} unresolved replies` },
+            { label: 'Local recommendations', value: `${property.recommendations ?? 0} from the host` },
             {
               label: 'Special notes',
-              value: property.vitoria.specialNotes || 'None — Vitoria uses the property information above.',
+              value: vitoria.specialNotes || 'None — Vitoria uses the property information above.',
             },
           ]}
         />
       </Panel>
 
       <Panel title="Photographs">
-        <div className="mediagrid">
-          {property.images.map((photoId, i) => (
-            <div className="mediacard" key={`${photoId}-${i}`}>
-              <div className="mediacard__img">
-                <SmartImage photoId={photoId} alt={`${property.name} photo ${i + 1}`} fill width={500} />
-              </div>
+          {images.length === 0 ? (
+            <InlineEmpty icon="camera" title="No photographs yet" />
+          ) : (
+            <div className="mediagrid">
+              {images.map((photoId, i) => (
+                <div className="mediacard" key={`${photoId}-${i}`}>
+                  <div className="mediacard__img">
+                    <SmartImage photoId={photoId} alt={`${property.name} photo ${i + 1}`} fill width={500} />
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          )}
       </Panel>
 
       <Grid cols={2}>
@@ -236,12 +257,12 @@ export default function PropertyDetail() {
           <DataTable
             columns={[
               { key: 'id', label: 'Request', primary: true, render: (r) => <span className="dtable__mono">{r.id}</span> },
-              { key: 'kind', label: 'Type', render: (r) => (r.id.startsWith('GR') ? 'Grocery' : 'Transfer') },
+              { key: 'kind', label: 'Type', render: (r) => (String(r.id ?? '').startsWith('GR') ? 'Grocery' : 'Transfer') },
               {
                 key: 'status',
                 label: 'Status',
                 render: (r) =>
-                  r.id.startsWith('GR') ? (
+                  String(r.id ?? '').startsWith('GR') ? (
                     <StatusPill map={GROCERY_STATUSES} value={r.status} />
                   ) : (
                     <StatusPill map={TRANSFER_STATUSES} value={r.status} />
@@ -249,7 +270,7 @@ export default function PropertyDetail() {
               },
             ]}
             rows={[...orders, ...transfers].slice(0, 10)}
-            rowTo={(r) => (r.id.startsWith('GR') ? `/admin/grocery/${r.id}` : `/admin/transfers/${r.id}`)}
+            rowTo={(r) => (String(r.id ?? '').startsWith('GR') ? `/admin/grocery/${r.id}` : `/admin/transfers/${r.id}`)}
             caption="Service requests at this property"
             empty={{ icon: 'bag', title: 'No service requests' }}
           />

@@ -4,10 +4,9 @@ import { useApp } from '../context/AppContext'
 /**
  * Gate for anything that belongs to a person rather than to 30A.
  *
- * The destination itself — beaches, restaurants, experiences, events, the map,
- * Vitoria — stays open to everyone, because the public site has to sell the
- * place to people who have not booked. The moment a screen shows *your* data,
- * it goes behind this.
+ * The guest dashboard (sidebar, Vitoria, restaurants, stay tools) sits behind
+ * this. The marketing site stays public. After login, the guest continues to
+ * the page they asked for.
  *
  * Where the guest was heading is preserved in `state.from`, so logging in
  * continues the journey instead of dumping them on the home screen.

@@ -53,10 +53,11 @@ export function useTable(fetcher, { initial = {}, deps = [], pageSize = 25 } = {
     try {
       const result = await fetcher({ search: debounced, page, pageSize, ...filters })
       if (requestId.current !== id) return // a newer request has already landed
+      const rows = Array.isArray(result?.rows) ? result.rows : Array.isArray(result) ? result : []
       setState({
-        rows: result.rows ?? result,
-        total: result.total ?? (result.rows ?? result).length,
-        pages: result.pages ?? 1,
+        rows,
+        total: result?.total ?? rows.length,
+        pages: result?.pages ?? 1,
         loading: false,
         error: null,
       })

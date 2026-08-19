@@ -26,6 +26,16 @@ export const exploreCategories = [
     blurb: 'Accesses, parking, chairs',
   },
   {
+    id: 'cat_area',
+    label: 'Area Map',
+    slug: 'area',
+    icon: 'map',
+    image: PHOTO.beachAerial,
+    route: '/area',
+    filter: 'Beaches',
+    blurb: '30A map, card & flyer',
+  },
+  {
     id: 'cat_things',
     label: 'Things To Do',
     slug: 'activities',
@@ -166,7 +176,7 @@ export const quickActions = [
   { id: 'qa_restaurants', label: 'Restaurants', icon: 'utensils', to: '/restaurants' },
   { id: 'qa_todo', label: 'Things To Do', icon: 'ticket', to: '/partners?category=Activities' },
   { id: 'qa_beach', label: 'Beach Guide', icon: 'umbrella', to: '/beaches' },
-  { id: 'qa_trip', label: 'My Trip', icon: 'suitcase', to: '/my-trip' },
+  { id: 'qa_area', label: 'Area Map', icon: 'map', to: '/area' },
 ]
 
 /** Concierge services that My30A fulfils itself (vs. partner referrals). */

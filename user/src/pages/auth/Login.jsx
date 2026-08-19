@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
 import { Field, Input, Checkbox } from '../../components/ui/Form'
 import { AuthHeading, FormError, PasswordField } from '../../components/auth/AuthBits'
 import { useApp } from '../../context/AppContext'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { DEMO_ACCOUNTS } from '../../data/mockAccounts'
 
 /**
  * Log in.
@@ -48,12 +46,6 @@ export default function Login() {
     } finally {
       setBusy(false)
     }
-  }
-
-  const fillDemo = (demo) => {
-    setEmail(demo.email)
-    setPassword(demo.password)
-    setErrors({})
   }
 
   return (
@@ -109,28 +101,6 @@ export default function Login() {
         <Link to="/signup" className="auth__link">
           Create an account
         </Link>
-      </p>
-
-      <div className="divider">Or try a demo account</div>
-
-      <div className="u-stack" style={{ gap: 'var(--sp-2)' }}>
-        {DEMO_ACCOUNTS.map((demo) => (
-          <button key={demo.email} type="button" className="access__demo" onClick={() => fillDemo(demo)}>
-            <span className="drawer__unlock-icon" aria-hidden="true">
-              <Icon name="user" />
-            </span>
-            <span className="u-grow" style={{ minWidth: 0 }}>
-              <span className="drawer__guest-name">{demo.label}</span>
-              <span className="drawer__guest-sub">{demo.detail}</span>
-            </span>
-            <Icon name="arrowRight" size={18} style={{ flex: 'none', color: 'var(--ink-400)' }} />
-          </button>
-        ))}
-      </div>
-
-      <p className="u-xs u-muted" style={{ textAlign: 'center' }}>
-        Tapping a demo account fills the form — press Log in to continue. Password for both is{' '}
-        <code>demo1234</code>.
       </p>
     </>
   )

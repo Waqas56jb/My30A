@@ -13,6 +13,7 @@ export const MAIN_NAV = [
   { to: '/host/vitoria', label: 'Vitoria', icon: 'sparkles' },
   { to: '/host/activity', label: 'Guest activity', icon: 'list' },
   { to: '/host/analytics', label: 'Analytics', icon: 'chart' },
+  { to: '/host/area', label: 'Area map & flyers', icon: 'map' },
 ]
 
 /** Built per-property so the links always point at the selected rental. */

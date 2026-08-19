@@ -14,8 +14,8 @@ import { useAsync } from '../hooks/useAsync'
 import * as api from '../services/mockApi'
 import { sendMessage, createUserMessage, greetingFor } from '../services/vitoriaService'
 import { track, ANALYTICS_EVENTS } from '../services/analytics'
-import { suggestedPrompts } from '../data/mockMessages'
-import { mockLocalConditions } from '../data/mockRecommendations'
+import { suggestedPrompts } from '../data/prompts'
+import { EMPTY_CONDITIONS } from '../services/liveApi'
 import { formatDayLabel, formatDateRange } from '../utils/format'
 
 /**
@@ -30,8 +30,11 @@ export default function Vitoria() {
   const { guest, property, pushToast } = useApp()
   useDocumentTitle('Vitoria')
 
+  const conditions = useAsync(() => api.getWeather(), [])
+  const local = conditions.data ?? EMPTY_CONDITIONS
   const seed = useAsync(() => api.getMessages(), [])
   const [messages, setMessages] = useState([])
+  const [conversationId, setConversationId] = useState(null)
   const [draft, setDraft] = useState('')
   const [attachment, setAttachment] = useState(null)
   const [typing, setTyping] = useState(false)
@@ -53,6 +56,7 @@ export default function Vitoria() {
     seeded.current = true
     if (seed.data.length > 0) {
       setMessages(seed.data)
+      setConversationId(seed.data.find((row) => row.conversationId)?.conversationId ?? null)
     } else {
       const opener = greetingFor(guest, property)
       setMessages([opener])
@@ -90,21 +94,28 @@ export default function Vitoria() {
       setAtBottom(true)
 
       try {
-        const reply = await sendMessage(body || 'I sent you a grocery list photo', { guest, property }, {
-          onTyping: setTyping,
-        })
+        const reply = await sendMessage(
+          body || 'I sent you a grocery list photo',
+          { guest, property, conversationId },
+          { onTyping: setTyping },
+        )
+        if (reply.conversationId) setConversationId(reply.conversationId)
         setMessages((list) => [...list, reply])
         api.appendMessage(reply)
       } catch {
         setTyping(false)
-        pushToast({
-          tone: 'error',
-          title: 'Message not delivered',
-          message: 'Vitoria is offline for a moment. Try again shortly.',
-        })
+        setMessages((list) => [
+          ...list,
+          {
+            id: `err-${Date.now()}`,
+            role: 'assistant',
+            at: new Date().toISOString(),
+            text: 'I could not complete that reply. Please try again.',
+          },
+        ])
       }
     },
-    [draft, attachment, guest, property, pushToast],
+    [draft, attachment, guest, property, conversationId],
   )
 
   // A partner page can hand Vitoria an opening question via router state.
@@ -125,6 +136,7 @@ export default function Vitoria() {
     api.clearMessages()
     const opener = greetingFor(guest, property)
     api.appendMessage(opener)
+    setConversationId(null)
     setMessages([opener])
     setConfirmClear(false)
     pushToast({ tone: 'success', title: 'Conversation cleared' })
@@ -230,8 +242,7 @@ export default function Vitoria() {
             {guest?.stay?.adults} adults, {guest?.stay?.children} kids
           </div>
           <div className="u-xs u-muted">
-            Sunset {mockLocalConditions.sunset} · Water {mockLocalConditions.water.tempF}° ·{' '}
-            {mockLocalConditions.beachFlag.label}
+            Sunset {local.sunset} · {local.weather.condition} · {local.beachFlag.label}
           </div>
         </div>
 

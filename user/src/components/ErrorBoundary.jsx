@@ -1,10 +1,11 @@
 import { Component } from 'react'
+import { useLocation } from 'react-router-dom'
 
 /**
  * Last line of defence. A render error in one page should never leave the
  * guest staring at a white screen mid-holiday.
  */
-export default class ErrorBoundary extends Component {
+export class ErrorBoundary extends Component {
   constructor(props) {
     super(props)
     this.state = { error: null }
@@ -19,6 +20,12 @@ export default class ErrorBoundary extends Component {
     console.error('[My30A] Unhandled UI error', error, info)
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.resetKey !== prevProps.resetKey && this.state.error) {
+      this.setState({ error: null })
+    }
+  }
+
   render() {
     if (!this.state.error) return this.props.children
 
@@ -27,14 +34,14 @@ export default class ErrorBoundary extends Component {
         <div className="nf">
           <h1 style={{ fontSize: 'var(--fs-h1)' }}>Something went wrong</h1>
           <p className="u-small u-muted" style={{ maxWidth: '44ch' }}>
-            We hit an unexpected error. Reloading usually fixes it — if it keeps happening, your host
-            can reach our team directly.
+            This screen hit an unexpected error. You can try again or keep browsing — your stay is
+            still saved.
           </p>
           <div className="u-row u-wrap" style={{ justifyContent: 'center' }}>
-            <button type="button" className="btn" onClick={() => window.location.reload()}>
-              Reload the app
+            <button type="button" className="btn" onClick={() => this.setState({ error: null })}>
+              Try this page again
             </button>
-            <a className="btn btn--secondary" href="/">
+            <a className="btn btn--secondary" href="/discover">
               Back to home
             </a>
           </div>
@@ -56,4 +63,10 @@ export default class ErrorBoundary extends Component {
       </div>
     )
   }
+}
+
+/** Remounts / clears the boundary whenever the URL changes. */
+export default function RouteErrorBoundary({ children }) {
+  const location = useLocation()
+  return <ErrorBoundary resetKey={location.pathname + location.search}>{children}</ErrorBoundary>
 }

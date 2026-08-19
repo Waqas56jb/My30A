@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import SmartImage from '../ui/SmartImage'
 import Icon from '../ui/Icon'
 import { Badge } from '../ui/StatusBadge'
-import { resolveEntity } from '../../services/mockApi'
 import { formatDistance } from '../../utils/format'
 
 const routeFor = (kind, id) => {
@@ -23,34 +22,44 @@ const routeFor = (kind, id) => {
  * it is what makes the recommendation feel like memory rather than a listing.
  */
 export default function RecommendationCard({ recommendation }) {
-  const entity = resolveEntity(recommendation.refId)
-  if (!entity) return null
-  const name = entity.name ?? entity.title
+  if (!recommendation) return null
+  const id = recommendation.refId ?? recommendation.id
+  const name = recommendation.name ?? recommendation.title
+  if (!id || !name) return null
+  const kind = recommendation.kind ?? recommendation.type ?? 'partner'
 
   return (
     <Link
-      to={routeFor(recommendation.kind, recommendation.refId)}
+      to={routeFor(kind, id)}
       className="card"
       style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-      aria-label={`${name} — ${recommendation.tag}`}
+      aria-label={`${name}${recommendation.tag ? ` — ${recommendation.tag}` : ''}`}
     >
       <div style={{ position: 'relative' }}>
-        <SmartImage photoId={entity.image} alt={name} ratio="3x2" width={620} zoom />
-        <div className="place-card__badges">
-          <Badge tone="glass">
-            <Icon name="sparkles" style={{ width: 12, height: 12 }} />
-            {recommendation.tag}
-          </Badge>
-        </div>
+        <SmartImage photoId={recommendation.image} alt={name} ratio="3x2" width={620} zoom />
+        {recommendation.tag ? (
+          <div className="place-card__badges">
+            <Badge tone="glass">
+              <Icon name="sparkles" style={{ width: 12, height: 12 }} />
+              {recommendation.tag}
+            </Badge>
+          </div>
+        ) : null}
       </div>
       <div className="place-card__body">
         <h3 className="place-card__title u-clamp-2">{name}</h3>
-        <p className="place-card__desc u-clamp-3" style={{ fontStyle: 'italic' }}>
-          “{recommendation.reason}”
-        </p>
+        {recommendation.reason ? (
+          <p className="place-card__desc u-clamp-3" style={{ fontStyle: 'italic' }}>
+            “{recommendation.reason}”
+          </p>
+        ) : recommendation.shortDescription ? (
+          <p className="place-card__desc u-clamp-3">{recommendation.shortDescription}</p>
+        ) : null}
         <div className="place-card__foot">
           <span className="u-xs u-muted">
-            {entity.distance !== undefined ? formatDistance(entity.distance) : entity.location}
+            {recommendation.distance !== undefined
+              ? formatDistance(recommendation.distance)
+              : recommendation.location ?? recommendation.category}
           </span>
           <Icon name="arrowRight" style={{ width: 16, height: 16, color: 'var(--sea-700)' }} />
         </div>

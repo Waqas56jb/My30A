@@ -56,7 +56,11 @@ export default function GroceryOrders() {
       key: 'total',
       label: 'Total',
       align: 'right',
-      render: (row) => <Money amount={(row.actualAmount ?? row.estimatedAmount) + row.serviceFee} />,
+      render: (row) => (
+        <Money
+          amount={Number(row.actualAmount ?? row.estimatedAmount ?? 0) + Number(row.serviceFee ?? 0)}
+        />
+      ),
     },
     { key: 'status', label: 'Status', render: (row) => <StatusPill map={GROCERY_STATUSES} value={row.status} /> },
     {

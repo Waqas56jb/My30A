@@ -16,7 +16,6 @@ import { useApp } from '../context/AppContext'
 import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
-import { resolveEntity } from '../services/mockApi'
 import {
   formatDateRange,
   formatLongDate,
@@ -45,9 +44,10 @@ export default function MyTrip() {
 
   const orders = useAsync(() => api.getOrders(), [])
   const events = useAsync(() => api.getEvents(), [])
+  const savedQuery = useAsync(() => api.getSavedPlaces(savedIds), [savedIds.join('|')])
 
   const phase = stayPhase(guest?.stay)
-  const saved = useMemo(() => savedIds.map(resolveEntity).filter(Boolean), [savedIds])
+  const saved = savedQuery.data ?? []
 
   const { upcoming, past } = useMemo(() => {
     const list = orders.data ?? []
@@ -156,7 +156,9 @@ export default function MyTrip() {
 
       {/* --------------------------- Saved places ---------------------------- */}
       <Section title="Saved places" subtitle={`${saved.length} saved during this trip`} linkTo="/explore" linkLabel="Find more">
-        {saved.length === 0 ? (
+        {savedQuery.loading && <SkeletonGrid count={3} columns="grid--3" />}
+        {savedQuery.error && <ErrorState error={savedQuery.error} onRetry={savedQuery.reload} />}
+        {!savedQuery.loading && !savedQuery.error && saved.length === 0 ? (
           <EmptyState
             icon="heart"
             title="Nothing saved yet"
@@ -164,7 +166,7 @@ export default function MyTrip() {
             actionLabel="Explore 30A"
             actionTo="/explore"
           />
-        ) : (
+        ) : !savedQuery.loading && !savedQuery.error ? (
           <div className="grid grid--3">
             {saved.map((entity) => (
               <PlaceCard
@@ -174,7 +176,7 @@ export default function MyTrip() {
               />
             ))}
           </div>
-        )}
+        ) : null}
       </Section>
 
       {/* ---------------------------- Preferences ---------------------------- */}

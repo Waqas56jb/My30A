@@ -9,7 +9,6 @@ import { useLoad } from '../../hooks/useTable'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
 import { vitoriaSummary, topicBreakdown, CONVERSATION_STATUSES } from '../../data/conversations'
-import { series } from '../../data/analytics'
 import { formatRelative, formatNumber } from '../../utils/format'
 
 /**
@@ -21,21 +20,23 @@ export default function Activity() {
   useDocumentTitle('AI activity')
   const [range, setRange] = useState('7d')
   const { data, loading, error, reload } = useLoad(() => api.getAllConversations(), [])
+  const volume = useLoad(() => api.getInsightSeries('conversations', range), [range])
 
   if (loading) return <SkeletonGrid count={6} columns="grid--3" />
   if (error) return <ErrorState error={error} onRetry={reload} />
 
-  const summary = vitoriaSummary(data)
-  const topics = topicBreakdown(data)
-  const escalations = data.filter((c) => c.status === 'escalated').slice(0, 12)
-  const requests = data.filter((c) => c.createdRequest).slice(0, 12)
+  const rows = data ?? []
+  const summary = vitoriaSummary(rows)
+  const topics = topicBreakdown(rows)
+  const escalations = rows.filter((c) => c.status === 'escalated').slice(0, 12)
+  const requests = rows.filter((c) => c.createdRequest).slice(0, 12)
 
   /* Response-time buckets, computed from the conversations themselves. */
   const buckets = [
-    { label: '0–2s', value: data.filter((c) => c.responseSeconds <= 2).length },
-    { label: '3–4s', value: data.filter((c) => c.responseSeconds > 2 && c.responseSeconds <= 4).length },
-    { label: '5–6s', value: data.filter((c) => c.responseSeconds > 4 && c.responseSeconds <= 6).length },
-    { label: '7–9s', value: data.filter((c) => c.responseSeconds > 6).length },
+    { label: '0–2s', value: rows.filter((c) => (c.responseSeconds ?? 0) <= 2).length },
+    { label: '3–4s', value: rows.filter((c) => c.responseSeconds > 2 && c.responseSeconds <= 4).length },
+    { label: '5–6s', value: rows.filter((c) => c.responseSeconds > 4 && c.responseSeconds <= 6).length },
+    { label: '7–9s+', value: rows.filter((c) => c.responseSeconds > 6).length },
   ]
 
   return (
@@ -48,23 +49,29 @@ export default function Activity() {
 
       <div className="astats">
         <Stat label="Conversations" value={summary.total} icon="message" tone="sea" />
-        <Stat label="Messages" value={summary.messages} icon="send" tone="info" />
+        <Stat label="Messages" value={Number(summary.messages) || 0} icon="send" tone="info" />
         <Stat label="Requests created" value={summary.requestsCreated} icon="clock" tone="gold" />
         <Stat label="Open escalations" value={summary.escalated} icon="alert" tone="danger" />
       </div>
 
       <Panel title="Volume">
-        <TrendChart data={series('conversations', range)} label="Conversations" height={190} />
+        <TrendChart data={volume.data ?? []} label="Conversations" height={190} />
         <ChartNote>
-          {formatNumber(summary.total)} conversations in the fixture set. The series is the same
-          history the dashboard draws from.
+          {formatNumber(summary.total)} live conversations in this list, grouped by{' '}
+          {range === 'today' ? 'hour' : range === '90d' ? 'week' : range === '12m' ? 'month' : 'day'}.
         </ChartNote>
       </Panel>
 
       <Grid cols={2}>
         <Panel title="Response time" subtitle="How long Vitoria takes to answer.">
           <BarChart data={buckets} label="Response time distribution" height={170} valueSuffix=" conversations" />
-          <ChartNote>Average {summary.avgResponse.toFixed(1)} seconds across every conversation.</ChartNote>
+          <ChartNote>
+            Average{' '}
+            {Number.isFinite(Number(summary.avgResponse)) && Number(summary.avgResponse) > 0
+              ? `${Number(summary.avgResponse) < 60 ? `${Math.round(summary.avgResponse)}s` : `${(summary.avgResponse / 60).toFixed(1)}m`}`
+              : '—'}{' '}
+            from the guest’s first message to Vitoria’s first reply.
+          </ChartNote>
         </Panel>
 
         <Panel title="Outcome">

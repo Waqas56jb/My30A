@@ -9,9 +9,6 @@ import { PartnerCard } from '../components/cards/PlaceCard'
 import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
-import { PARTNER_CATEGORIES } from '../data/mockPartners'
-
-const OPTIONS = ['All', ...PARTNER_CATEGORIES]
 
 /**
  * Local partner directory. Every listing exists to connect the guest with the
@@ -19,15 +16,17 @@ const OPTIONS = ['All', ...PARTNER_CATEGORIES]
  */
 export default function Partners() {
   const [params, setParams] = useSearchParams()
+  const categories = useAsync(() => api.getCategories(), [])
+  const OPTIONS = ['All', ...(categories.data ?? []).map((c) => c.name)]
   const initial = params.get('category') ?? 'All'
-  const [category, setCategory] = useState(OPTIONS.includes(initial) ? initial : 'All')
+  const [category, setCategory] = useState(initial)
   const [query, setQuery] = useState('')
 
   useDocumentTitle(category === 'All' ? 'Local partners' : category)
 
   useEffect(() => {
     const next = params.get('category') ?? 'All'
-    if (OPTIONS.includes(next) && next !== category) setCategory(next)
+    if ((OPTIONS.includes(next) || next === 'All') && next !== category) setCategory(next)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params])
 

@@ -25,7 +25,9 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
 import { trackPartnerView, trackPartnerClick } from '../services/analytics'
 import { formatDistance, priceLevelLabel, weekdayName } from '../utils/format'
-import { img } from '../assets/images'
+import { bookingCta, openRestaurantBooking } from '../utils/restaurantBooking'
+import { placeCover } from '../utils/listingImages'
+import { resolveImageSrc } from '../assets/images'
 
 /**
  * Detail page shared by /partners/:id and /restaurants/:id.
@@ -81,7 +83,7 @@ export default function PlaceDetail({ kind = 'partner' }) {
 
   const saved = isSaved(place.id)
   const today = weekdayName()
-  const gallery = place.gallery?.length ? place.gallery : [place.image]
+  const gallery = (place.gallery?.length ? place.gallery : [placeCover(place)]).filter(Boolean)
 
   const openWebsite = () => {
     trackPartnerClick(place, 'website')
@@ -89,9 +91,21 @@ export default function PlaceDetail({ kind = 'partner' }) {
   }
 
   const callPartner = () => {
+    if (!place.phone) return
     trackPartnerClick(place, 'phone')
     window.location.href = `tel:${place.phone.replace(/[^\d+]/g, '')}`
   }
+
+  const reserveTable = async () => {
+    try {
+      const booking = await api.reserveRestaurant(place.id)
+      openRestaurantBooking(booking, place)
+    } catch {
+      openRestaurantBooking(null, place)
+    }
+  }
+
+  const cta = kind === 'restaurant' ? bookingCta(place) : null
 
   const askVitoria = () => {
     trackPartnerClick(place, 'ask_vitoria')
@@ -120,7 +134,7 @@ export default function PlaceDetail({ kind = 'partner' }) {
       {/* --------------------------- Hero --------------------------- */}
       <div className="detail-hero">
         <SmartImage
-          photoId={place.image}
+          photoId={placeCover(place)}
           alt={place.name}
           className="detail-hero__media"
           width={1600}
@@ -269,12 +283,25 @@ export default function PlaceDetail({ kind = 'partner' }) {
                   ].filter(Boolean)}
                 />
                 <div className="u-stack" style={{ marginTop: 'var(--sp-4)' }}>
-                  <Button block icon="globe" onClick={openWebsite}>
-                    Visit website
-                  </Button>
-                  <Button block variant="secondary" icon="phone" onClick={callPartner}>
-                    Call partner
-                  </Button>
+                  {kind === 'restaurant' ? (
+                    <Button block icon={cta?.label === 'Call to reserve' ? 'phone' : 'utensils'} onClick={reserveTable}>
+                      {cta.label}
+                    </Button>
+                  ) : (
+                    <Button block icon="globe" onClick={openWebsite}>
+                      Visit website
+                    </Button>
+                  )}
+                  {!(kind === 'restaurant' && cta?.label === 'Call to reserve') && (
+                    <Button block variant="secondary" icon="phone" onClick={callPartner}>
+                      {kind === 'restaurant' ? 'Call restaurant' : 'Call partner'}
+                    </Button>
+                  )}
+                  {kind === 'restaurant' && place.website ? (
+                    <Button block variant="ghost" icon="globe" onClick={openWebsite}>
+                      Visit website
+                    </Button>
+                  ) : null}
                   <Button block variant="ghost" icon="sparkles" onClick={askVitoria}>
                     Ask Vitoria about this
                   </Button>
@@ -282,8 +309,9 @@ export default function PlaceDetail({ kind = 'partner' }) {
               </div>
 
               <p className="disclosure">
-                {place.name} is an independent local business. My30A introduces you — reservations,
-                availability, and payment are handled by {place.name} directly.
+                {kind === 'restaurant'
+                  ? cta.disclosure
+                  : `${place.name} is an independent local business. My30A introduces you — reservations, availability, and payment are handled by ${place.name} directly.`}
               </p>
             </aside>
           </div>
@@ -316,9 +344,15 @@ export default function PlaceDetail({ kind = 'partner' }) {
 
         {/* --------------------- Mobile sticky CTA -------------------- */}
         <StickyBar className="detail-sticky">
-          <Button icon="globe" onClick={openWebsite}>
-            Website
-          </Button>
+          {kind === 'restaurant' ? (
+            <Button icon={cta?.label === 'Call to reserve' ? 'phone' : 'utensils'} onClick={reserveTable}>
+              {cta.shortLabel}
+            </Button>
+          ) : (
+            <Button icon="globe" onClick={openWebsite}>
+              Website
+            </Button>
+          )}
           <Button variant="secondary" icon="phone" onClick={callPartner}>
             Call
           </Button>
@@ -333,7 +367,7 @@ export default function PlaceDetail({ kind = 'partner' }) {
 
       <Lightbox
         open={lightbox.open}
-        images={gallery.map((photoId) => img(photoId, 1600, 1.4))}
+        images={gallery.map((photoId) => resolveImageSrc(photoId, null, 1600, 1.4))}
         index={lightbox.index}
         alt={place.name}
         onIndexChange={(index) => setLightbox((s) => ({ ...s, index }))}

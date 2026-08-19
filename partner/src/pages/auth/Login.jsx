@@ -5,10 +5,8 @@ import Button from '../../components/ui/Button'
 import Icon from '../../components/ui/Icon'
 import { Field, Input, Checkbox } from '../../components/ui/Form'
 import { Callout } from '../../components/ui/Display'
-import { StatusPill } from '../../components/PartnerUI'
 import { usePartner } from '../../context/PartnerContext'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
-import { DEMO_ACCOUNTS } from '../../data/partners'
 import { PHOTO } from '../../assets/images'
 
 export default function Login() {
@@ -21,8 +19,6 @@ export default function Login() {
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [showAccounts, setShowAccounts] = useState(false)
-
   const redirectTo = location.state?.from ?? '/partner/dashboard'
 
   const submit = async (event) => {
@@ -114,46 +110,8 @@ export default function Login() {
       <div className="divider">Don&apos;t have a partner account?</div>
 
       <Button to="/partner/register" variant="secondary" block icon="plus">
-        Become a Partner
+        Apply as a partner
       </Button>
-
-      <Callout icon="info">
-        Prototype build — no real authentication. Any password works.{' '}
-        <button
-          type="button"
-          onClick={() => setShowAccounts((v) => !v)}
-          style={{ color: 'var(--sea-700)', textDecoration: 'underline', fontWeight: 600 }}
-        >
-          {showAccounts ? 'Hide demo accounts' : 'Show demo accounts'}
-        </button>
-      </Callout>
-
-      {showAccounts && (
-        <div className="pstack" style={{ gap: 'var(--sp-2)' }}>
-          {DEMO_ACCOUNTS.map((account) => (
-            <button
-              key={account.id}
-              type="button"
-              className="setting-row"
-              style={{ border: '1px solid var(--line)', borderRadius: 'var(--r-md)' }}
-              onClick={() => setForm((f) => ({ ...f, email: account.email, password: 'demo1234' }))}
-            >
-              <span className="setting-row__icon" aria-hidden="true">
-                <Icon name="building" />
-              </span>
-              <span className="setting-row__text">
-                <span className="setting-row__title">{account.businessName}</span>
-                <span className="setting-row__sub">{account.email}</span>
-              </span>
-              <StatusPill status={account.status} />
-            </button>
-          ))}
-          <p className="u-xs u-muted">
-            Each demo business is in a different state, so you can see approved, pending, rejected and
-            suspended listings.
-          </p>
-        </div>
-      )}
     </AuthShell>
   )
 }

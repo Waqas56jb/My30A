@@ -1,0 +1,1021 @@
+{
+  "sourceFile": "MY30A_App_Partners_For_Developer.xlsx",
+  "pulled": "2026-08",
+  "count": 124,
+  "categories": [
+    "Arts & Culture",
+    "Baby & Kids Equipment",
+    "Beach Services",
+    "Bike Rental",
+    "Family & Entertainment",
+    "Family / Babysitting",
+    "Golf",
+    "Golf Cart Rental",
+    "Kids Camps",
+    "Local Marketplace",
+    "Medical / Urgent Care",
+    "On the Water",
+    "Pet Services",
+    "Pickleball",
+    "Private Chef",
+    "Real Estate",
+    "Special Moments / Photography",
+    "Weddings, Proposals & Events",
+    "Welcome Setup (Florist & Gifts)",
+    "Wellness & Spa"
+  ],
+  "partners": [
+    {
+      "category": "On the Water",
+      "name": "30A Yacht Charters",
+      "description": "Private yacht charters for cruising, sightseeing, and sunset trips.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "30ayachtcharters.com",
+      "phone": "(850) 220-6400"
+    },
+    {
+      "category": "On the Water",
+      "name": "Crab Island Luxury Adventures",
+      "description": "Luxury yacht charters and sunset cruises around Crab Island.",
+      "areaServed": "WaterColor",
+      "website": "crabislandluxuryadventures.com",
+      "phone": "(850) 325-0325"
+    },
+    {
+      "category": "On the Water",
+      "name": "Shallow Minded Fishing Charters 30A",
+      "description": "Inshore fishing charters for families and groups.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "shallowmindedfishingcharters30a.com",
+      "phone": "(850) 376-4938"
+    },
+    {
+      "category": "On the Water",
+      "name": "Blue Sky Fishing 30A",
+      "description": "Local fishing charters for all experience levels.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "30afishingfun.com",
+      "phone": "(850) 896-5794"
+    },
+    {
+      "category": "On the Water",
+      "name": "30A Inshore Charters",
+      "description": "Guided inshore fishing trips along the 30A coastline.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "30ainshorecharters.com",
+      "phone": "(850) 699-0014"
+    },
+    {
+      "category": "On the Water",
+      "name": "Pharmasea Outfitters",
+      "description": "Inshore and nearshore fishing charters.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "pharmaseaoutfitters.com",
+      "phone": "(850) 565-9556"
+    },
+    {
+      "category": "On the Water",
+      "name": "Sweet Jody Fishing Charters",
+      "description": "Affordable family-friendly fishing charters.",
+      "areaServed": "30A area",
+      "website": "sweetjodyfishingcharters.com",
+      "phone": "(850) 650-2500"
+    },
+    {
+      "category": "On the Water",
+      "name": "Stelluna Charter Boat",
+      "description": "Family-friendly sport fishing charters.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": "(850) 420-7347"
+    },
+    {
+      "category": "On the Water",
+      "name": "Lock N Load Charters",
+      "description": "Family fun fishing charters.",
+      "areaServed": "Destin / 30A",
+      "website": "locknloadcharters.com",
+      "phone": "(850) 865-7838"
+    },
+    {
+      "category": "On the Water",
+      "name": "Dawn Patrol Charters",
+      "description": "Fishing charters based in Destin serving the 30A area.",
+      "areaServed": "Destin / 30A",
+      "website": "dawnpatroldestin.com",
+      "phone": "(850) 376-1936"
+    },
+    {
+      "category": "On the Water",
+      "name": "30A Pontoon Rentals",
+      "description": "Self-drive pontoon boat rentals.",
+      "areaServed": "30A area",
+      "website": "30apontoonrental.com",
+      "phone": "(850) 220-6400"
+    },
+    {
+      "category": "On the Water",
+      "name": "4N Jet Ski Rentals",
+      "description": "Jet ski rentals - hourly, half-day, and full-day options.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": "(850) 797-9515"
+    },
+    {
+      "category": "On the Water",
+      "name": "Glow Paddle",
+      "description": "Nighttime LED kayak and paddleboard tours - a unique after-dark experience.",
+      "areaServed": "WaterColor / 30A",
+      "website": "glowpaddle.com",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "30a Paddleboard Rentals",
+      "description": "Paddleboard rentals delivered directly to the beach.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "30apd.com",
+      "phone": "(850) 381-2892"
+    },
+    {
+      "category": "On the Water",
+      "name": "30A Beach Paddle Surf",
+      "description": "Paddleboard and kayak rentals plus guided tours.",
+      "areaServed": "Inlet Beach",
+      "website": "30abeachpaddlesurf.com",
+      "phone": "(850) 258-2153"
+    },
+    {
+      "category": "On the Water",
+      "name": "Yellowfin Ocean Sports",
+      "description": "Bike, kayak, and paddleboard rentals and sales, plus bait & tackle.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "yellowfinoceansports.com",
+      "phone": "(850) 231-1717"
+    },
+    {
+      "category": "On the Water",
+      "name": "YOLO Board & Bike Store",
+      "description": "Well-known 30A brand for paddleboard and bike rentals/sales.",
+      "areaServed": "Gulf Place / Santa Rosa Beach",
+      "website": "yoloboard.com",
+      "phone": "(850) 267-0602"
+    },
+    {
+      "category": "On the Water",
+      "name": "Captain Zac's Beach Bonfires",
+      "description": "Customizable 30A beach bonfire packages, from intimate to festive.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "BOHO30A",
+      "description": "Beach picnic experiences for romantic evenings, proposals, and celebrations.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Dead Fish Charters",
+      "description": "Family fishing charters that pick guests up directly from the beach.",
+      "areaServed": "Grayton Beach",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Fire And Tide 30A",
+      "description": "Beach bonfire company for 30A.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Big Fish Bike and Beach Rentals",
+      "description": "Bike and beach gear rentals serving NW Florida for 20+ years.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Stinky's Bait Shack",
+      "description": "30A's only live bait retailer and outfitter, on a coastal dune lake in Dune Allen Beach.",
+      "areaServed": "Dune Allen Beach",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Shallow Water Expeditions Guide Service",
+      "description": "Fly-fishing and light tackle charters on flats and bay boats.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Emerald Coast Beach Service",
+      "description": "Beach chair and umbrella rentals for a full day at the beach.",
+      "areaServed": "South Walton / Destin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Backwater Tours",
+      "description": "Eco tours and stand-up paddle adventures on Choctawhatchee Bay and River.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "30A Airboat Adventures",
+      "description": "Thrilling airboat rides through South Walton's back waters and wildlife.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Adventure 30A",
+      "description": "Surf camp, surf lessons, bike rentals, SUP and kayak rentals.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Florida Bluewater Charters",
+      "description": "Premium private boat charters - offshore fishing, Crab Island, dolphin cruises, sunset tours.",
+      "areaServed": "30A / Santa Rosa Beach / Destin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Jongle Beach Service",
+      "description": "Multi-service beach rental: bikes, paddleboard, kayak, beach chairs/umbrellas, e-bikes, golf carts, bonfires. Free delivery.",
+      "areaServed": "South Walton",
+      "website": "jonglebeach.com",
+      "phone": "(850) 687-5484"
+    },
+    {
+      "category": "On the Water",
+      "name": "Peddler's Paddle Boards and Kayaks",
+      "description": "SUP and kayak rentals, $75/24hrs, at Peddler's Pavilion.",
+      "areaServed": "Seacrest Beach",
+      "website": "",
+      "phone": "(850) 708-5528"
+    },
+    {
+      "category": "On the Water",
+      "name": "Peddler's Bike Shop",
+      "description": "One-stop bike shop - 30A's largest selection of bikes, trikes, kids bikes, tandems.",
+      "areaServed": "Seacrest Beach",
+      "website": "",
+      "phone": "(850) 708-5528"
+    },
+    {
+      "category": "On the Water",
+      "name": "Surf Sup Paddle Board Sales and Rentals",
+      "description": "Mobile SUP rental service, ATX paddleboards for all skill levels.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "On the Water",
+      "name": "Eventure Florida 30A",
+      "description": "Electric bike rentals and bike/paddleboard tours since 2016.",
+      "areaServed": "WaterColor",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Golf Cart Rental",
+      "name": "30A Gulf Carts",
+      "description": "Golf cart rentals delivered to your property.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "30agulfcarts.com",
+      "phone": "(850) 753-9162"
+    },
+    {
+      "category": "Golf Cart Rental",
+      "name": "30A Golf Cart Rentals (Beachy Buggy)",
+      "description": "Golf cart rentals with delivery and pickup.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "beachybuggy.com",
+      "phone": "(850) 502-0030"
+    },
+    {
+      "category": "Golf Cart Rental",
+      "name": "Joy Ride 30A Golf Carts",
+      "description": "Golf cart rentals delivered to your door.",
+      "areaServed": "Santa Rosa Beach (Blue Mtn)",
+      "website": "joyride30a.com",
+      "phone": "(850) 665-0002"
+    },
+    {
+      "category": "Golf Cart Rental",
+      "name": "Outlaw Rentals",
+      "description": "Golf carts, kayaks, bikes, and scooters for rent.",
+      "areaServed": "30A area",
+      "website": "outlawrentals.com",
+      "phone": "(850) 231-6550"
+    },
+    {
+      "category": "Golf Cart Rental",
+      "name": "Street Legal Golf Cart Rentals",
+      "description": "Street-legal golf cart rentals with delivery.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "streetlegalgolfcartrentals.com",
+      "phone": "(850) 558-1924"
+    },
+    {
+      "category": "Golf Cart Rental",
+      "name": "Beach Better Golf Carts",
+      "description": "Family-owned golf cart rentals serving Miramar Beach, Destin, and Santa Rosa Beach/30A.",
+      "areaServed": "Miramar Beach / 30A",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Golf Cart Rental",
+      "name": "South Walton Golf Cart Rentals",
+      "description": "Street-legal LSV golf carts since 2011, 4/6/8-passenger, free delivery across 30A/Santa Rosa Beach/Miramar Beach/PCB.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Bike Rental",
+      "name": "Rideit Electric Bike Rentals",
+      "description": "Electric bike rentals for exploring the 30A trail.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "rideitfl.com",
+      "phone": "(850) 366-2524"
+    },
+    {
+      "category": "Bike Rental",
+      "name": "30A Bike Rentals",
+      "description": "Bike and e-bike rentals delivered to your property.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "30abikerentals.net",
+      "phone": "(850) 231-0959"
+    },
+    {
+      "category": "Bike Rental",
+      "name": "Big Daddy's Bike Shop",
+      "description": "Bike sales, rentals, and repair.",
+      "areaServed": "30A area",
+      "website": "bigdaddysbikeshop.com",
+      "phone": "(850) 622-1165"
+    },
+    {
+      "category": "Golf",
+      "name": "Santa Rosa Golf & Beach Club",
+      "description": "18-hole golf course. NOTE: member-owned club - confirm guest-play policy before offering in-app.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "santarosaclub.com",
+      "phone": ""
+    },
+    {
+      "category": "Golf",
+      "name": "Origins Golf Course (Watersound)",
+      "description": "Family-friendly 10-hole par-3 course, great for beginners and casual play.",
+      "areaServed": "Watersound",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Golf",
+      "name": "The Back Nine",
+      "description": "Premium indoor golf simulator facility - 3 bays with PGA Tour-official Full Swing simulators.",
+      "areaServed": "Miramar Beach",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Golf",
+      "name": "Burnt Pine Golf Club",
+      "description": "Exclusive championship course in Sandestin, ranked among the region's most prestigious.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Golf",
+      "name": "Golf Academy at Sandestin",
+      "description": "Public course with golf instruction for individuals, groups, and juniors.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Golf",
+      "name": "Raven Golf Club",
+      "description": "Championship course designed by Robert Trent Jones Jr. at Sandestin.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Golf",
+      "name": "Baytowne Golf Club",
+      "description": "Course extending from beach to bay, designed by Tom Jackson.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Special Moments / Photography",
+      "name": "Randi Doris Photography",
+      "description": "Family and beach photography sessions.",
+      "areaServed": "Inlet Beach",
+      "website": "randidorisphotography.com",
+      "phone": ""
+    },
+    {
+      "category": "Special Moments / Photography",
+      "name": "Modernmade Photography",
+      "description": "Family, proposal, and beach photography.",
+      "areaServed": "Inlet Beach",
+      "website": "modernmadephotography.com",
+      "phone": "(850) 332-3791"
+    },
+    {
+      "category": "Special Moments / Photography",
+      "name": "Sarah Lynn Photography",
+      "description": "Newborn, family, maternity, and cake smash photography.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Special Moments / Photography",
+      "name": "Ashley Nichole Photography",
+      "description": "Wedding photography with custom packages for every couple.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "Peach & Pearl Events",
+      "description": "Wedding and event planning and coordination.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "peachandpearlevents.com",
+      "phone": "(850) 231-0007"
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "Destin To Wed Event Planning",
+      "description": "Wedding and event planning services.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "destintowed.com",
+      "phone": "(850) 687-0076"
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "SALTY Beach Setups",
+      "description": "Beach picnic, proposal, and bonfire setups.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "saltygirlsbeachsetups.com",
+      "phone": "(850) 979-4479"
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "Kaylie B. Poplin Photography",
+      "description": "Fine art wedding and family photographer along 30A.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "Sand Lily Photography",
+      "description": "Wedding photography servicing all of South Walton.",
+      "areaServed": "South Walton",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "The Girl Who Wants Everything",
+      "description": "Boutique event company for elevated beach weddings and celebrations.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "Marie DiGiovine Wedding Officiant",
+      "description": "Customized wedding and vow renewal officiant.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "Forever I Do Weddings",
+      "description": "Boutique wedding planning for destination beach and garden weddings.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "ADINA Photography",
+      "description": "Wedding photography based in 30A.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "Margaret Ellen Bridal",
+      "description": "Wedding gown boutique with designer dress lines.",
+      "areaServed": "Inlet Beach",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Weddings, Proposals & Events",
+      "name": "Island Sands Beach Weddings",
+      "description": "All-inclusive wedding coordination, equipment rental, and catering - one-stop shop (DJ, cake, photography, hair/makeup).",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Welcome Setup (Florist & Gifts)",
+      "name": "Bouquet at Clay",
+      "description": "Florist offering welcome flowers and arrangements.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "shop.bouquetatclay.com",
+      "phone": "(850) 502-0725"
+    },
+    {
+      "category": "Welcome Setup (Florist & Gifts)",
+      "name": "Clay Garden & Gifts",
+      "description": "Gift baskets and garden gifts.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "clay30a.com",
+      "phone": "(850) 231-2150"
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "The Spa in Seaside",
+      "description": "Massage and spa treatments.",
+      "areaServed": "Seaside",
+      "website": "thespaseaside.com",
+      "phone": "(850) 213-0036"
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "Seaborn Wellness LLC",
+      "description": "Mobile massage - comes directly to the guest's home.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "seabornwellness.com",
+      "phone": "(850) 842-1469"
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "Spa Pearl",
+      "description": "Intimate poolside spa with private treatment rooms; manicure/pedicure.",
+      "areaServed": "Rosemary Beach",
+      "website": "thepearlrb.com",
+      "phone": "(850) 460-9041"
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "The Yoga Haus",
+      "description": "In-studio and private beach yoga classes.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "Pilates By The Sea",
+      "description": "Comprehensive Pilates and wellness studio, all levels.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "Otium 30A",
+      "description": "Boutique fitness studio - yoga, barre, TRX, private training.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "Sandestin Tennis Club",
+      "description": "Top-rated tennis facility at Sandestin Golf and Beach Resort.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "TOPS'L Beach & Racquet Resort",
+      "description": "Tennis facility with 12 courts, private lessons and tournaments.",
+      "areaServed": "Miramar Beach",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "Seabreeze Massage",
+      "description": "Exclusive mobile massage therapy - comes to the guest's residence or event.",
+      "areaServed": "Bay & Walton area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "WL Davidson Yoga & Mindfulness",
+      "description": "Private yin yoga, yoga nidra, and meditation sessions, virtual or on the beach.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Wellness & Spa",
+      "name": "Ocean Elements Day Spa",
+      "description": "Massage therapy, facials, body wraps, and nail services.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Private Chef",
+      "name": "30a Vacation Chef",
+      "description": "Private chef services for vacation rentals.",
+      "areaServed": "Inlet Beach / PCB",
+      "website": "30avacationchef.com",
+      "phone": "(850) 305-0624"
+    },
+    {
+      "category": "Private Chef",
+      "name": "Marrow Private Chefs",
+      "description": "Private chef and in-home dining experiences.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "marrowprivatechefs.com",
+      "phone": "(850) 280-4319"
+    },
+    {
+      "category": "Pet Services",
+      "name": "Happy Tails Pet Care & Services",
+      "description": "Pet sitting and dog walking.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "",
+      "phone": "(850) 502-7502"
+    },
+    {
+      "category": "Beach Services",
+      "name": "Coastal 30A",
+      "description": "Beach chair, umbrella, and bonfire setup.",
+      "areaServed": "Seagrove Beach",
+      "website": "coastal30achairs.com",
+      "phone": "(850) 468-3222"
+    },
+    {
+      "category": "Beach Services",
+      "name": "South Walton Beach Chair Guys",
+      "description": "Beach chair rental and bonfire setup.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "southwaltonbeachchairguys.com",
+      "phone": "(850) 502-6261"
+    },
+    {
+      "category": "Pickleball",
+      "name": "Bayside Pickleball Club",
+      "description": "Indoor pickleball courts - reservations, lessons, events.",
+      "areaServed": "30A area",
+      "website": "baysidepickle.com",
+      "phone": "(850) 270-7306"
+    },
+    {
+      "category": "Family / Babysitting",
+      "name": "Angelfish Babysitting Services",
+      "description": "Babysitting and nanny services.",
+      "areaServed": "Destin (serves 30A)",
+      "website": "angelfishservices.com",
+      "phone": "(850) 797-3100"
+    },
+    {
+      "category": "Real Estate",
+      "name": "Gena Roberson - Gena Sells Real Estate",
+      "description": "Local realtor.",
+      "areaServed": "Seacrest / Santa Rosa Beach",
+      "website": "genaroberson.premierfl.com",
+      "phone": "(469) 219-1025"
+    },
+    {
+      "category": "Real Estate",
+      "name": "Kyle Miller | 30A Real Estate",
+      "description": "Local realtor.",
+      "areaServed": "Inlet Beach",
+      "website": "kyle.30afineliving.com",
+      "phone": "(850) 842-0025"
+    },
+    {
+      "category": "Real Estate",
+      "name": "Cyndi Wilkinson | Rosemary Beach Realty",
+      "description": "Local realtor.",
+      "areaServed": "Rosemary Beach",
+      "website": "the30acollective.com",
+      "phone": "(850) 814-4323"
+    },
+    {
+      "category": "Real Estate",
+      "name": "Carillon Realty Inc",
+      "description": "Real estate sales and rentals.",
+      "areaServed": "Carillon Beach / Inlet Beach",
+      "website": "carillon-beach.com",
+      "phone": "(850) 234-5600 ext 24"
+    },
+    {
+      "category": "Real Estate",
+      "name": "Legacy Hill Real Estate (Jonathan Hill Team)",
+      "description": "Luxury real estate team serving Destin, 30A, and PCB.",
+      "areaServed": "30A / Destin / PCB",
+      "website": "j30a.com",
+      "phone": "(205) 370-5905"
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Buddy's Seafood Market",
+      "description": "Fresh seafood market.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "buddysseafoodmarket.com",
+      "phone": "(850) 213-5684"
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "30Ale House",
+      "description": "Beer, wine, and spirits shop.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "",
+      "phone": "(850) 424-3874"
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Harbor Cigars",
+      "description": "Fine tobacconist and cigar shop.",
+      "areaServed": "Destin",
+      "website": "harborcigars.com",
+      "phone": "(850) 650-3111"
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Kwiker Liquor",
+      "description": "Wine, craft beer, and spirits shop.",
+      "areaServed": "Santa Rosa Beach area",
+      "website": "kwikerliquor.com",
+      "phone": "(850) 234-1434"
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Old Florida Outfitters",
+      "description": "Outdoor apparel and fishing/tackle gear.",
+      "areaServed": "South Walton",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "The Candy Bar",
+      "description": "Specialty candy shop.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Stellar",
+      "description": "Clothing, accessories, and gifts for tweens.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "The Blue Giraffe",
+      "description": "Local art gallery.",
+      "areaServed": "Inlet Beach",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Gigi's Fabulous Kids' Fashions and Toys",
+      "description": "Kids clothing and toys.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Cabana by The Seaside Style",
+      "description": "Open-air bazaar with bohemian accessories, sandals, jewelry, and more.",
+      "areaServed": "Seaside",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Sirens Lingerie & Swim",
+      "description": "Locally-owned lingerie, lounge, and swimwear boutique.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Seaside Farmers Market",
+      "description": "Community farmers market highlighting local, seasonal produce.",
+      "areaServed": "Seaside",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Sandestin Clothing Company",
+      "description": "Resort's signature logo shop for men, women, and children.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Local Marketplace",
+      "name": "Ophelia | Seacrest",
+      "description": "Designer boutique for beach-ready fashion, jewelry, and accessories.",
+      "areaServed": "Seacrest",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Family & Entertainment",
+      "name": "Baytowne Adventure Zone",
+      "description": "Zipline, ropes course, tower climb, and eurobungy at Baytowne Wharf.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Family & Entertainment",
+      "name": "30A Axe Throwing Company",
+      "description": "Axe throwing with craft beers and small plates.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Family & Entertainment",
+      "name": "Thrills Laser Tag & Arcade",
+      "description": "3,500 sq ft laser tag arena plus arcade with 70+ games.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Family & Entertainment",
+      "name": "BLAST Arcade & Laser Maze",
+      "description": "Arcade and laser maze at the Village of Baytowne Wharf.",
+      "areaServed": "Sandestin",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Family & Entertainment",
+      "name": "New Vision Boulevard 10 Cinema",
+      "description": "South Walton's premier movie theater with premium seating options.",
+      "areaServed": "Grand Boulevard",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Family & Entertainment",
+      "name": "SandCastle Rockstars",
+      "description": "Interactive group sandcastle-building lessons on the beach.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Family & Entertainment",
+      "name": "The Shard Shop Grayton",
+      "description": "Make-your-own glass mosaic art boutique experience.",
+      "areaServed": "Grayton Beach",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Arts & Culture",
+      "name": "East End Gallery",
+      "description": "Collaborative gallery of original art from local and regional artists.",
+      "areaServed": "East end of 30A",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Arts & Culture",
+      "name": "J.Leon Gallery + Studio",
+      "description": "Gallery and working ceramics studio making art accessible to all.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Arts & Culture",
+      "name": "Emerald Coast Theatre Company",
+      "description": "Non-profit professional theatre company performing across the area.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Arts & Culture",
+      "name": "Lola's on 30A",
+      "description": "Eclectic art and gift boutique featuring the owner's original beach-inspired artwork.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Arts & Culture",
+      "name": "Sharon Long Watercolors",
+      "description": "Watercolor painting classes and workshops for all skill levels.",
+      "areaServed": "30A area",
+      "website": "",
+      "phone": ""
+    },
+    {
+      "category": "Medical / Urgent Care",
+      "name": "Vacation Medicine - Virtual Urgent Care",
+      "description": "Telemedicine built specifically for vacationers - video visit, prescriptions sent to local pharmacy, no need to leave the house.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "",
+      "phone": "(850) 660-3112"
+    },
+    {
+      "category": "Medical / Urgent Care",
+      "name": "Doc Smiley's Urgent Care",
+      "description": "Walk-in urgent care, highly rated with visiting families.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "",
+      "phone": "(850) 231-1919"
+    },
+    {
+      "category": "Medical / Urgent Care",
+      "name": "Emerald Coast Urgent Care (Inlet Beach)",
+      "description": "Walk-in urgent care open 7 days, closest location to core 30A.",
+      "areaServed": "Inlet Beach",
+      "website": "",
+      "phone": "(850) 588-1843"
+    },
+    {
+      "category": "Medical / Urgent Care",
+      "name": "Publix Pharmacy at Watersound Town Center",
+      "description": "Pharmacy for prescription pickup/transfer.",
+      "areaServed": "Inlet Beach / Watersound",
+      "website": "",
+      "phone": "(850) 213-7030"
+    },
+    {
+      "category": "Medical / Urgent Care",
+      "name": "SoWal Pharmacy",
+      "description": "Locally-owned pharmacy.",
+      "areaServed": "Miramar Beach",
+      "website": "",
+      "phone": "(850) 828-6337"
+    },
+    {
+      "category": "Baby & Kids Equipment",
+      "name": "BabyQuip Cindy 30A",
+      "description": "Baby gear rental delivered - cribs, strollers, high chairs, baby-proofing items, and more.",
+      "areaServed": "30A / Panama City Beach / Destin",
+      "website": "",
+      "phone": "(850) 630-5667"
+    },
+    {
+      "category": "Kids Camps",
+      "name": "30A Learning Academy",
+      "description": "Children's camp/academy in Santa Rosa Beach. NOTE: confirm whether they accept short-term/vacationing families or only ongoing enrollment before listing as bookable.",
+      "areaServed": "Santa Rosa Beach",
+      "website": "",
+      "phone": "(850) 291-7197"
+    }
+  ]
+}

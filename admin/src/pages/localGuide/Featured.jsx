@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
-import SmartImage from '../../components/ui/SmartImage'
+import SmartImage, { Thumb } from '../../components/ui/SmartImage'
 import { SkeletonGrid } from '../../components/ui/Skeleton'
 import { ErrorState } from '../../components/ui/States'
 import { Callout } from '../../components/ui/Display'
@@ -31,9 +31,10 @@ export default function Featured() {
   if (featured.loading || eligible.loading) return <SkeletonGrid count={6} columns="grid--3" />
   if (featured.error) return <ErrorState error={featured.error} onRetry={featured.reload} />
 
-  const rows = featured.data.rows
+  const rows = featured.data?.rows ?? []
   const candidates = (eligible.data?.rows ?? []).filter((p) => !p.featured).slice(0, 8)
-  const categoryName = (id) => categories.data?.find((c) => c.id === id)?.name ?? id
+  const categoryList = Array.isArray(categories.data) ? categories.data : []
+  const categoryName = (id) => categoryList.find((c) => c.id === id)?.name ?? id
 
   const toggle = async (partner, next) => {
     try {
@@ -69,14 +70,18 @@ export default function Featured() {
         />
         <Stat
           label="Combined views"
-          value={rows.reduce((sum, r) => sum + r.stats.views, 0)}
+          value={rows.reduce((sum, r) => sum + (Number(r.stats?.views) || 0), 0)}
           icon="eye"
           tone="info"
         />
         <Stat
           label="Outbound clicks"
           value={rows.reduce(
-            (sum, r) => sum + r.stats.websiteClicks + r.stats.phoneClicks + r.stats.directionsClicks,
+            (sum, r) =>
+              sum +
+              (Number(r.stats?.websiteClicks) || 0) +
+              (Number(r.stats?.phoneClicks) || 0) +
+              (Number(r.stats?.directionsClicks) || 0),
             0,
           )}
           icon="navigation"
@@ -96,7 +101,7 @@ export default function Featured() {
             {rows.map((partner) => (
               <div className="mediacard" key={partner.id}>
                 <div className="mediacard__img">
-                  <SmartImage photoId={partner.images[0]} alt={partner.name} fill width={480} />
+                  <SmartImage photoId={partner.images?.[0]} alt={partner.name} label={partner.name} fill width={480} />
                   <span className="mediacard__flag">Featured</span>
                 </div>
                 <div className="mediacard__body">
@@ -105,7 +110,7 @@ export default function Featured() {
                   </Link>
                   <span className="mediacard__meta">{categoryName(partner.categoryId)}</span>
                   <span className="mediacard__meta">
-                    {formatNumber(partner.stats.views)} views ·{' '}
+                    {formatNumber(partner.stats?.views)} views ·{' '}
                     {partner.startingPrice ? <Money amount={partner.startingPrice} /> : 'Contact for pricing'}
                   </span>
                 </div>
@@ -130,15 +135,13 @@ export default function Featured() {
           <ul className="activity">
             {candidates.map((partner) => (
               <li className="activity__row" key={partner.id}>
-                <span style={{ width: 40, flex: 'none' }}>
-                  <SmartImage photoId={partner.images[0]} alt="" ratio="1x1" width={80} radius="sm" />
-                </span>
+                <Thumb photoId={partner.images?.[0]} name={partner.name} alt="" />
                 <span style={{ minWidth: 0, flex: '1 1 auto' }}>
                   <Link to={`/admin/partners/${partner.id}`} className="activity__title" style={{ textDecoration: 'none' }}>
                     {partner.name}
                   </Link>
                   <span className="activity__body">
-                    {categoryName(partner.categoryId)} · {formatNumber(partner.stats.views)} views
+                    {categoryName(partner.categoryId)} · {formatNumber(partner.stats?.views)} views
                   </span>
                 </span>
                 <Button size="sm" variant="secondary" icon="star" onClick={() => toggle(partner, true)}>

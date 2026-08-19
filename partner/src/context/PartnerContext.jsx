@@ -2,7 +2,6 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import * as authService from '../services/authService'
 import * as partnerService from '../services/partnerService'
 import * as notificationService from '../services/notificationService'
-import { subscribe, setFailureMode } from '../services/mockClient'
 import { readStore, writeStore, STORAGE_KEYS } from '../utils/storage'
 import { makeId } from '../utils/format'
 
@@ -67,6 +66,13 @@ export function PartnerProvider({ children }) {
       setLoadState('ready')
       return record
     } catch (err) {
+      if (err?.code === 'AUTH_REQUIRED' || err?.code === 'AUTH_INVALID' || err?.code === 'AUTH_EXPIRED') {
+        await authService.signOut()
+        setSession(null)
+        setStatus('guest')
+        setLoadState('idle')
+        return null
+      }
       setError(err)
       setLoadState('error')
       return null
@@ -82,18 +88,6 @@ export function PartnerProvider({ children }) {
     }
     loadPartner(session.partnerId)
     notificationService.listNotifications(session.partnerId).then(setNotifications).catch(() => {})
-
-    const offPartners = subscribe('partners', (list) => {
-      const next = list.find((item) => item.id === session.partnerId)
-      if (next) setPartner(next)
-    })
-    const offNotifs = subscribe('notifications', (list) =>
-      setNotifications(list.filter((item) => item.partnerId === session.partnerId)),
-    )
-    return () => {
-      offPartners()
-      offNotifs()
-    }
   }, [session, loadPartner])
 
   const login = useCallback(async (credentials) => {
@@ -113,18 +107,16 @@ export function PartnerProvider({ children }) {
   /** Applying signs the new partner straight in so they can see their status. */
   const apply = useCallback(async (input) => {
     const created = await partnerService.applyAsPartner(input)
-    const next = authService.startSessionFor(created)
-    setSession(next)
-    setStatus('authed')
+    if (created?.token) {
+      const next = authService.startSessionFor(created)
+      setSession(next)
+      setStatus('authed')
+    } else if (input.email && input.password) {
+      const next = await authService.login({ email: input.email, password: input.password })
+      setSession(next)
+      setStatus('authed')
+    }
     setPartner(created)
-    notificationService.push({
-      partnerId: created.id,
-      type: 'status',
-      icon: 'clock',
-      title: 'Your partner profile has been submitted',
-      message: 'Our local team reviews every business by hand, usually within two working days.',
-      link: '/partner/dashboard',
-    })
     return created
   }, [])
 
@@ -163,21 +155,13 @@ export function PartnerProvider({ children }) {
     setSettings((prev) => {
       const merged = { ...prev, ...patch }
       writeStore(STORAGE_KEYS.settings, merged)
-      setFailureMode(merged.simulateErrors)
       return merged
     })
   }, [])
 
-  useEffect(() => {
-    setFailureMode(settings.simulateErrors)
-  }, [settings.simulateErrors])
-
   const resetDemoData = useCallback(async () => {
-    partnerService.resetPartners()
-    notificationService.resetNotifications()
     if (session?.partnerId) await loadPartner(session.partnerId)
-    pushToast({ tone: 'success', title: 'Demo data reset', message: 'The shipped fixtures are back.' })
-  }, [session, loadPartner, pushToast])
+  }, [session, loadPartner])
 
   const value = useMemo(
     () => ({

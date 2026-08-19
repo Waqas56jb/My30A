@@ -133,7 +133,12 @@ export const ACTIVE_TRANSFER = [
 
 /** Hours from now until pickup, used to pick the cancellation tier. */
 export function hoursUntilPickup(transfer, today = TODAY) {
-  const pickup = new Date(`${transfer.pickupDate}T${String(transfer.pickupTime).padStart(5, '0')}:00Z`)
+  const date = transfer?.pickupDate || transfer?.date
+  const rawTime = String(transfer?.pickupTime || transfer?.time || '12:00')
+  const time = rawTime.length >= 5 ? rawTime.slice(0, 5) : rawTime.padStart(5, '0')
+  if (!date) return 0
+  const pickup = new Date(`${date}T${time}:00Z`)
+  if (Number.isNaN(pickup.getTime())) return 0
   const now = new Date(`${today}T09:00:00Z`)
   return Math.round((pickup - now) / 36e5)
 }

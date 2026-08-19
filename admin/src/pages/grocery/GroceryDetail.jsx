@@ -36,21 +36,24 @@ export default function GroceryDetail() {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [estimate, setEstimate] = useState('')
 
-  useDocumentTitle(data ? `Order ${data.order.id}` : 'Grocery order')
+  useDocumentTitle(data?.order?.id ? `Order ${data.order.id}` : 'Grocery order')
 
   if (loading) return <SkeletonPage />
-  if (error) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
+  if (error || !data?.order) return <ErrorState error={error} onRetry={reload} title="We could not open that" />
 
-  const { order, payments, guest } = data
-  const meta = GROCERY_STATUSES[order.status]
+  const { order, payments } = data
+  const meta = GROCERY_STATUSES[order.status] ?? {}
   const cancelled = order.status === 'cancelled'
-  const basket = order.actualAmount ?? order.estimatedAmount
+  const items = Array.isArray(order.items) ? order.items : []
+  const basket = Number(order.actualAmount ?? order.estimatedAmount ?? 0) || 0
+  const serviceFee = Number(order.serviceFee ?? 0) || 0
+  const tipAmount = Number(order.tipAmount ?? 0) || 0
 
   const advance = async (status, extra = {}) => {
     setBusy(true)
     try {
       await api.setOrderStatus(order.id, status, extra)
-      pushToast({ tone: 'success', title: `${order.id} is now ${GROCERY_STATUSES[status].label.toLowerCase()}` })
+      pushToast({ tone: 'success', title: `${order.id} is now ${(GROCERY_STATUSES[status]?.label ?? status).toLowerCase()}` })
       reload()
     } catch (err) {
       pushToast({ tone: 'error', title: 'That did not go through', message: err.message })
@@ -78,7 +81,7 @@ export default function GroceryDetail() {
         actions={
           <>
             <StatusPill map={GROCERY_STATUSES} value={order.status} />
-            {meta.next && !cancelled && (
+            {meta?.next && !cancelled && (
               <Button
                 icon="arrowRight"
                 loading={busy}
@@ -150,17 +153,17 @@ export default function GroceryDetail() {
             </div>
             <div className="refund-preview__row">
               <span>Service fee</span>
-              <strong>{formatCurrency(order.serviceFee)}</strong>
+              <strong>{formatCurrency(serviceFee)}</strong>
             </div>
-            {order.tipAmount > 0 && (
+            {tipAmount > 0 && (
               <div className="refund-preview__row">
                 <span>Tip ({order.tipPercent}%)</span>
-                <strong>{formatCurrency(order.tipAmount)}</strong>
+                <strong>{formatCurrency(tipAmount)}</strong>
               </div>
             )}
             <div className="refund-preview__row refund-preview__row--total">
               <span>Total</span>
-              <strong>{formatCurrency(basket + order.serviceFee + order.tipAmount)}</strong>
+              <strong>{formatCurrency(basket + serviceFee + tipAmount)}</strong>
             </div>
           </div>
 
@@ -176,18 +179,22 @@ export default function GroceryDetail() {
       </Grid>
 
       <Grid cols={2}>
-        <Panel title={`Shopping list (${order.items.length} items)`}>
-          <ul className="activity">
-            {order.items.map((item) => (
-              <li className="activity__row" key={item.id}>
-                <span className="activity__icon" aria-hidden="true">{item.qty}</span>
-                <span style={{ minWidth: 0 }}>
-                  <span className="activity__title">{item.name}</span>
-                  {item.note && <span className="activity__body">{item.note}</span>}
-                </span>
-              </li>
-            ))}
-          </ul>
+        <Panel title={`Shopping list (${items.length} items)`}>
+          {items.length === 0 ? (
+            <InlineEmpty icon="bag" title="No items on this list" />
+          ) : (
+            <ul className="activity">
+              {items.map((item) => (
+                <li className="activity__row" key={item.id ?? item.name}>
+                  <span className="activity__icon" aria-hidden="true">{item.qty ?? 1}</span>
+                  <span style={{ minWidth: 0 }}>
+                    <span className="activity__title">{item.name}</span>
+                    {item.note && <span className="activity__body">{item.note}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Panel>
 
         <Panel title="Delivery photo" subtitle="Sent to the guest when the order is marked delivered.">

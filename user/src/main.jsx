@@ -11,6 +11,7 @@ import './styles/components.css'
 import './styles/chat.css'
 import './styles/pages.css'
 import './styles/discover.css'
+import './styles/area-guide.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

@@ -91,6 +91,12 @@
   padding-left: 8px;
 }
 
+@media (max-width: 420px) {
+  .ptop__tag {
+    display: none;
+  }
+}
+
 .ptop__actions {
   margin-left: auto;
   display: flex;

@@ -30,20 +30,20 @@ export default function RevenueAnalytics() {
   if (payments.loading || refunds.loading) return <SkeletonGrid count={6} columns="grid--3" />
   if (payments.error) return <ErrorState error={payments.error} onRetry={payments.reload} />
 
-  const rows = payments.data.rows
+  const rows = payments.data?.rows ?? []
   const captured = rows.filter((p) => p.status === 'captured')
   const authorised = rows.filter((p) => p.status === 'authorized')
   const failed = rows.filter((p) => p.status === 'failed')
 
-  const gross = captured.reduce((sum, p) => sum + p.amount, 0)
-  const refunded = refunds.data.rows
+  const gross = captured.reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
+  const refunded = (refunds.data?.rows ?? [])
     .filter((r) => r.status === 'completed')
-    .reduce((sum, r) => sum + r.amount, 0)
-  const tips = captured.filter((p) => p.type === 'tip').reduce((sum, p) => sum + p.amount, 0)
+    .reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
+  const tips = captured.filter((p) => p.type === 'tip').reduce((sum, p) => sum + (Number(p.amount) || 0), 0)
 
   const byType = Object.keys(PAYMENT_TYPES).map((type) => ({
     label: PAYMENT_TYPES[type].label,
-    value: captured.filter((p) => p.type === type).reduce((sum, p) => sum + p.amount, 0),
+    value: captured.filter((p) => p.type === type).reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
   })).sort((a, b) => b.value - a.value)
 
   return (

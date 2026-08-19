@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
 import MarketingLayout from './layouts/MarketingLayout'
 import AuthLayout from './layouts/AuthLayout'
-import ErrorBoundary from './components/ErrorBoundary'
+import RouteErrorBoundary from './components/ErrorBoundary'
 import RequireGuest from './components/RequireGuest'
 import RequireAuth from './components/RequireAuth'
 import { SkeletonPage } from './components/ui/Skeleton'
@@ -26,6 +26,7 @@ const BeachDetail = lazy(() => import('./pages/BeachDetail'))
 const Events = lazy(() => import('./pages/Events'))
 const EventDetail = lazy(() => import('./pages/EventDetail'))
 const MapPage = lazy(() => import('./pages/MapPage'))
+const AreaGuide = lazy(() => import('./pages/AreaGuide'))
 const SearchPage = lazy(() => import('./pages/SearchPage'))
 const Favorites = lazy(() => import('./pages/Favorites'))
 const Help = lazy(() => import('./pages/Help'))
@@ -65,7 +66,7 @@ const guarded = (element, props) => (
 
 export default function App() {
   return (
-    <ErrorBoundary>
+    <RouteErrorBoundary>
       <Suspense fallback={<SkeletonPage />}>
         <Routes>
           {/* ---------------- Accounts ---------------- */}
@@ -91,20 +92,22 @@ export default function App() {
               visitor sees; the app shell begins once they step inside. */}
           <Route element={<MarketingLayout />}>
             <Route index element={<Landing />} />
+            <Route path="/help" element={<Help />} />
           </Route>
 
-          <Route element={<AppLayout />}>
-            {/* -------- Your app home: needs an account, not a stay -------- */}
-            <Route path="/discover" element={authed(<Discover />)} />
-
-            {/* ---------------- Browse the destination ----------------
-                Open to everyone on purpose. The public site has to sell 30A
-                to people who have not booked, so none of this is gated. */}
+          <Route
+            element={
+              <RequireAuth>
+                <AppLayout />
+              </RequireAuth>
+            }
+          >
+            <Route path="/discover" element={<Discover />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/experiences/:slug" element={<ExperienceDetail />} />
             <Route path="/map" element={<MapPage />} />
+            <Route path="/area" element={<AreaGuide />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/help" element={<Help />} />
             <Route path="/vitoria" element={<Vitoria />} />
 
             <Route path="/restaurants" element={<Restaurants />} />
@@ -143,9 +146,9 @@ export default function App() {
             <Route path="/transfers/:id" element={guarded(<TransferDetail />)} />
 
             {/* ---------------- Your account ---------------- */}
-            <Route path="/favorites" element={authed(<Favorites />)} />
-            <Route path="/notifications" element={authed(<Notifications />)} />
-            <Route path="/settings" element={authed(<Settings />)} />
+            <Route path="/favorites" element={<Favorites />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/settings" element={<Settings />} />
 
             {/* Aliases kept so older links never dead-end */}
             <Route path="/home" element={<Navigate to="/discover" replace />} />
@@ -158,6 +161,6 @@ export default function App() {
           </Route>
         </Routes>
       </Suspense>
-    </ErrorBoundary>
+    </RouteErrorBoundary>
   )
 }

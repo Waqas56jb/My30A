@@ -24,7 +24,7 @@ import * as api from '../services/mockApi'
 import { track, ANALYTICS_EVENTS } from '../services/analytics'
 import { formatDistance } from '../utils/format'
 import { img } from '../assets/images'
-import { mockLocalConditions } from '../data/mockRecommendations'
+import { EMPTY_CONDITIONS } from '../services/liveApi'
 
 export default function BeachDetail() {
   const { id } = useParams()
@@ -33,6 +33,8 @@ export default function BeachDetail() {
   const [lightbox, setLightbox] = useState({ open: false, index: 0 })
 
   const { data: beach, loading, error, reload } = useAsync(() => api.getBeach(id), [id])
+  const conditions = useAsync(() => api.getWeather(), [])
+  const local = conditions.data ?? EMPTY_CONDITIONS
   useDocumentTitle(beach?.name)
 
   useEffect(() => {
@@ -94,7 +96,7 @@ export default function BeachDetail() {
           <div className="detail-layout">
             <div>
               <div className="u-row u-wrap" style={{ marginBottom: 8 }}>
-                <Badge tone="sand">{beach.bestFor}</Badge>
+                <Badge tone="sand">{beach.useLabel || beach.bestFor || 'Beach access'}</Badge>
                 {beach.walkTime && <Badge tone="ok">{beach.walkTime}</Badge>}
               </div>
 
@@ -113,6 +115,11 @@ export default function BeachDetail() {
               <p className="prose" style={{ marginTop: 'var(--sp-5)' }}>
                 {beach.description}
               </p>
+              {beach.rules ? (
+                <Callout icon="info" className="section">
+                  {beach.rules}
+                </Callout>
+              ) : null}
 
               {beach.vitoriaNote && (
                 <Callout icon="sparkles" className="section">
@@ -123,7 +130,7 @@ export default function BeachDetail() {
 
               <Section title="What’s there" id="amenities">
                 <div className="taglist">
-                  {beach.amenities.map((amenity) => (
+                  {(beach.amenities ?? []).map((amenity) => (
                     <span key={amenity} className="tag">
                       {amenity}
                     </span>
@@ -173,20 +180,20 @@ export default function BeachDetail() {
                 <div className="flag-row">
                   <span
                     className="flag-swatch"
-                    style={{ background: mockLocalConditions.beachFlag.color }}
+                    style={{ background: local.beachFlag.color }}
                     aria-hidden="true"
                   />
                   <div>
                     <div className="u-small" style={{ fontWeight: 600 }}>
-                      {mockLocalConditions.beachFlag.label}
+                      {local.beachFlag.label}
                     </div>
-                    <div className="u-xs u-muted">{mockLocalConditions.beachFlag.meaning}</div>
+                    <div className="u-xs u-muted">{local.beachFlag.meaning}</div>
                   </div>
                 </div>
                 <p className="u-xs u-muted" style={{ marginTop: 10 }}>
-                  Water {mockLocalConditions.water.tempF}° · {mockLocalConditions.water.surf}
+                  {local.weather.condition} · {local.water.surf}
                   <br />
-                  {mockLocalConditions.tide}
+                  {local.tide}
                 </p>
               </div>
             </aside>

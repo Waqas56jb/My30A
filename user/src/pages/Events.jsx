@@ -11,7 +11,7 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
 import { formatLongDate, toDate, formatDateRange } from '../utils/format'
 
-const CATEGORIES = ['All', 'Live Music', 'Market', 'Wellness', 'Arts', 'Food & Drink', 'Family']
+const CATEGORIES = ['All', 'Live Music', 'Market', 'Wellness', 'Arts', 'Food & Drink', 'Family', 'Community']
 
 export default function Events() {
   const { guest } = useApp()
@@ -45,7 +45,7 @@ export default function Events() {
         subtitle={
           guest?.stay
             ? `What’s on between ${formatDateRange(guest.stay.checkInDate, guest.stay.checkOutDate)}`
-            : 'What’s on along 30A'
+            : 'Live local calendar from 30A.com / Beach Happy'
         }
         back
         backTo="/explore"

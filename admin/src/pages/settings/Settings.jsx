@@ -11,8 +11,32 @@ import { useLoad } from '../../hooks/useTable'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAdmin } from '../../context/AdminContext'
 import * as api from '../../services/adminApi'
-import { SETTINGS_SECTIONS } from '../../data/settings'
-import { cx, formatCurrency } from '../../utils/format'
+import { SETTINGS_SECTIONS, DEFAULT_SETTINGS, mergeSettings } from '../../data/settings'
+import { cx } from '../../utils/format'
+
+const str = (value) => {
+  if (value == null) return ''
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return ''
+}
+
+const flag = (value) => value === true || value === 'true' || value === 1 || value === '1'
+
+const num = (value) => {
+  if (value === '' || value == null) return ''
+  const n = Number(value)
+  return Number.isFinite(n) ? n : ''
+}
+
+const list = (value) => (Array.isArray(value) ? value.filter((item) => item != null) : [])
+
+const objects = (value) => list(value).filter((item) => item && typeof item === 'object')
+
+const chipLabel = (value) => {
+  if (typeof value === 'string' || typeof value === 'number') return String(value)
+  if (value && typeof value === 'object') return str(value.label ?? value.name ?? value.id)
+  return ''
+}
 
 /** One row: a labelled control with an explanation of what it changes. */
 function Row({ title, sub, children }) {
@@ -45,19 +69,24 @@ export default function Settings() {
   const [resetOpen, setResetOpen] = useState(false)
 
   useEffect(() => {
-    if (data) setDraft(data)
+    if (!data) return
+    setDraft(mergeSettings(data))
   }, [data])
 
-  if (loading || !draft) return <SkeletonPage />
+  if (loading) return <SkeletonPage />
   if (error) return <ErrorState error={error} onRetry={reload} />
+  if (!draft) return <SkeletonPage />
 
   const set = (key, value) =>
-    setDraft((d) => ({ ...d, [section]: { ...d[section], [key]: value } }))
+    setDraft((d) => ({
+      ...d,
+      [section]: { ...(d?.[section] ?? DEFAULT_SETTINGS[section] ?? {}), [key]: value },
+    }))
 
   const save = async () => {
     setBusy(true)
     try {
-      await api.updateSettings(section, draft[section])
+      await api.updateSettings(section, draft[section] ?? DEFAULT_SETTINGS[section])
       pushToast({ tone: 'success', title: 'Settings saved' })
       reload()
     } catch (err) {
@@ -74,8 +103,12 @@ export default function Settings() {
     reload()
   }
 
-  const s = draft[section]
-  const meta = SETTINGS_SECTIONS.find((x) => x.id === section)
+  const s = { ...(DEFAULT_SETTINGS[section] ?? {}), ...(draft[section] ?? {}) }
+  const meta = SETTINGS_SECTIONS.find((x) => x.id === section) ?? SETTINGS_SECTIONS[0]
+  const plans = objects(s.plans)
+  const fees = objects(s.serviceFees)
+  const rules = objects(s.cancellationRules)
+  const events = list(s.trackedEvents).map(chipLabel).filter(Boolean)
 
   return (
     <div className="apage">
@@ -109,29 +142,29 @@ export default function Settings() {
         </nav>
 
         <div className="u-stack" style={{ gap: 'var(--sp-5)' }}>
-          <Panel title={meta.label} subtitle={meta.blurb}>
+          <Panel title={meta?.label ?? 'Settings'} subtitle={meta?.blurb}>
             {/* ------------------------------ General ---------------------- */}
             {section === 'general' && (
               <div className="u-stack" style={{ gap: 'var(--sp-4)' }}>
                 <Grid cols={2}>
                   <Field label="Platform name">
-                    {(p) => <Input {...p} value={s.platformName} onChange={(e) => set('platformName', e.target.value)} />}
+                    {(p) => <Input {...p} value={str(s.platformName)} onChange={(e) => set('platformName', e.target.value)} />}
                   </Field>
                   <Field label="Support email">
-                    {(p) => <Input {...p} type="email" value={s.supportEmail} onChange={(e) => set('supportEmail', e.target.value)} />}
+                    {(p) => <Input {...p} type="email" value={str(s.supportEmail)} onChange={(e) => set('supportEmail', e.target.value)} />}
                   </Field>
                   <Field label="Support phone">
-                    {(p) => <Input {...p} value={s.supportPhone} onChange={(e) => set('supportPhone', e.target.value)} />}
+                    {(p) => <Input {...p} value={str(s.supportPhone)} onChange={(e) => set('supportPhone', e.target.value)} />}
                   </Field>
                   <Field label="Timezone">
-                    {(p) => <Input {...p} value={s.timezone} onChange={(e) => set('timezone', e.target.value)} />}
+                    {(p) => <Input {...p} value={str(s.timezone)} onChange={(e) => set('timezone', e.target.value)} />}
                   </Field>
                   <Field label="Currency">
-                    {(p) => <Input {...p} value={s.currency} onChange={(e) => set('currency', e.target.value)} />}
+                    {(p) => <Input {...p} value={str(s.currency)} onChange={(e) => set('currency', e.target.value)} />}
                   </Field>
                 </Grid>
                 <Field label="Service area">
-                  {(p) => <Textarea {...p} rows={2} value={s.serviceArea} onChange={(e) => set('serviceArea', e.target.value)} />}
+                  {(p) => <Textarea {...p} rows={2} value={str(s.serviceArea)} onChange={(e) => set('serviceArea', e.target.value)} />}
                 </Field>
               </div>
             )}
@@ -140,17 +173,17 @@ export default function Settings() {
             {section === 'business' && (
               <div className="u-stack" style={{ gap: 'var(--sp-4)' }}>
                 <p className="stat__label">Host plans</p>
-                {s.plans.map((plan, i) => (
-                  <Grid cols={3} key={plan.id}>
+                {plans.map((plan, i) => (
+                  <Grid cols={3} key={plan.id ?? i}>
                     <Field label="Plan name">
                       {(p) => (
                         <Input
                           {...p}
-                          value={plan.name}
+                          value={str(plan.name)}
                           onChange={(e) => {
-                            const plans = [...s.plans]
-                            plans[i] = { ...plan, name: e.target.value }
-                            set('plans', plans)
+                            const next = [...plans]
+                            next[i] = { ...plan, name: e.target.value }
+                            set('plans', next)
                           }}
                         />
                       )}
@@ -160,11 +193,11 @@ export default function Settings() {
                         <Input
                           {...p}
                           type="number"
-                          value={plan.price}
+                          value={num(plan.price)}
                           onChange={(e) => {
-                            const plans = [...s.plans]
-                            plans[i] = { ...plan, price: Number(e.target.value) }
-                            set('plans', plans)
+                            const next = [...plans]
+                            next[i] = { ...plan, price: Number(e.target.value) }
+                            set('plans', next)
                           }}
                         />
                       )}
@@ -174,11 +207,11 @@ export default function Settings() {
                         <Input
                           {...p}
                           type="number"
-                          value={plan.properties}
+                          value={num(plan.properties)}
                           onChange={(e) => {
-                            const plans = [...s.plans]
-                            plans[i] = { ...plan, properties: Number(e.target.value) }
-                            set('plans', plans)
+                            const next = [...plans]
+                            next[i] = { ...plan, properties: Number(e.target.value) }
+                            set('plans', next)
                           }}
                         />
                       )}
@@ -187,17 +220,17 @@ export default function Settings() {
                 ))}
 
                 <Field label="Trial length (days)">
-                  {(p) => <Input {...p} type="number" value={s.trialDays} onChange={(e) => set('trialDays', Number(e.target.value))} />}
+                  {(p) => <Input {...p} type="number" value={num(s.trialDays)} onChange={(e) => set('trialDays', Number(e.target.value))} />}
                 </Field>
 
                 <Row title="Hosts need approval" sub="New host accounts wait in a queue before their properties can go live.">
-                  <Switch checked={s.requireHostApproval} onChange={(v) => set('requireHostApproval', v)} label="Hosts need approval" />
+                  <Switch checked={flag(s.requireHostApproval)} onChange={(v) => set('requireHostApproval', v)} label="Hosts need approval" />
                 </Row>
                 <Row title="Partners need approval" sub="Applications are reviewed before the listing is visible to guests.">
-                  <Switch checked={s.requirePartnerApproval} onChange={(v) => set('requirePartnerApproval', v)} label="Partners need approval" />
+                  <Switch checked={flag(s.requirePartnerApproval)} onChange={(v) => set('requirePartnerApproval', v)} label="Partners need approval" />
                 </Row>
                 <Row title="Publish on approval" sub="Approving a partner makes the listing live immediately, rather than leaving it hidden.">
-                  <Switch checked={s.autoPublishApprovedPartners} onChange={(v) => set('autoPublishApprovedPartners', v)} label="Publish on approval" />
+                  <Switch checked={flag(s.autoPublishApprovedPartners)} onChange={(v) => set('autoPublishApprovedPartners', v)} label="Publish on approval" />
                 </Row>
               </div>
             )}
@@ -208,17 +241,17 @@ export default function Settings() {
                 <MockPaymentNote />
 
                 <p className="stat__label">Grocery service fee tiers</p>
-                {s.serviceFees.map((tier, i) => (
-                  <Grid cols={3} key={tier.id}>
+                {fees.map((tier, i) => (
+                  <Grid cols={3} key={tier.id ?? i}>
                     <Field label="Tier">
                       {(p) => (
                         <Input
                           {...p}
-                          value={tier.label}
+                          value={str(tier.label)}
                           onChange={(e) => {
-                            const tiers = [...s.serviceFees]
-                            tiers[i] = { ...tier, label: e.target.value }
-                            set('serviceFees', tiers)
+                            const next = [...fees]
+                            next[i] = { ...tier, label: e.target.value }
+                            set('serviceFees', next)
                           }}
                         />
                       )}
@@ -228,12 +261,12 @@ export default function Settings() {
                         <Input
                           {...p}
                           type="number"
-                          value={tier.upTo ?? ''}
+                          value={tier.upTo == null ? '' : num(tier.upTo)}
                           placeholder="No limit"
                           onChange={(e) => {
-                            const tiers = [...s.serviceFees]
-                            tiers[i] = { ...tier, upTo: e.target.value === '' ? null : Number(e.target.value) }
-                            set('serviceFees', tiers)
+                            const next = [...fees]
+                            next[i] = { ...tier, upTo: e.target.value === '' ? null : Number(e.target.value) }
+                            set('serviceFees', next)
                           }}
                         />
                       )}
@@ -243,11 +276,11 @@ export default function Settings() {
                         <Input
                           {...p}
                           type="number"
-                          value={tier.fee}
+                          value={num(tier.fee)}
                           onChange={(e) => {
-                            const tiers = [...s.serviceFees]
-                            tiers[i] = { ...tier, fee: Number(e.target.value) }
-                            set('serviceFees', tiers)
+                            const next = [...fees]
+                            next[i] = { ...tier, fee: Number(e.target.value) }
+                            set('serviceFees', next)
                           }}
                         />
                       )}
@@ -258,21 +291,21 @@ export default function Settings() {
                 <p className="stat__label" style={{ marginTop: 'var(--sp-3)' }}>
                   Transfer cancellation rules
                 </p>
-                {s.cancellationRules.map((rule, i) => (
-                  <Grid cols={3} key={rule.id}>
+                {rules.map((rule, i) => (
+                  <Grid cols={3} key={rule.id ?? i}>
                     <Field label="Window">
-                      {(p) => <Input {...p} value={rule.label} readOnly />}
+                      {(p) => <Input {...p} value={str(rule.label)} readOnly />}
                     </Field>
                     <Field label="Hours before pickup">
                       {(p) => (
                         <Input
                           {...p}
                           type="number"
-                          value={rule.hours}
+                          value={num(rule.hours)}
                           onChange={(e) => {
-                            const rules = [...s.cancellationRules]
-                            rules[i] = { ...rule, hours: Number(e.target.value) }
-                            set('cancellationRules', rules)
+                            const next = [...rules]
+                            next[i] = { ...rule, hours: Number(e.target.value) }
+                            set('cancellationRules', next)
                           }}
                         />
                       )}
@@ -282,11 +315,11 @@ export default function Settings() {
                         <Input
                           {...p}
                           type="number"
-                          value={rule.fee}
+                          value={num(rule.fee)}
                           onChange={(e) => {
-                            const rules = [...s.cancellationRules]
-                            rules[i] = { ...rule, fee: Number(e.target.value) }
-                            set('cancellationRules', rules)
+                            const next = [...rules]
+                            next[i] = { ...rule, fee: Number(e.target.value) }
+                            set('cancellationRules', next)
                           }}
                         />
                       )}
@@ -298,7 +331,7 @@ export default function Settings() {
                   {(p) => (
                     <Input
                       {...p}
-                      value={s.tipPresets.join(', ')}
+                      value={list(s.tipPresets).map(num).filter((n) => n !== '').join(', ')}
                       onChange={(e) =>
                         set(
                           'tipPresets',
@@ -314,13 +347,13 @@ export default function Settings() {
                   sub="The card hold becomes a charge only when the ride is marked completed. Turning this off would charge at confirmation."
                 >
                   <Switch
-                    checked={s.captureTransfersOnCompletion}
+                    checked={flag(s.captureTransfersOnCompletion)}
                     onChange={(v) => set('captureTransfersOnCompletion', v)}
                     label="Capture transfers on completion"
                   />
                 </Row>
 
-                <Callout icon="lock">{s.processorLabel}</Callout>
+                <Callout icon="lock">{str(s.processorLabel)}</Callout>
               </div>
             )}
 
@@ -328,22 +361,22 @@ export default function Settings() {
             {section === 'notifications' && (
               <div>
                 <Row title="Push notifications" sub="Master switch for push to guests, hosts and partners.">
-                  <Switch checked={s.pushEnabled} onChange={(v) => set('pushEnabled', v)} label="Push notifications" />
+                  <Switch checked={flag(s.pushEnabled)} onChange={(v) => set('pushEnabled', v)} label="Push notifications" />
                 </Row>
                 <Row title="Email notifications" sub="Master switch for transactional email.">
-                  <Switch checked={s.emailEnabled} onChange={(v) => set('emailEnabled', v)} label="Email notifications" />
+                  <Switch checked={flag(s.emailEnabled)} onChange={(v) => set('emailEnabled', v)} label="Email notifications" />
                 </Row>
                 <Row title="Daily operations digest" sub="A morning summary of everything waiting in the queues.">
-                  <Switch checked={s.dailyOpsDigest} onChange={(v) => set('dailyOpsDigest', v)} label="Daily operations digest" />
+                  <Switch checked={flag(s.dailyOpsDigest)} onChange={(v) => set('dailyOpsDigest', v)} label="Daily operations digest" />
                 </Row>
                 <Row title="Alert on failed payment" sub="Tell the finance role as soon as a card is declined.">
-                  <Switch checked={s.alertOnFailedPayment} onChange={(v) => set('alertOnFailedPayment', v)} label="Alert on failed payment" />
+                  <Switch checked={flag(s.alertOnFailedPayment)} onChange={(v) => set('alertOnFailedPayment', v)} label="Alert on failed payment" />
                 </Row>
                 <Row title="Alert on escalation" sub="Tell support the moment Vitoria hands a conversation over.">
-                  <Switch checked={s.alertOnEscalation} onChange={(v) => set('alertOnEscalation', v)} label="Alert on escalation" />
+                  <Switch checked={flag(s.alertOnEscalation)} onChange={(v) => set('alertOnEscalation', v)} label="Alert on escalation" />
                 </Row>
                 <Field label="Digest time">
-                  {(p) => <Input {...p} value={s.digestTime} onChange={(e) => set('digestTime', e.target.value)} />}
+                  {(p) => <Input {...p} value={str(s.digestTime)} onChange={(e) => set('digestTime', e.target.value)} />}
                 </Field>
               </div>
             )}
@@ -353,10 +386,10 @@ export default function Settings() {
               <div className="u-stack" style={{ gap: 'var(--sp-4)' }}>
                 <Grid cols={2}>
                   <Field label="Assistant name">
-                    {(p) => <Input {...p} value={s.assistantName} onChange={(e) => set('assistantName', e.target.value)} />}
+                    {(p) => <Input {...p} value={str(s.assistantName)} onChange={(e) => set('assistantName', e.target.value)} />}
                   </Field>
                   <Field label="Tone">
-                    {(p) => <Input {...p} value={s.tone} onChange={(e) => set('tone', e.target.value)} />}
+                    {(p) => <Input {...p} value={str(s.tone)} onChange={(e) => set('tone', e.target.value)} />}
                   </Field>
                 </Grid>
 
@@ -366,7 +399,7 @@ export default function Settings() {
                       {...p}
                       type="number"
                       min="1"
-                      value={s.escalateAfterUnresolved}
+                      value={num(s.escalateAfterUnresolved)}
                       onChange={(e) => set('escalateAfterUnresolved', Number(e.target.value))}
                     />
                   )}
@@ -376,27 +409,27 @@ export default function Settings() {
                   title="Vitoria can create service requests"
                   sub="She collects the details and raises a grocery or transfer request. A human still confirms it."
                 >
-                  <Switch checked={s.canCreateRequests} onChange={(v) => set('canCreateRequests', v)} label="Can create service requests" />
+                  <Switch checked={flag(s.canCreateRequests)} onChange={(v) => set('canCreateRequests', v)} label="Can create service requests" />
                 </Row>
 
                 <Row
                   title="Vitoria can quote partner prices"
                   sub="Off by default, and it should stay off. My30A does not control partner pricing or availability, so quoting one is a promise we cannot keep."
                 >
-                  <Switch checked={s.canQuotePartnerPrices} onChange={(v) => set('canQuotePartnerPrices', v)} label="Can quote partner prices" />
+                  <Switch checked={flag(s.canQuotePartnerPrices)} onChange={(v) => set('canQuotePartnerPrices', v)} label="Can quote partner prices" />
                 </Row>
 
                 <Field label="Languages" hint="Comma separated.">
                   {(p) => (
                     <Input
                       {...p}
-                      value={s.languages.join(', ')}
+                      value={list(s.languages).map(chipLabel).filter(Boolean).join(', ')}
                       onChange={(e) => set('languages', e.target.value.split(',').map((x) => x.trim()).filter(Boolean))}
                     />
                   )}
                 </Field>
 
-                <Callout icon="sparkles">{s.modelLabel}</Callout>
+                <Callout icon="sparkles">{str(s.modelLabel)}</Callout>
               </div>
             )}
 
@@ -405,7 +438,7 @@ export default function Settings() {
               <div className="u-stack" style={{ gap: 'var(--sp-4)' }}>
                 <Field label="Default sort">
                   {(p) => (
-                    <Select {...p} value={s.defaultSort} onChange={(e) => set('defaultSort', e.target.value)}>
+                    <Select {...p} value={str(s.defaultSort) || 'Featured first'} onChange={(e) => set('defaultSort', e.target.value)}>
                       <option>Featured first</option>
                       <option>Most viewed</option>
                       <option>Alphabetical</option>
@@ -418,11 +451,11 @@ export default function Settings() {
                   title="Show prices when known"
                   sub="Listings without a price fall back to the label below rather than showing nothing."
                 >
-                  <Switch checked={s.showPricesWhenKnown} onChange={(v) => set('showPricesWhenKnown', v)} label="Show prices when known" />
+                  <Switch checked={flag(s.showPricesWhenKnown)} onChange={(v) => set('showPricesWhenKnown', v)} label="Show prices when known" />
                 </Row>
 
                 <Field label="Fallback price label">
-                  {(p) => <Input {...p} value={s.fallbackPriceLabel} onChange={(e) => set('fallbackPriceLabel', e.target.value)} />}
+                  {(p) => <Input {...p} value={str(s.fallbackPriceLabel)} onChange={(e) => set('fallbackPriceLabel', e.target.value)} />}
                 </Field>
 
                 <Field label="Maximum featured per category">
@@ -430,7 +463,7 @@ export default function Settings() {
                     <Input
                       {...p}
                       type="number"
-                      value={s.maxFeaturedPerCategory}
+                      value={num(s.maxFeaturedPerCategory)}
                       onChange={(e) => set('maxFeaturedPerCategory', Number(e.target.value))}
                     />
                   )}
@@ -444,7 +477,7 @@ export default function Settings() {
                 <div>
                   <p className="stat__label" style={{ marginBottom: 6 }}>Tracked events</p>
                   <div className="chiplist">
-                    {s.trackedEvents.map((event) => (
+                    {events.map((event) => (
                       <span key={event} className="chip">{event}</span>
                     ))}
                   </div>
@@ -456,13 +489,13 @@ export default function Settings() {
                 </div>
 
                 <Row title="Weekly partner report" sub="Email each approved partner their views and clicks every Monday.">
-                  <Switch checked={s.weeklyReportEnabled} onChange={(v) => set('weeklyReportEnabled', v)} label="Weekly partner report" />
+                  <Switch checked={flag(s.weeklyReportEnabled)} onChange={(v) => set('weeklyReportEnabled', v)} label="Weekly partner report" />
                 </Row>
                 <Row title="Partners can edit their own listing" sub="Business details, photographs and hours.">
-                  <Switch checked={s.allowSelfServiceEdits} onChange={(v) => set('allowSelfServiceEdits', v)} label="Partners can edit their listing" />
+                  <Switch checked={flag(s.allowSelfServiceEdits)} onChange={(v) => set('allowSelfServiceEdits', v)} label="Partners can edit their listing" />
                 </Row>
                 <Row title="Edits need re-approval" sub="Changes go back into the review queue before guests see them.">
-                  <Switch checked={s.requireApprovalOnEdit} onChange={(v) => set('requireApprovalOnEdit', v)} label="Edits need re-approval" />
+                  <Switch checked={flag(s.requireApprovalOnEdit)} onChange={(v) => set('requireApprovalOnEdit', v)} label="Edits need re-approval" />
                 </Row>
               </div>
             )}
@@ -474,7 +507,7 @@ export default function Settings() {
                   title="Setup required before publishing"
                   sub="A property cannot go live until the essential sections are filled in."
                 >
-                  <Switch checked={s.requireSetupBeforePublish} onChange={(v) => set('requireSetupBeforePublish', v)} label="Setup required before publishing" />
+                  <Switch checked={flag(s.requireSetupBeforePublish)} onChange={(v) => set('requireSetupBeforePublish', v)} label="Setup required before publishing" />
                 </Row>
 
                 <Field label="Minimum sections completed">
@@ -482,20 +515,20 @@ export default function Settings() {
                     <Input
                       {...p}
                       type="number"
-                      value={s.minimumSetupSections}
+                      value={num(s.minimumSetupSections)}
                       onChange={(e) => set('minimumSetupSections', Number(e.target.value))}
                     />
                   )}
                 </Field>
 
                 <Row title="Hosts can share guest links" sub="Generate a link or QR code that unlocks the stay for a guest.">
-                  <Switch checked={s.allowGuestLinkSharing} onChange={(v) => set('allowGuestLinkSharing', v)} label="Hosts can share guest links" />
+                  <Switch checked={flag(s.allowGuestLinkSharing)} onChange={(v) => set('allowGuestLinkSharing', v)} label="Hosts can share guest links" />
                 </Row>
                 <Row
                   title="Subscription required"
                   sub="Off for now — the commercial model has not been finalised, and no host is blocked from the product yet."
                 >
-                  <Switch checked={s.subscriptionRequired} onChange={(v) => set('subscriptionRequired', v)} label="Subscription required" />
+                  <Switch checked={flag(s.subscriptionRequired)} onChange={(v) => set('subscriptionRequired', v)} label="Subscription required" />
                 </Row>
               </div>
             )}
@@ -509,13 +542,13 @@ export default function Settings() {
                 </Callout>
 
                 <Row title="Require two-factor authentication" sub="For every admin user, not just those who can reach payments.">
-                  <Switch checked={s.requireTwoFactor} onChange={(v) => set('requireTwoFactor', v)} label="Require two-factor authentication" />
+                  <Switch checked={flag(s.requireTwoFactor)} onChange={(v) => set('requireTwoFactor', v)} label="Require two-factor authentication" />
                 </Row>
 
                 <Grid cols={2}>
                   <Field label="Session length (hours)">
                     {(p) => (
-                      <Input {...p} type="number" value={s.sessionHours} onChange={(e) => set('sessionHours', Number(e.target.value))} />
+                      <Input {...p} type="number" value={num(s.sessionHours)} onChange={(e) => set('sessionHours', Number(e.target.value))} />
                     )}
                   </Field>
                   <Field label="Audit retention (days)">
@@ -523,7 +556,7 @@ export default function Settings() {
                       <Input
                         {...p}
                         type="number"
-                        value={s.auditRetentionDays}
+                        value={num(s.auditRetentionDays)}
                         onChange={(e) => set('auditRetentionDays', Number(e.target.value))}
                       />
                     )}
@@ -532,7 +565,7 @@ export default function Settings() {
 
                 <Field label="IP allowlist" hint="One address or range per line. Empty means no restriction.">
                   {(p) => (
-                    <Textarea {...p} rows={3} value={s.ipAllowlist} onChange={(e) => set('ipAllowlist', e.target.value)} />
+                    <Textarea {...p} rows={3} value={str(s.ipAllowlist)} onChange={(e) => set('ipAllowlist', e.target.value)} />
                   )}
                 </Field>
               </div>
@@ -541,7 +574,7 @@ export default function Settings() {
 
           <div className="tone-row">
             <Button onClick={save} loading={busy} icon="check">Save changes</Button>
-            <Button variant="ghost" onClick={() => setDraft(data)}>Discard</Button>
+            <Button variant="ghost" onClick={() => setDraft(mergeSettings(data))}>Discard</Button>
           </div>
         </div>
       </div>

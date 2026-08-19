@@ -40,26 +40,6 @@ export function AdminProvider({ children }) {
     [dismissToast],
   )
 
-  /* --------------------------- Attention feed -------------------------- */
-  const refreshOverview = useCallback(async () => {
-    try {
-      setOverview(await api.getOverview())
-    } catch {
-      /* the badges are a convenience; a failure must not break the shell */
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!user) return undefined
-    refreshOverview()
-    /* Any table change can change a queue count, so listen broadly rather
-       than wiring each screen to remember to refresh the sidebar. */
-    const topics = ['partners', 'orders', 'transfers', 'payments', 'refunds', 'reviews', 'hosts']
-    const unsubscribes = topics.map((topic) => api.subscribe(topic, refreshOverview))
-    return () => unsubscribes.forEach((fn) => fn())
-  }, [user, refreshOverview])
-
-  /* ------------------------------- Auth -------------------------------- */
   const logIn = useCallback(async (credentials) => {
     const next = await auth.login(credentials)
     setSession(next)
@@ -72,12 +52,59 @@ export function AdminProvider({ children }) {
     setOverview(null)
   }, [])
 
+  const refreshUser = useCallback((patch) => {
+    setSession((current) => {
+      if (!current) return current
+      const next = {
+        ...current,
+        email: patch.email ?? current.email,
+        user: { ...current.user, ...patch },
+      }
+      auth.updateSessionUser(patch)
+      return next
+    })
+  }, [])
+
+  /* --------------------------- Attention feed -------------------------- */
+  const refreshOverview = useCallback(async () => {
+    try {
+      setOverview(await api.getOverview())
+    } catch {
+      /* the badges are a convenience; a failure must not break the shell */
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!user?.id) return undefined
+    refreshOverview()
+    let alive = true
+    api.getMe()
+      .then((me) => {
+        if (!alive) return
+        refreshUser({
+          name: me.name,
+          email: me.email,
+          title: me.title,
+          phone: me.phone,
+          avatarUrl: me.avatarUrl,
+        })
+      })
+      .catch(() => {})
+    const topics = ['partners', 'orders', 'transfers', 'payments', 'refunds', 'reviews', 'hosts']
+    const unsubscribes = topics.map((topic) => api.subscribe(topic, refreshOverview))
+    return () => {
+      alive = false
+      unsubscribes.forEach((fn) => fn())
+    }
+  }, [user?.id, refreshOverview, refreshUser])
+
   const value = useMemo(
     () => ({
       user,
       isAuthed: !!user,
       logIn,
       signOut,
+      refreshUser,
       can: (area, minimum) => auth.can(user, area, minimum),
       toasts,
       pushToast,
@@ -87,7 +114,7 @@ export function AdminProvider({ children }) {
       attention: overview?.attention ?? [],
       attentionCount: (overview?.attention ?? []).reduce((sum, a) => sum + a.count, 0),
     }),
-    [user, logIn, signOut, toasts, pushToast, dismissToast, overview, refreshOverview],
+    [user, logIn, signOut, refreshUser, toasts, pushToast, dismissToast, overview, refreshOverview],
   )
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>

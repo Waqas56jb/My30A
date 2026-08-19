@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
 import Icon from '../../components/ui/Icon'
 import Button from '../../components/ui/Button'
-import SmartImage from '../../components/ui/SmartImage'
+import { Thumb } from '../../components/ui/SmartImage'
 import { SearchBar, FilterChips, Field, Select } from '../../components/ui/Form'
 import {
   PageHeader, Panel, StatusPill, Money, Stat, ReferralNote,
@@ -52,9 +52,7 @@ export default function Listings() {
       primary: true,
       render: (row) => (
         <span className="tone-row" style={{ flexWrap: 'nowrap' }}>
-          <span style={{ width: 40, flex: 'none' }}>
-            <SmartImage photoId={row.images[0]} alt="" ratio="1x1" width={80} radius="sm" />
-          </span>
+          <Thumb photoId={row.images?.[0]} name={row.name} alt="" />
           <span style={{ minWidth: 0 }}>
             <Link to={`/admin/partners/${row.id}`} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
               {row.name}
@@ -69,7 +67,7 @@ export default function Listings() {
     {
       key: 'categoryId',
       label: 'Category',
-      render: (row) => categories.data?.find((c) => c.id === row.categoryId)?.name ?? row.categoryId,
+      render: (row) => categories.data?.find?.((c) => c.id === row.categoryId)?.name ?? row.categoryId,
     },
     {
       key: 'startingPrice',
@@ -89,7 +87,7 @@ export default function Listings() {
       render: (row) => (row.rating ? `${row.rating} (${row.reviewCount})` : '—'),
     },
     { key: 'images', label: 'Photos', align: 'right', hideOn: 'card', render: (row) => row.images.length },
-    { key: 'views', label: 'Views', align: 'right', render: (row) => formatNumber(row.stats.views) },
+    { key: 'views', label: 'Views', align: 'right', render: (row) => formatNumber(row.stats?.views) },
     { key: 'status', label: 'Status', render: (row) => <StatusPill map={PARTNER_STATUSES} value={row.status} /> },
     {
       key: 'visibility',

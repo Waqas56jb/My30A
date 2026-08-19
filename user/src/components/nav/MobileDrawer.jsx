@@ -83,8 +83,8 @@ export default function MobileDrawer({ open, onClose }) {
               <Icon name="user" />
             </span>
             <span>
-              <span className="drawer__guest-name">Log in or sign up</span>
-              <span className="drawer__guest-sub">Your stay, saved places and preferences</span>
+              <span className="drawer__guest-name">Log in</span>
+              <span className="drawer__guest-sub">Sign in to open your stay</span>
             </span>
             <Icon name="chevronRight" size={18} style={{ color: 'var(--ink-300)', flex: 'none' }} />
           </Link>
@@ -115,13 +115,9 @@ export default function MobileDrawer({ open, onClose }) {
             {isAuthed && (
               <Link to="/logout" className="drawer__item">
                 <Icon name="logout" />
-                Sign out
+                Log out
               </Link>
             )}
-            <Link to="/" className="drawer__item">
-              <Icon name="waves" />
-              Back to the website
-            </Link>
           </div>
         </nav>
       </div>

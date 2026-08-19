@@ -16,6 +16,7 @@ import { useIsDesktop } from '../hooks/useMediaQuery'
 import * as api from '../services/mockApi'
 import { track, ANALYTICS_EVENTS } from '../services/analytics'
 import { formatDistance } from '../utils/format'
+import { AREA_GUIDE } from '../data/areaGuide'
 
 const LAYERS = [
   { value: 'All', label: 'Everything' },
@@ -65,6 +66,11 @@ export default function MapPage() {
         back
         backTo="/explore"
         breadcrumbs={[{ label: 'Explore', to: '/explore' }, { label: 'Map' }]}
+        actions={
+          <Button to="/area" variant="ghost" size="sm" icon="map">
+            {AREA_GUIDE.pageTitle}
+          </Button>
+        }
       />
 
       <FilterChips

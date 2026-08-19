@@ -11,7 +11,7 @@ import { useLoad } from '../../hooks/useTable'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAdmin } from '../../context/AdminContext'
 import * as api from '../../services/adminApi'
-import { series, seriesDelta, todaySnapshot, METRICS } from '../../data/analytics'
+import { todaySnapshot, METRICS } from '../../data/analytics'
 import { formatCurrency, formatNumber, formatRelative } from '../../utils/format'
 
 /**
@@ -30,14 +30,20 @@ export default function Dashboard() {
 
   const overview = useLoad(() => api.getOverview(), [])
   const activity = useLoad(() => api.getRecentAudit(8), [])
-  const today = todaySnapshot()
+  const chartLoad = useLoad(() => api.getInsightSeries(metric, range), [metric, range])
 
   if (overview.loading) return <SkeletonGrid count={8} columns="grid--4" />
   if (overview.error) return <ErrorState error={overview.error} onRetry={overview.reload} />
 
-  const t = overview.data.totals
-  const chart = series(metric, range)
-  const delta = seriesDelta(metric, range)
+  const t = overview.data?.totals ?? {}
+  const today = overview.data?.today ?? todaySnapshot()
+  const chart = Array.isArray(chartLoad.data) ? chartLoad.data : []
+  const first = chart[0]?.value ?? 0
+  const last = chart[chart.length - 1]?.value ?? 0
+  const delta = {
+    now: chart.reduce((sum, p) => sum + (Number(p.value) || 0), 0),
+    change: first ? (last - first) / Math.max(1, first) : 0,
+  }
 
   const TODAY_ROWS = [
     { label: 'New guests', value: today.newGuests, icon: 'user' },
@@ -75,6 +81,7 @@ export default function Dashboard() {
         <Stat label="Partners" value={t.partners} icon="sparkles" tone="gold" to="/admin/partners" hint={`${t.approvedPartners} approved`} />
         <Stat label="Active requests" value={t.activeRequests} icon="clock" tone="danger" to="/admin/service-requests" hint="Grocery + transfers in flight" />
         <Stat label="Revenue" value={formatCurrency(t.revenue)} icon="dollar" tone="success" to="/admin/analytics/revenue" hint={`${formatCurrency(t.netRevenue)} net of refunds`} />
+        <Stat label="Conversations" value={t.conversations} icon="message" tone="gold" to="/admin/vitoria/conversations" hint={`${formatNumber(t.messages)} messages`} />
         <Stat label="Partner interactions" value={t.partnerClicks} icon="navigation" tone="gold" to="/admin/analytics/partners" hint="Referral activity only" />
       </div>
 
@@ -138,9 +145,9 @@ export default function Dashboard() {
         </div>
 
         {chart.length > 24 ? (
-          <TrendChart data={chart} label={METRICS[metric].label} height={200} />
+          <TrendChart data={chart} label={METRICS[metric].label} height={240} />
         ) : (
-          <BarChart data={chart} label={METRICS[metric].label} height={200} />
+          <BarChart data={chart} label={METRICS[metric].label} height={240} />
         )}
 
         <ChartNote>

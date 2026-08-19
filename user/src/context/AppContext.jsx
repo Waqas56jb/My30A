@@ -3,7 +3,6 @@ import * as api from '../services/mockApi'
 import * as auth from '../services/authService'
 import { setAnalyticsContext, track, ANALYTICS_EVENTS } from '../services/analytics'
 import { readStore, writeStore, STORAGE_KEYS } from '../utils/storage'
-import { resolveAccessCode } from '../data/mockGuests'
 import { makeId } from '../utils/format'
 
 const AppContext = createContext(null)
@@ -36,11 +35,7 @@ export function AppProvider({ children }) {
   )
   const [guest, setGuest] = useState(null)
   const [property, setProperty] = useState(null)
-  const [status, setStatus] = useState(() =>
-    readStore(STORAGE_KEYS.guestSlug) ?? auth.getSession()?.account?.guestSlug
-      ? 'loading'
-      : 'public',
-  ) // public | loading | ready | error
+  const [status, setStatus] = useState(() => (auth.getSession()?.account ? 'loading' : 'public')) // public | loading | ready | error
   const [error, setError] = useState(null)
 
   const [notifications, setNotifications] = useState([])
@@ -72,46 +67,70 @@ export function AppProvider({ children }) {
   )
 
   /* ------------------------ Session bootstrap ---------------------- */
-  const loadSession = useCallback(
-    async (slug) => {
-      setStatus('loading')
-      setError(null)
-      try {
-        const { guest: nextGuest, property: nextProperty } = await api.resolveGuestLink(slug)
-        setGuest(nextGuest)
-        setProperty(nextProperty)
-        setSavedIds(nextGuest.savedPlaceIds ?? [])
-        setAnalyticsContext({
-          guestId: nextGuest.id,
-          propertyId: nextProperty?.id,
-          propertySlug: nextProperty?.slug,
-        })
-        setStatus('ready')
-        if (!openedRef.current) {
-          openedRef.current = true
-          track(ANALYTICS_EVENTS.GUEST_OPENED_APP, { slug })
-        }
-        return nextGuest
-      } catch (err) {
-        setError(err)
-        setStatus('error')
+  const loadSession = useCallback(async () => {
+    if (!auth.getSession()?.account) {
+      setGuest(null)
+      setProperty(null)
+      setSavedIds([])
+      setStatus('public')
+      return null
+    }
+    setStatus('loading')
+    setError(null)
+    try {
+      const nextGuest = await api.getGuest()
+      const nextProperty = nextGuest.stay
+        ? await api.getProperty().catch(() => null)
+        : null
+      setGuest(nextGuest)
+      setProperty(nextProperty)
+      setSavedIds(nextGuest.savedPlaceIds ?? [])
+      const slug = nextGuest.stay?.slug ?? nextGuest.stay?.access_slug ?? null
+      if (slug) {
+        setGuestSlug(slug)
+        writeStore(STORAGE_KEYS.guestSlug, slug)
+      }
+      setAnalyticsContext({
+        guestId: nextGuest.id,
+        propertyId: nextProperty?.id,
+        propertySlug: nextProperty?.slug,
+      })
+      setStatus('ready')
+      if (nextGuest.stay && !openedRef.current) {
+        openedRef.current = true
+        track(ANALYTICS_EVENTS.GUEST_OPENED_APP, { slug })
+      }
+      return nextGuest
+    } catch (err) {
+      if (err?.code === 'AUTH_REQUIRED' || err?.code === 'AUTH_INVALID' || err?.code === 'AUTH_EXPIRED') {
+        await auth.signOut()
+        setAccount(null)
+        setGuest(null)
+        setProperty(null)
+        setSavedIds([])
+        setStatus('public')
         return null
       }
-    },
-    [],
-  )
+      setError(err)
+      setStatus('error')
+      return null
+    }
+  }, [])
 
   useEffect(() => {
     writeStore(STORAGE_KEYS.guestSlug, guestSlug)
-    if (!guestSlug) {
+  }, [guestSlug])
+
+  useEffect(() => {
+    if (!account) {
       setGuest(null)
       setProperty(null)
       setSavedIds([])
       setStatus('public')
       return
     }
-    loadSession(guestSlug)
-  }, [guestSlug, loadSession])
+    loadSession()
+  }, [account, loadSession])
 
   /* --------------------------- Authentication ---------------------------
      An account is who you are; a stay is which house you are in this week.
@@ -153,18 +172,24 @@ export function AppProvider({ children }) {
    * link is remembered on the account so the next sign-in goes straight there.
    */
   const unlockWithCode = useCallback(
-    (input) => {
-      const slug = resolveAccessCode(input)
-      if (!slug) return false
-      setGuestSlug(slug)
-      if (account?.id) {
-        auth.linkStayToAccount(account.id, slug).then((next) => {
+    async (input) => {
+      const code = String(input ?? '').trim()
+      if (!code) return false
+      try {
+        const redeemed = await api.redeemAccess(code)
+        const slug = redeemed?.slug ?? redeemed?.code ?? code
+        setGuestSlug(slug)
+        if (account?.id) {
+          const next = await auth.linkStayToAccount(account.id, slug)
           if (next) setAccount(next)
-        })
+        }
+        await loadSession()
+        return true
+      } catch {
+        return false
       }
-      return true
     },
-    [account],
+    [account, loadSession],
   )
 
   /** Detach the property but stay logged in — for end of holiday. */
@@ -174,6 +199,8 @@ export function AppProvider({ children }) {
       const next = await auth.linkStayToAccount(account.id, null)
       if (next) setAccount(next)
     }
+    setGuest((g) => (g ? { ...g, stay: null } : g))
+    setProperty(null)
     pushToast({
       tone: 'info',
       title: 'Stay removed',
@@ -272,13 +299,10 @@ export function AppProvider({ children }) {
     api.setFailureMode(settings.simulateErrors)
   }, [settings.simulateErrors])
 
-  /* ------------------------- Demo utilities ------------------------ */
   const resetDemoData = useCallback(async () => {
-    api.resetMockData()
     await refreshNotifications()
-    await loadSession(guestSlug)
-    pushToast({ tone: 'success', title: 'Demo data reset', message: 'All mock requests restored.' })
-  }, [guestSlug, loadSession, refreshNotifications, pushToast])
+    await loadSession()
+  }, [loadSession, refreshNotifications])
 
   const value = useMemo(
     () => ({
@@ -293,11 +317,11 @@ export function AppProvider({ children }) {
       guest,
       property,
       status,
-      hasGuest: !!guest,
+      hasGuest: Boolean(guest?.stay),
       error,
       unlockWithCode,
       signOut,
-      reloadSession: () => loadSession(guestSlug),
+      reloadSession: () => loadSession(),
       notifications,
       unreadCount,
       refreshNotifications,

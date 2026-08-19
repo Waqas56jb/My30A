@@ -28,6 +28,7 @@ const Notifications = lazy(() => import('./pages/Notifications'))
 const Profile = lazy(() => import('./pages/Profile'))
 const Settings = lazy(() => import('./pages/Settings'))
 const Help = lazy(() => import('./pages/Help'))
+const AreaGuide = lazy(() => import('./pages/AreaGuide'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 /* Auth screens that live in one module. */
@@ -98,6 +99,7 @@ export default function App() {
             <Route path="/host/profile" element={<Profile />} />
             <Route path="/host/settings" element={<Settings />} />
             <Route path="/host/help" element={<Help />} />
+            <Route path="/host/area" element={<AreaGuide />} />
 
             <Route path="/host/recommendations" element={<Navigate to="/host/properties" replace />} />
             <Route path="*" element={<NotFound />} />

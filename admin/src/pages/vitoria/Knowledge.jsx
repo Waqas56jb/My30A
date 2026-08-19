@@ -86,7 +86,7 @@ export default function Knowledge() {
     reload()
   }
 
-  const rows = data ?? []
+  const rows = Array.isArray(data) ? data : []
 
   return (
     <div className="apage">
@@ -108,7 +108,7 @@ export default function Knowledge() {
         <Stat label="Disabled" value={rows.filter((r) => !r.enabled).length} icon="eyeOff" tone="danger" />
         <Stat
           label="Times used"
-          value={rows.reduce((sum, r) => sum + r.usedCount, 0)}
+          value={rows.reduce((sum, r) => sum + (Number(r.usedCount) || 0), 0)}
           icon="chart"
           tone="gold"
         />

@@ -8,13 +8,14 @@ import { OrderCard } from '../components/cards/ServiceCard'
 import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
-import { AIRPORTS } from '../data/mockCategories'
 import { PHOTO } from '../assets/images'
 import { formatCurrency } from '../utils/format'
 
 export default function Transfers() {
   useDocumentTitle('Airport transfers')
   const { data, loading, error, reload } = useAsync(() => api.getTransfers(), [])
+  const airports = useAsync(() => api.getAirports(), [])
+  const AIRPORTS = airports.data ?? []
 
   const transfers = (data ?? []).map((t) => ({
     ...t,

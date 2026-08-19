@@ -66,7 +66,7 @@ export default function Notifications() {
     reload()
   }
 
-  const rows = data ?? []
+  const rows = Array.isArray(data) ? data : []
 
   return (
     <div className="apage">
