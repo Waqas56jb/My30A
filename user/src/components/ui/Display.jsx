@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from './Icon'
 import SmartImage from './SmartImage'
@@ -227,6 +227,37 @@ export function ImageGallery({ images = [], alt = '', onOpen }) {
           <SmartImage photoId={photoId} alt={`${alt} photo ${i + 1}`} ratio="4x3" width={640} zoom />
         </Item>
       ))}
+    </div>
+  )
+}
+
+/** Fade-up on scroll — StayOn30A-style entrance, skipped when motion is reduced. */
+export function Reveal({ children, className }) {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.classList.add('is-in')
+      return
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          el.classList.add('is-in')
+          io.disconnect()
+        }
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -8% 0px' },
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
+
+  return (
+    <div ref={ref} className={cx('reveal', className)}>
+      {children}
     </div>
   )
 }

@@ -1,8 +1,9 @@
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Icon from '../components/ui/Icon'
 import Button from '../components/ui/Button'
 import SmartImage from '../components/ui/SmartImage'
-import { Section, ScrollRow, Avatar } from '../components/ui/Display'
+import { Section, ScrollRow, Avatar, Reveal } from '../components/ui/Display'
 import { SkeletonGrid } from '../components/ui/Skeleton'
 import { ErrorState } from '../components/ui/States'
 import ExperienceTile from '../components/cards/ExperienceTile'
@@ -17,7 +18,7 @@ import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
 import { experiences, experienceRoute, SPOTLIGHT_SLUGS, getExperience } from '../data/mockExperiences'
-import { howItWorks, serviceCatalogue, testimonials, heroProof } from '../data/mockLanding'
+import { howItWorks, serviceCatalogue, testimonials, heroProof, coastTowns, stayBenefits } from '../data/mockLanding'
 
 const STATS = [
   { k: '26', v: 'miles of coast' },
@@ -41,11 +42,25 @@ export default function Landing() {
   const restaurants = useAsync(() => api.getRestaurants({ sort: 'featured' }), [])
   const events = useAsync(() => api.getEvents(), [])
   const spotlights = SPOTLIGHT_SLUGS.map(getExperience).filter(Boolean)
+  const [collection, setCollection] = useState('all')
+  const [town, setTown] = useState(coastTowns[8])
+  const shownExperiences = useMemo(
+    () => (collection === 'all' ? experiences.slice(0, 8) : experiences.filter((item) => item.slug === collection)),
+    [collection],
+  )
+  const collectionChips = [
+    { id: 'all', label: 'All' },
+    ...experiences
+      .filter((item) => item.featured)
+      .slice(0, 7)
+      .map((item) => ({ id: item.slug, label: item.label })),
+  ]
+  const mapSrc = `https://www.google.com/maps?q=${encodeURIComponent(town.query)}&z=13&output=embed`
 
   return (
     <>
       {/* ------------------------------- Hero ------------------------------- */}
-      <header className="dhero dhero--full">
+      <header className="dhero dhero--full dhero--editorial">
         <HeroVideo posterId={PHOTO.heroEmerald} />
         <div className="dhero__scrim" aria-hidden="true" />
 
@@ -56,10 +71,33 @@ export default function Landing() {
           </span>
 
           <h1 className="dhero__title">Experience 30A like a local.</h1>
+          <p className="dhero__lede">Arrive. Exhale. Settle.</p>
           <p className="dhero__sub">
             Sugar-white sand, a nineteen-mile bike trail, bonfires at sunset, and the people who make
             it all effortless. Your vacation, your way.
           </p>
+
+          <div className="so-bar" role="navigation" aria-label="Start your stay">
+            <Link
+              to={isAuthed ? '/explore' : '/login'}
+              state={isAuthed ? undefined : { from: '/explore' }}
+              className="so-bar__item"
+            >
+              <span>Explore</span>
+              <strong>Beaches, carts &amp; tables</strong>
+            </Link>
+            <Link
+              to={isAuthed ? '/vitoria' : '/login'}
+              state={isAuthed ? undefined : { from: '/vitoria' }}
+              className="so-bar__item"
+            >
+              <span>Concierge</span>
+              <strong>Ask Vitoria</strong>
+            </Link>
+            <Link to={isAuthed ? '/discover' : '/signup'} className="so-bar__cta">
+              {isAuthed ? 'Go to my stay' : 'Unlock stay'}
+            </Link>
+          </div>
 
           <div className="dhero__ctas">
             <Button
@@ -90,6 +128,8 @@ export default function Landing() {
               </li>
             ))}
           </ul>
+
+          <p className="so-trust">Loved by guests along 30A — a concierge for every stay</p>
 
           <div className="dhero__stats">
             {STATS.map((stat) => (
@@ -132,17 +172,52 @@ export default function Landing() {
           </div>
         )}
 
+        <Reveal>
+          <article className="so-about">
+            <div className="so-about__media">
+              <SmartImage photoId={PHOTO.houseWhite} alt="Alys Beach-style coastal home" ratio="4x5" width={900} />
+            </div>
+            <div className="so-about__copy">
+              <p className="spotlight__eyebrow">This coast</p>
+              <h2 className="so-about__title">Luxury stays along Florida&apos;s 30A — with a concierge who already lives here.</h2>
+              <p className="so-about__pull">Arrive. Exhale. Settle.</p>
+              <p className="spotlight__body">
+                Sugar-white sand, rare dune lakes, and thirteen beach towns on one road. My30A is the guest
+                layer on top of that: WiFi and door codes when you walk in, Vitoria when you want a table,
+                a cart, or a bonfire, and local partners who take the booking themselves.
+              </p>
+              <Button to="/explore" iconRight="arrowRight">
+                Learn the coast
+              </Button>
+            </div>
+          </article>
+        </Reveal>
+
         {/* --------------------------- Experiences -------------------------- */}
         <Section
-          title="What will you do today?"
-          subtitle="Twelve ways to spend an afternoon on 30A"
+          title="Select your getaway"
+          subtitle="Design-forward days. Elevated essentials. Zero friction."
           linkTo="/explore"
           linkLabel="See everything"
           id="experiences"
         >
-          <div className="exp-grid">
-            {experiences.slice(0, 8).map((experience, i) => (
-              <ExperienceTile key={experience.slug} experience={experience} eager={i < 2} />
+          <div className="so-chips" role="tablist" aria-label="Collections">
+            {collectionChips.map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                role="tab"
+                aria-selected={collection === chip.id}
+                className={`so-chip${collection === chip.id ? ' is-on' : ''}`}
+                onClick={() => setCollection(chip.id)}
+              >
+                {chip.label}
+              </button>
+            ))}
+          </div>
+          <div className="exp-grid exp-grid--stay">
+            {shownExperiences.map((experience, i) => (
+              <ExperienceTile key={experience.slug} experience={experience} tall eager={i < 2} />
             ))}
           </div>
         </Section>
@@ -184,6 +259,68 @@ export default function Landing() {
             </article>
           </Section>
         ))}
+
+        <Reveal>
+          <section className="so-map" id="map" aria-labelledby="map-title">
+            <div className="so-map__copy">
+              <p className="spotlight__eyebrow">Find us</p>
+              <h2 className="so-map__title" id="map-title">
+                Our location
+              </h2>
+              <p className="spotlight__body">
+                Stretching 26 miles along Florida&apos;s Emerald Coast, Scenic Highway 30A connects Inlet
+                Beach, Rosemary, Alys, Seagrove, WaterSound, Seaside, and the towns in between.
+              </p>
+              <ul className="so-map__facts">
+                <li>Walkable coastal towns</li>
+                <li>Rare coastal dune lakes</li>
+                <li>Bike-friendly communities</li>
+                <li>Uncrowded public accesses</li>
+              </ul>
+              <div className="so-towns" role="list">
+                {coastTowns.map((item) => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    role="listitem"
+                    className={`so-town${town.name === item.name ? ' is-on' : ''}`}
+                    onClick={() => setTown(item)}
+                  >
+                    {item.name}
+                  </button>
+                ))}
+              </div>
+              <p className="so-map__blurb">{town.line}</p>
+            </div>
+            <div className="so-map__frame">
+              <span className="so-map__pulse" aria-hidden="true" />
+              <iframe
+                title={`Map of ${town.name} on 30A`}
+                src={mapSrc}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                allowFullScreen
+              />
+            </div>
+          </section>
+        </Reveal>
+
+        <Reveal>
+          <section className="so-benefits" aria-labelledby="benefits-title">
+            <p className="spotlight__eyebrow">Book your stay</p>
+            <h2 className="so-benefits__title" id="benefits-title">
+              Benefits of staying with My30A
+            </h2>
+            <div className="so-benefits__grid">
+              {stayBenefits.map((item) => (
+                <article className="so-benefit" key={item.title}>
+                  <h3>{item.title}</h3>
+                  <p>{item.body}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        </Reveal>
 
         {/* ----------------------------- Watch ------------------------------ */}
         <Section id="watch" className="section video-feature">
@@ -361,7 +498,7 @@ export default function Landing() {
 
         {/* ---------------------------- Guests say --------------------------- */}
         {testimonials.length > 0 && (
-        <Section title="What guests say" subtitle="From stays this summer" id="quotes">
+        <Section title="What our guests are saying" subtitle="From stays along 30A this season" id="quotes">
           <div className="quotes">
             {testimonials.map((item) => (
               <figure className="quote" key={item.id}>

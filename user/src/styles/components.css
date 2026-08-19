@@ -313,6 +313,9 @@ button.card:active {
 .simg--ratio-4x3 {
   aspect-ratio: 4 / 3;
 }
+.simg--ratio-4x5 {
+  aspect-ratio: 4 / 5;
+}
 .simg--ratio-3x2 {
   aspect-ratio: 3 / 2;
 }

@@ -66,7 +66,51 @@ export const serviceCatalogue = [
   },
 ]
 
-export const testimonials = []
+export const testimonials = [
+  {
+    id: 't1',
+    quote:
+      'We stopped googling from the beach. Vitoria had a quiet access, a cart, and dinner sorted before the kids finished the sandcastle.',
+    name: 'Sarah Whitmore',
+    detail: 'Rosemary Beach · guest',
+    image: '1695425812104-8a9963d58887',
+  },
+  {
+    id: 't2',
+    quote:
+      'Door codes, WiFi, a stocked fridge, and a driver at ECP — and none of it came through a group text. That is the whole difference.',
+    name: 'Daniel Okafor',
+    detail: 'Seaside · guest',
+    image: '1605472075294-4c73b9909d08',
+  },
+  {
+    id: 't3',
+    quote:
+      'The map of 30A finally made sense. Inlet to Grayton in a cart, bonfire at sunset, no hunting for parking. Effortless.',
+    name: 'Alex Rivera',
+    detail: 'Watercolor · guest',
+    image: '1569918970203-ea053ffda098',
+  },
+]
+
+export const coastTowns = [
+  { name: 'Inlet Beach', query: 'Inlet Beach, Florida 30A', line: 'Wide shorelines and quiet dune landscapes at the east end of the road.' },
+  { name: 'Seacrest', query: 'Seacrest Beach, Florida', line: 'Laid-back dunes and walkable charm between Alys and Rosemary.' },
+  { name: 'Seagrove', query: 'Seagrove Beach, Florida', line: 'Towering oaks, winding roads, and classic 30A beach culture.' },
+  { name: 'Watersound', query: 'Watersound, Florida', line: 'Boardwalk-lined beaches, privacy, and uninterrupted Gulf views.' },
+  { name: 'Grayton Beach', query: 'Grayton Beach, Florida', line: 'Historic, creative, and still the soul of this stretch of coast.' },
+  { name: 'Dune Allen', query: 'Dune Allen, Florida', line: 'Quiet, family-paced, with easy walkovers and a residential feel.' },
+  { name: 'Alys Beach', query: 'Alys Beach, Florida', line: 'White courtyards, open architecture, a distinctly refined coastal town.' },
+  { name: 'Watercolor', query: 'WaterColor, Florida', line: 'Lush greens, timeless houses, and a seamless walk to the sand.' },
+  { name: 'Seaside', query: 'Seaside, Florida', line: 'Pastel streets, the square, and the most walkable mile on 30A.' },
+  { name: 'Rosemary Beach', query: 'Rosemary Beach, Florida', line: 'Brick lanes, gulf views, and dinner you will plan the trip around.' },
+]
+
+export const stayBenefits = [
+  { title: 'The local intel', body: 'Beaches, carts, bonfires, and tables worth knowing — already mapped to where you are staying.' },
+  { title: 'Direct to the people', body: 'We introduce you. Partners take the call and the payment. No extra platform fee on what you book.' },
+  { title: 'One concierge', body: 'WiFi, door codes, groceries, and a driver at baggage claim. Ask Vitoria instead of starting another search.' },
+]
 
 /** Small trust line under the hero CTAs. */
 export const heroProof = [
