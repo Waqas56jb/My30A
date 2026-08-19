@@ -66,7 +66,9 @@ const schema = z.object({
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
   const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n');
-  throw new Error(`Invalid environment configuration:\n${issues}`);
+  const message = `Invalid environment configuration:\n${issues}`;
+  console.error(message);
+  throw new Error(message);
 }
 
 export const env = parsed.data;

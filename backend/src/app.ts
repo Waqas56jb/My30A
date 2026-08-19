@@ -20,6 +20,9 @@ const rateLimit = middlewareFactory(rateLimitImport);
 export function createApp() {
   const app = express();
   app.disable('x-powered-by');
+  if (process.env.VERCEL || env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1);
+  }
   app.use(requestId);
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cors({ origin: corsOrigins, credentials: true }));
@@ -32,15 +35,28 @@ export function createApp() {
       max: env.RATE_LIMIT_MAX,
       standardHeaders: true,
       legacyHeaders: false,
+      validate: { xForwardedForHeader: false },
     }),
   );
   app.use(
     '/api/v1/auth',
-    rateLimit({ windowMs: 15 * 60 * 1000, max: 40, standardHeaders: true, legacyHeaders: false }),
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      max: 40,
+      standardHeaders: true,
+      legacyHeaders: false,
+      validate: { xForwardedForHeader: false },
+    }),
   );
   app.use(
     '/api/v1/vitoria',
-    rateLimit({ windowMs: 60 * 1000, max: 20, standardHeaders: true, legacyHeaders: false }),
+    rateLimit({
+      windowMs: 60 * 1000,
+      max: 20,
+      standardHeaders: true,
+      legacyHeaders: false,
+      validate: { xForwardedForHeader: false },
+    }),
   );
 
   app.get('/health', async (_req, res) => {

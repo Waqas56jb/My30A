@@ -6,7 +6,7 @@ const { Pool } = pg;
 
 export const pool = new Pool({
   connectionString: env.SUPABASE_POOLER_URL,
-  max: 12,
+  max: process.env.VERCEL ? 2 : 12,
   idleTimeoutMillis: 20_000,
   connectionTimeoutMillis: 15_000,
   ssl: { rejectUnauthorized: false },
