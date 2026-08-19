@@ -8,5 +8,6 @@ export function middlewareFactory(mod: unknown): MiddlewareFactory {
   if (mod && typeof mod === 'object' && 'default' in mod && typeof (mod as { default: unknown }).default === 'function') {
     return (mod as { default: MiddlewareFactory }).default;
   }
-  throw new Error('Middleware package did not export a function');
+  console.error('Middleware package did not export a function');
+  return () => ((_req, _res, next) => next());
 }

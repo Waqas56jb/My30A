@@ -63,15 +63,43 @@ const schema = z.object({
   OPENTABLE_SEARCH_TERM: z.string().default('30A Santa Rosa Beach'),
 });
 
+export type AppEnv = z.infer<typeof schema>;
+
+const placeholder: z.input<typeof schema> = {
+  NODE_ENV: 'production',
+  JWT_SECRET: 'x'.repeat(32),
+  SESSION_SECRET: 'x'.repeat(32),
+  SUPABASE_URL: 'https://placeholder.invalid',
+  SUPABASE_ANON_KEY: 'missing',
+  SUPABASE_DB_URL: 'postgresql://127.0.0.1:5432/postgres',
+  SUPABASE_POOLER_URL: 'postgresql://127.0.0.1:5432/postgres',
+  OPENAI_API_KEY: 'missing',
+  OPENAI_MODEL: 'gpt-4o-mini',
+  SMTP_USER: 'missing',
+  SMTP_PASSWORD: 'missing',
+  SMTP_FROM: 'missing@example.com',
+  OFFICIAL_EMAIL: 'missing@example.com',
+};
+
 const parsed = schema.safeParse(process.env);
-if (!parsed.success) {
-  const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n');
-  const message = `Invalid environment configuration:\n${issues}`;
+
+export const envIssues = parsed.success
+  ? []
+  : parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
+
+export const envReady = parsed.success;
+
+if (envIssues.length) {
+  const message = `Invalid environment configuration:\n${envIssues.join('\n')}`;
   console.error(message);
-  throw new Error(message);
+  // On Vercel a throw here becomes FUNCTION_INVOCATION_FAILED for every request.
+  // Boot with placeholders and report the missing keys from /health instead.
+  if (!process.env.VERCEL) {
+    throw new Error(message);
+  }
 }
 
-export const env = parsed.data;
+export const env: AppEnv = parsed.success ? parsed.data : schema.parse(placeholder);
 
 export const corsOrigins = env.CORS_ORIGINS.split(',')
   .map((s) => s.trim())

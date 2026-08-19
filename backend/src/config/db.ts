@@ -1,14 +1,16 @@
 import pg from 'pg';
-import { env } from './env.js';
+import { env, envReady } from './env.js';
 import { logger } from './logger.js';
 
 const { Pool } = pg;
+const onVercel = Boolean(process.env.VERCEL);
 
 export const pool = new Pool({
   connectionString: env.SUPABASE_POOLER_URL,
-  max: process.env.VERCEL ? 2 : 12,
-  idleTimeoutMillis: 20_000,
-  connectionTimeoutMillis: 15_000,
+  max: onVercel ? 1 : 12,
+  idleTimeoutMillis: onVercel ? 4_000 : 20_000,
+  connectionTimeoutMillis: onVercel ? 3_000 : 15_000,
+  allowExitOnIdle: onVercel,
   ssl: { rejectUnauthorized: false },
 });
 
@@ -22,17 +24,21 @@ function sessionPoolerUrl() {
   }
 }
 
-export const migratePool = new Pool({
-  connectionString: env.SUPABASE_DB_URL,
-  max: 2,
-  ssl: { rejectUnauthorized: false },
-});
+export const migratePool = onVercel
+  ? pool
+  : new Pool({
+      connectionString: env.SUPABASE_DB_URL,
+      max: 2,
+      ssl: { rejectUnauthorized: false },
+    });
 
-export const migrateFallbackPool = new Pool({
-  connectionString: sessionPoolerUrl(),
-  max: 2,
-  ssl: { rejectUnauthorized: false },
-});
+export const migrateFallbackPool = onVercel
+  ? pool
+  : new Pool({
+      connectionString: sessionPoolerUrl(),
+      max: 2,
+      ssl: { rejectUnauthorized: false },
+    });
 
 export async function connectMigrator() {
   try {
@@ -73,6 +79,7 @@ export async function withTransaction<T>(fn: (client: pg.PoolClient) => Promise<
 }
 
 export async function pingDatabase(): Promise<boolean> {
+  if (!envReady) return false;
   try {
     await pool.query('select 1 as ok');
     return true;

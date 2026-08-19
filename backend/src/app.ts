@@ -3,15 +3,12 @@ import cors from 'cors';
 import helmetImport from 'helmet';
 import rateLimitImport from 'express-rate-limit';
 import { resolve } from 'node:path';
-import { corsOrigins, env } from './config/env.js';
+import { corsOrigins, env, envIssues, envReady, hasServiceRole } from './config/env.js';
 import { requestId } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { v1 } from './routes/v1.js';
 import { pingDatabase } from './config/db.js';
 import { openaiHealth } from './integrations/openai/openai.js';
 import { emailVerified } from './integrations/email/emailService.js';
-import { hasServiceRole } from './config/env.js';
-import { getIo } from './sockets/io.js';
 import { middlewareFactory } from './utils/middlewareFactory.js';
 
 const helmet = middlewareFactory(helmetImport);
@@ -60,15 +57,31 @@ export function createApp() {
   );
 
   app.get('/', (_req, res) => {
-    res.json({ service: 'my30a-host-backend', health: '/health' });
+    res.json({
+      service: 'my30a-host-backend',
+      health: '/health',
+      ready: envReady,
+      issues: envIssues,
+    });
   });
 
   app.get('/health', async (_req, res) => {
+    if (!envReady) {
+      res.status(503).json({
+        status: 'misconfigured',
+        service: 'my30a-host-backend',
+        issues: envIssues,
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
     const database = (await pingDatabase()) ? 'connected' : 'down';
     const openai = openaiHealth();
     const email = emailVerified() ? 'verified' : 'unverified';
     const storage = hasServiceRole ? 'configured' : 'service_role_missing';
-    const realtime = getIo() ? 'connected' : 'not_started';
+    const realtime = process.env.VERCEL ? 'not_started' : 'unknown';
     const ok = database === 'connected';
     res.status(ok ? 200 : 503).json({
       status: ok && openai.status !== 'unavailable' && hasServiceRole ? 'ok' : 'degraded',
@@ -84,7 +97,25 @@ export function createApp() {
     });
   });
 
-  app.use('/api/v1', v1);
+  if (!envReady) {
+    app.use('/api/v1', (_req, res) => {
+      res.status(503).json({
+        success: false,
+        error: {
+          code: 'MISCONFIGURED',
+          message: 'Backend environment is incomplete. Set the missing keys on Vercel and redeploy.',
+          details: envIssues,
+        },
+      });
+    });
+  } else {
+    app.use('/api/v1', (req, res, next) => {
+      void import('./routes/v1.js')
+        .then(({ v1 }) => v1(req, res, next))
+        .catch(next);
+    });
+  }
+
   app.use(errorHandler);
   return app;
 }
