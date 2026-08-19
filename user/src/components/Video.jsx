@@ -7,21 +7,20 @@ import { cx } from '../utils/format'
 /**
  * Silent, looping video behind the hero.
  *
- * The still photograph is painted first and stays underneath, so the headline
- * is legible from the first frame and nothing breaks if the embed is blocked,
- * fails, or the visitor is on a connection where it never arrives. The iframe
- * fades in only once YouTube reports it has loaded.
- *
- * Anyone who has asked their system for reduced motion gets the photograph
- * alone — a looping video is exactly the kind of thing that setting is for.
+ * No still poster on the public landing — the iframe autoplays immediately so
+ * visitors never see a freeze-frame, then a cut. YouTube's title overlay is
+ * cropped by scaling the iframe past the hero edges. Reduced-motion visitors
+ * get a dark field instead of a looping clip.
  */
 export function HeroVideo({ posterId, title = VIDEO_TITLE, className }) {
   const reducedMotion = usePrefersReducedMotion()
   const [ready, setReady] = useState(false)
 
   return (
-    <div className={cx('video-bg', ready && 'video-bg--ready', className)} aria-hidden="true">
-      {posterId && <img className="video-bg__poster" src={heroImage(posterId)} alt="" />}
+    <div className={cx('video-bg', (ready || !reducedMotion) && 'video-bg--ready', className)} aria-hidden="true">
+      {reducedMotion && posterId ? (
+        <img className="video-bg__poster" src={heroImage(posterId)} alt="" />
+      ) : null}
 
       {!reducedMotion && (
         <iframe

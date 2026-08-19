@@ -426,11 +426,11 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  /* Scale past the frame so YouTube's title / channel overlay is cropped. */
+  transform: translate(-50%, -50%) scale(1.5);
   border: 0;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 1s var(--ease);
+  opacity: 1;
   width: 100vw;
   height: 56.25vw;
   min-width: 177.7778vh;

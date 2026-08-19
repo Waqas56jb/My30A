@@ -21,12 +21,20 @@ const EMBED_BASE = 'https://www.youtube.com/embed'
 
 /* Shared across both players: no captions, no annotations, no related videos
    from other channels, and inline playback so iOS does not go fullscreen. */
-const SHARED_PARAMS = ['cc_load_policy=0', 'iv_load_policy=3', 'rel=0', 'modestbranding=1', 'playsinline=1']
+const SHARED_PARAMS = [
+  'cc_load_policy=0',
+  'iv_load_policy=3',
+  'rel=0',
+  'modestbranding=1',
+  'playsinline=1',
+  'showinfo=0',
+]
 
 /**
  * Hero background: autoplays muted, loops forever, no controls, no keyboard.
  * `loop=1` only works alongside `playlist=<same id>` — that is a YouTube quirk,
- * not a typo.
+ * not a typo. Title chrome is cropped in CSS because YouTube no longer honours
+ * showinfo=0.
  */
 export const heroEmbedUrl = (id = VIDEO_ID) =>
   `${EMBED_BASE}/${id}?${[

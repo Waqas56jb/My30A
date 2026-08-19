@@ -61,7 +61,7 @@ export default function Landing() {
     <>
       {/* ------------------------------- Hero ------------------------------- */}
       <header className="dhero dhero--full dhero--editorial">
-        <HeroVideo posterId={PHOTO.heroEmerald} />
+        <HeroVideo />
         <div className="dhero__scrim" aria-hidden="true" />
 
         <div className="dhero__inner">
