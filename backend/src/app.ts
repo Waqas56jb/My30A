@@ -78,20 +78,37 @@ export function createApp() {
     }
 
     const database = (await pingDatabase()) ? 'connected' : 'down';
+    const openaiKey = Boolean(env.OPENAI_API_KEY && env.OPENAI_API_KEY !== 'missing');
+    const smtpReady = Boolean(env.SMTP_USER && env.SMTP_PASSWORD && env.SMTP_FROM);
     const openai = openaiHealth();
-    const email = emailVerified() ? 'verified' : 'unverified';
+    const openaiLabel =
+      openai.status === 'ok'
+        ? 'reachable'
+        : openai.status === 'unavailable'
+          ? 'model_unavailable'
+          : openaiKey
+            ? 'configured'
+            : 'missing';
+    const email = emailVerified() ? 'verified' : smtpReady ? 'configured' : 'missing';
     const storage = hasServiceRole ? 'configured' : 'service_role_missing';
-    const realtime = process.env.VERCEL ? 'not_started' : 'unknown';
+    const realtime = process.env.VERCEL ? 'serverless' : 'not_started';
+    const missing: string[] = [];
+    if (database !== 'connected') missing.push('database');
+    if (!hasServiceRole) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+    if (!openaiKey) missing.push('OPENAI_API_KEY');
+    if (!smtpReady) missing.push('SMTP_USER/SMTP_PASSWORD/SMTP_FROM');
     const ok = database === 'connected';
+    const healthy = ok && hasServiceRole && openaiKey;
     res.status(ok ? 200 : 503).json({
-      status: ok && openai.status !== 'unavailable' && hasServiceRole ? 'ok' : 'degraded',
+      status: healthy ? 'ok' : 'degraded',
       service: 'my30a-host-backend',
       database,
-      openai: openai.status === 'ok' ? 'reachable' : openai.status === 'unavailable' ? 'model_unavailable' : 'unknown',
+      openai: openaiLabel,
       openaiModel: openai.configured,
       email,
       storage,
       realtime,
+      missing,
       version: '1.0.0',
       timestamp: new Date().toISOString(),
     });
