@@ -8,6 +8,7 @@ import { makeId } from '../utils/format'
 const PartnerContext = createContext(null)
 
 const DEFAULT_SETTINGS = {
+  pushNotifications: true,
   emailNotifications: true,
   performanceReports: true,
   profileUpdates: true,
@@ -88,6 +89,14 @@ export function PartnerProvider({ children }) {
     }
     loadPartner(session.partnerId)
     notificationService.listNotifications(session.partnerId).then(setNotifications).catch(() => {})
+    return notificationService.subscribe((notification) => {
+      setNotifications((list) =>
+        list.some((row) => row.id && row.id === notification.id)
+          ? list
+          : [notification, ...list],
+      )
+      pushToast({ tone: 'info', title: notification.title, message: notification.message })
+    }, session.partnerId)
   }, [session, loadPartner])
 
   const login = useCallback(async (credentials) => {
@@ -155,6 +164,12 @@ export function PartnerProvider({ children }) {
     setSettings((prev) => {
       const merged = { ...prev, ...patch }
       writeStore(STORAGE_KEYS.settings, merged)
+      if (Object.prototype.hasOwnProperty.call(patch, 'pushNotifications')) {
+        import('../services/pushClient').then(({ enablePush, disablePush }) => {
+          if (merged.pushNotifications) enablePush().catch(() => {})
+          else disablePush().catch(() => {})
+        })
+      }
       return merged
     })
   }, [])

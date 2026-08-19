@@ -10,6 +10,7 @@ import { useApp } from '../context/AppContext'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import { getAnalyticsLog, subscribeToAnalytics, clearAnalyticsLog } from '../services/analytics'
 import { formatTime } from '../utils/format'
+import { enablePush } from '../services/pushClient'
 
 function SettingRow({ icon, title, sub, control, onClick, as = 'div' }) {
   const Tag = onClick ? 'button' : as
@@ -43,6 +44,9 @@ export default function Settings() {
   const navigate = useNavigate()
   const [logOpen, setLogOpen] = useState(false)
   const [log, setLog] = useState(getAnalyticsLog())
+  const [pushReady, setPushReady] = useState(
+    () => typeof Notification !== 'undefined' && Notification.permission === 'granted',
+  )
   useDocumentTitle('Settings')
 
   useEffect(() => subscribeToAnalytics(() => setLog(getAnalyticsLog())), [])
@@ -56,11 +60,20 @@ export default function Settings() {
           <SettingRow
             icon="bell"
             title="Push notifications"
-            sub="Status changes for groceries and transfers"
+            sub="Browser and lock-screen alerts for groceries, transfers, and messages from the team"
             control={
               <Switch
                 checked={settings.pushEnabled}
-                onChange={(value) => updateSettings({ pushEnabled: value })}
+                onChange={(value) => {
+                  updateSettings({ pushEnabled: value })
+                  if (value) {
+                    enablePush()
+                      .then((ok) => setPushReady(Boolean(ok)))
+                      .catch(() => setPushReady(false))
+                  } else {
+                    setPushReady(false)
+                  }
+                }}
                 label="Push notifications"
               />
             }
@@ -90,6 +103,21 @@ export default function Settings() {
             }
           />
         </div>
+        {settings.pushEnabled && !pushReady && typeof Notification !== 'undefined' && Notification.permission !== 'denied' && (
+          <div style={{ marginTop: 12 }}>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() =>
+                enablePush()
+                  .then((ok) => setPushReady(Boolean(ok)))
+                  .catch(() => setPushReady(false))
+              }
+            >
+              Allow browser alerts
+            </Button>
+          </div>
+        )}
         <Callout icon="info" className="section">
           These preferences are stored on your account and used when we send status updates.
         </Callout>

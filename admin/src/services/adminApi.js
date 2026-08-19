@@ -1,6 +1,7 @@
 import { api, pageWrap } from './api'
-import { shapeGuest, shapeGuests, shapeHost, shapeHosts, shapePartner, shapePartners, shapeProperty, shapeProperties, shapeConversation, shapeConversations, shapeOrder, shapeOrders, shapeTransferRow, shapeTransfers, shapeCategories } from '../utils/shapeAdmin'
+import { shapeGuest, shapeGuests, shapeHost, shapeHosts, shapePartner, shapePartners, shapeProperty, shapeProperties, shapeConversation, shapeConversations, shapeOrder, shapeOrders, shapeTransferRow, shapeTransfers, shapeCategories, shapeAudits } from '../utils/shapeAdmin'
 import { mergeSettings } from '../data/settings'
+import { DEFAULT_PLANS } from '../data/hosts'
 
 export function resetAll() {}
 export const setAuditActor = () => {}
@@ -16,10 +17,11 @@ const matches = (row, search, ...fields) => {
   return fields.some((field) => String(field ?? '').toLowerCase().includes(q))
 }
 
-export async function getGuests({ search = '', status = 'all', page = 1, pageSize = 25 } = {}) {
+export async function getGuests({ search = '', status = 'all', account = 'all', page = 1, pageSize = 25 } = {}) {
   const data = await api('/admin/guests')
   let rows = shapeGuests(listOr(data))
   if (status !== 'all') rows = rows.filter((g) => g.status === status)
+  if (account !== 'all') rows = rows.filter((g) => (g.accountStatus ?? 'active') === account)
   rows = rows.filter((g) =>
     matches(g, search, g.name, g.email, g.phone, g.propertyName, g.hostName, g.confirmationCode),
   )
@@ -48,8 +50,16 @@ export async function getGuest(id) {
   }
 }
 
-export async function updateGuest() {
-  throw new Error('Guest records are updated from the guest account.')
+export async function updateGuest(id, patch) {
+  return api(`/admin/guests/${id}`, { method: 'PATCH', body: patch })
+}
+
+export async function setGuestStatus(id, status, reason = '') {
+  return api(`/admin/guests/${id}/status`, { method: 'POST', body: { status, reason } })
+}
+
+export async function deleteGuest(id) {
+  return api(`/admin/guests/${id}`, { method: 'DELETE' })
 }
 
 export async function getHosts({ search = '', status = 'all', page = 1, pageSize = 25 } = {}) {
@@ -73,8 +83,16 @@ export async function getHost(id) {
   }
 }
 
+export async function updateHost(id, patch) {
+  return api(`/admin/hosts/${id}`, { method: 'PATCH', body: patch })
+}
+
 export async function setHostStatus(id, status, reason = '') {
   return api(`/admin/hosts/${id}/status`, { method: 'POST', body: { status, reason } })
+}
+
+export async function deleteHost(id) {
+  return api(`/admin/hosts/${id}`, { method: 'DELETE' })
 }
 
 export async function getProperties({ search = '', status = 'all', hostId = null, page = 1, pageSize = 25 } = {}) {
@@ -136,10 +154,14 @@ export async function setPartnerStatus(id, status, reason = '') {
 }
 
 export async function updatePartner(id, patch) {
-  return api(`/admin/partners/${id}/status`, {
-    method: 'POST',
-    body: { status: patch.status, reason: patch.reason ?? '' },
-  })
+  if (patch.status && Object.keys(patch).every((key) => key === 'status' || key === 'reason')) {
+    return setPartnerStatus(id, patch.status, patch.reason ?? '')
+  }
+  return api(`/admin/partners/${id}`, { method: 'PATCH', body: patch })
+}
+
+export async function deletePartner(id) {
+  return api(`/admin/partners/${id}`, { method: 'DELETE' })
 }
 
 export async function getCategories() {
@@ -262,17 +284,30 @@ export async function getTips({ page = 1, pageSize = 25 } = {}) {
 
 export async function getSubscriptions({ search = '', status = 'all', page = 1, pageSize = 25 } = {}) {
   const data = await api('/admin/hosts')
-  let rows = shapeHosts(listOr(data)).map((h) => ({
-    id: `sub_${h.id}`,
-    hostId: h.id,
-    hostName: h.name,
-    hostEmail: h.email,
-    company: h.company,
-    status: h.subscription.status ?? h.status,
-    ...h.subscription,
-  }))
+  let rows = shapeHosts(listOr(data))
+    .filter(Boolean)
+    .map((h) => {
+      const subscription = h.subscription && typeof h.subscription === 'object' ? h.subscription : {}
+      return {
+        ...subscription,
+        id: `sub_${h.id}`,
+        hostId: h.id,
+        hostName: h.name,
+        hostEmail: h.email,
+        company: h.company,
+        planName: DEFAULT_PLANS.find((p) => p.id === subscription.planId)?.name ?? 'Essential',
+        properties: Number(h.propertyCount) || 0,
+        amount: Number(subscription.amount) || 0,
+        nextBillingDate: subscription.nextBillingDate ?? null,
+        trialEndsAt: subscription.trialEndsAt ?? null,
+        status: subscription.status ?? 'trial',
+      }
+    })
   if (status !== 'all') rows = rows.filter((s) => s.status === status)
-  if (search) rows = rows.filter((s) => `${s.hostName} ${s.hostEmail}`.toLowerCase().includes(search.toLowerCase()))
+  if (search) {
+    const q = search.toLowerCase()
+    rows = rows.filter((s) => `${s.hostName} ${s.hostEmail} ${s.company} ${s.planName}`.toLowerCase().includes(q))
+  }
   return pageWrap(rows, { page, pageSize })
 }
 
@@ -357,8 +392,13 @@ export async function setReviewStatus(id, status) {
   return api(`/ratings/${id}/status`, { method: 'POST', body: { status } })
 }
 
-export async function getNotifications() {
-  const data = await api('/notifications')
+export async function getNotifications({ search = '', audience = 'all', status = 'all' } = {}) {
+  const query = new URLSearchParams()
+  if (search) query.set('search', search)
+  if (audience && audience !== 'all') query.set('audience', audience)
+  if (status && status !== 'all') query.set('status', status)
+  const suffix = query.toString() ? `?${query}` : ''
+  const data = await api(`/admin/notifications${suffix}`)
   return Array.isArray(data) ? data : data?.items ?? []
 }
 
@@ -447,7 +487,7 @@ export async function changeMyPassword({ currentPassword, newPassword }) {
   return api('/admin/me/password', { method: 'POST', body: { currentPassword, newPassword } })
 }
 
-export const getAdminUsers = async () => api('/admin/users')
+export const getAdminUsers = async () => listOr(await api('/admin/users'))
 
 export async function saveAdminUser() {
   throw new Error('Admin users are invited from operations settings.')
@@ -459,7 +499,7 @@ export async function removeAdminUser() {
 
 export async function getAudit({ page = 1, pageSize = 25 } = {}) {
   const data = await api('/admin/audit')
-  return pageWrap(listOr(data), { page, pageSize })
+  return pageWrap(shapeAudits(listOr(data)), { page, pageSize })
 }
 
 export const getSettings = async () => {

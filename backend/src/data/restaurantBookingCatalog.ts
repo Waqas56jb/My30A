@@ -35,15 +35,16 @@ export const RESTAURANT_BOOKING_CATALOG: RestaurantCatalogRow[] = [
     description: 'Family dinner in Seaside. Not a My30A partner — reserve on this restaurant’s own booking page.',
     location: 'Seaside',
     phone: '(850) 231-7327',
+    website: 'https://www.thegreatsoutherncafe.com/',
     featured: true,
     latitude: 30.32,
     longitude: -86.14,
     priceLevel: 3,
     rating: 4.6,
-    bookingPlatform: 'opentable',
-    bookingUrl: 'https://www.opentable.com/r/great-southern-cafe-seaside',
+    bookingPlatform: 'phone_only',
+    bookingUrl: null,
     lastVerifiedDate: '2026-08-19',
-    bookingNotes: 'Direct OpenTable venue page.',
+    bookingNotes: 'Invented OpenTable slug /r/great-southern-cafe-seaside 404s. Live OpenTable listing is not bookable. Call (850) 231-7327.',
   },
   {
     id: 'a1000000-0000-0000-0000-000000000002',
@@ -54,15 +55,16 @@ export const RESTAURANT_BOOKING_CATALOG: RestaurantCatalogRow[] = [
     description: 'Casual breakfast and lunch in Rosemary Beach. Not a My30A partner.',
     location: 'Rosemary Beach',
     phone: '(850) 231-1300',
+    website: 'https://www.cowgirlkitchen.com/',
     featured: true,
     latitude: 30.28,
     longitude: -86.02,
     priceLevel: 2,
     rating: 4.5,
-    bookingPlatform: 'opentable',
-    bookingUrl: 'https://www.opentable.com/r/cowgirl-kitchen-rosemary-beach',
+    bookingPlatform: 'phone_only',
+    bookingUrl: null,
     lastVerifiedDate: '2026-08-19',
-    bookingNotes: 'Direct OpenTable venue page.',
+    bookingNotes: 'Not on OpenTable. Casual seating — call (850) 231-1300 rather than a guessed /r/ slug.',
   },
   {
     id: 'a1000000-0000-0000-0000-000000000003',
@@ -73,15 +75,16 @@ export const RESTAURANT_BOOKING_CATALOG: RestaurantCatalogRow[] = [
     description: 'Gulf-front dining in Seaside. Not a My30A partner.',
     location: 'Seaside',
     phone: '(850) 231-5900',
+    website: 'https://www.budandalleys.com/',
     featured: true,
     latitude: 30.3198,
     longitude: -86.1402,
     priceLevel: 3,
     rating: 4.5,
-    bookingPlatform: 'opentable',
-    bookingUrl: 'https://www.opentable.com/r/bud-and-alleys-seaside',
+    bookingPlatform: 'phone_only',
+    bookingUrl: null,
     lastVerifiedDate: '2026-08-19',
-    bookingNotes: 'Direct OpenTable venue page.',
+    bookingNotes: 'OpenTable /r/bud-and-alleys-seaside 404s. Official listing r/bud-and-alleys-waterfront-restaurant-and-bar says not on the network. Hostess: (850) 231-5900.',
   },
   {
     id: 'a1000000-0000-0000-0000-000000000004',
@@ -396,3 +399,36 @@ export const RESTAURANT_BOOKING_CATALOG: RestaurantCatalogRow[] = [
     bookingNotes: 'Direct OpenTable venue page.',
   },
 ];
+
+export function catalogRestaurant(id?: unknown, slug?: unknown) {
+  const idKey = id != null ? String(id) : '';
+  const slugKey = slug != null ? String(slug) : '';
+  return (
+    RESTAURANT_BOOKING_CATALOG.find((row) => row.id === idKey || row.slug === slugKey) ?? null
+  );
+}
+
+export function catalogAsRow(row: RestaurantCatalogRow): Record<string, unknown> {
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    cuisine: row.cuisine,
+    short_description: row.shortDescription,
+    description: row.description,
+    location: row.location,
+    address: row.address ?? null,
+    phone: row.phone,
+    website: row.website ?? null,
+    featured: Boolean(row.featured),
+    latitude: row.latitude ?? null,
+    longitude: row.longitude ?? null,
+    price_level: row.priceLevel ?? null,
+    rating: row.rating ?? null,
+    booking_platform: row.bookingPlatform,
+    booking_url: row.bookingUrl,
+    last_verified_date: row.lastVerifiedDate,
+    booking_notes: row.bookingNotes,
+    active: true,
+  };
+}

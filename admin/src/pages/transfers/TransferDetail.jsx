@@ -20,6 +20,7 @@ import {
 } from '../../data/transfers'
 import { PAYMENT_STATUSES, PAYMENT_TYPES, REFUND_STATUSES } from '../../data/payments'
 import { formatDate, formatCurrency, formatRelative } from '../../utils/format'
+import { propertyPath } from '../../utils/paths'
 
 const DRIVERS = ['Anthony P.', 'Marcus B.', 'Yolanda R.', 'Dev S.', 'Carla M.', 'Ruben O.']
 
@@ -152,7 +153,7 @@ export default function TransferDetail() {
               { label: 'Guest', value: <Link to={`/admin/guests/${transfer.guestId}`}>{transfer.guestName}</Link> },
               {
                 label: 'Property',
-                value: <Link to={`/admin/properties/${transfer.propertyId}`}>{transfer.propertyName}</Link>,
+                value: <Link to={propertyPath({ id: transfer.propertyId, propertyId: transfer.propertyId })}>{transfer.propertyName}</Link>,
               },
               { label: 'Host', value: transfer.hostName },
             ]}

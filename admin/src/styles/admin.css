@@ -28,24 +28,41 @@
 .ashell__main {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   padding: var(--sp-5) max(var(--sp-4), var(--safe-left)) calc(var(--sp-8) + var(--safe-bottom));
 }
 
 @media (min-width: 1100px) {
+  html:has(.ashell),
+  body:has(.ashell),
+  #root:has(.ashell) {
+    height: 100%;
+    max-height: 100dvh;
+    overflow: hidden;
+  }
+
   .ashell {
     display: grid;
     grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    height: 100%;
+    max-height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
   }
+
   .ashell__body {
-    height: 100vh;
-    height: 100dvh;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
   }
+
   .ashell__main {
-    /* The rail and the top bar stay put while a long table moves. Pairing
-       `clip` with an axis that is already `auto` is required — with a visible
-       axis the browser coerces it to `auto` and the shell starts scrolling. */
+    /* Only the page column scrolls. The rail and top bar stay put. */
     overflow-y: auto;
-    overflow-x: clip;
+    overflow-x: hidden;
+    overscroll-behavior: contain;
     padding: var(--sp-6) var(--sp-7) var(--sp-9);
   }
 }
@@ -60,8 +77,13 @@
   .asidebar {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    height: 100dvh;
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    position: sticky;
+    top: 0;
+    align-self: stretch;
+    overflow: hidden;
     background: var(--surface-ink);
     color: rgba(255, 255, 255, 0.86);
     border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -286,6 +308,7 @@
   position: sticky;
   top: 0;
   z-index: 30;
+  flex: none;
   display: flex;
   align-items: center;
   gap: var(--sp-3);
@@ -2572,4 +2595,20 @@
   gap: var(--sp-2);
   min-width: 0;
   flex: 1 1 12rem;
+}
+
+.rowact {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+}
+
+.rowact .icon-btn {
+  width: 36px;
+  height: 36px;
+}
+
+.account-form {
+  display: grid;
+  gap: var(--sp-4);
 }

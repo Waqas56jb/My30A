@@ -1629,6 +1629,71 @@ button.card:active {
   min-height: 320px;
 }
 
+.mappanel__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.mappanel__empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--ink-500);
+  font-size: var(--fs-small);
+}
+
+.mappanel__actions {
+  position: absolute;
+  left: var(--sp-3);
+  top: var(--sp-3);
+  display: flex;
+  gap: var(--sp-2);
+  z-index: 6;
+  flex-wrap: wrap;
+}
+
+.mappanel__link {
+  padding: 6px 10px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.94);
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--ink-800);
+  box-shadow: var(--sh-1);
+  text-decoration: none;
+}
+
+.mappanel__link:hover {
+  color: var(--sea-700);
+}
+
+.mappanel__pins {
+  position: absolute;
+  left: var(--sp-3);
+  right: var(--sp-3);
+  bottom: var(--sp-3);
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  z-index: 6;
+  padding-bottom: 2px;
+}
+
+.mappanel__pins .mappin {
+  position: static;
+  transform: none;
+  flex: 0 0 auto;
+}
+
+.mappanel__pins .mappin:hover,
+.mappanel__pins .mappin--active {
+  transform: none;
+}
+
 .mappanel__canvas {
   position: absolute;
   inset: 0;
@@ -1760,7 +1825,7 @@ button.card:active {
 .mappanel__legend {
   position: absolute;
   left: var(--sp-3);
-  bottom: var(--sp-3);
+  bottom: 58px;
   display: flex;
   gap: var(--sp-2);
   flex-wrap: wrap;

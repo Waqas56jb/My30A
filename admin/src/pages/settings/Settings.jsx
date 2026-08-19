@@ -360,10 +360,10 @@ export default function Settings() {
             {/* ---------------------------- Notifications ------------------ */}
             {section === 'notifications' && (
               <div>
-                <Row title="Push notifications" sub="Master switch for push to guests, hosts and partners.">
+                <Row title="Push notifications" sub="In-app inbox, live socket, and browser lock-screen alerts for guests, hosts and partners.">
                   <Switch checked={flag(s.pushEnabled)} onChange={(v) => set('pushEnabled', v)} label="Push notifications" />
                 </Row>
-                <Row title="Email notifications" sub="Master switch for transactional email.">
+                <Row title="Email notifications" sub="Master switch for SMTP email from the backend mail account.">
                   <Switch checked={flag(s.emailEnabled)} onChange={(v) => set('emailEnabled', v)} label="Email notifications" />
                 </Row>
                 <Row title="Daily operations digest" sub="A morning summary of everything waiting in the queues.">

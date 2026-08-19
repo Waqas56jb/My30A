@@ -28,8 +28,12 @@ import {
 import { trackEvent, adminOverview, adminSeries } from '../services/analyticsService.js';
 import { sendMessage, listGuestMessages, clearGuestConversations, listAdminConversations, getAdminConversation, vitoriaKpis } from '../services/vitoriaService.js';
 import {
-  listNotifications, markRead, markAllRead, unreadCount, createNotification,
+  listNotifications, markRead, markAllRead, unreadCount,
 } from '../services/notificationService.js';
+import { listBroadcasts, sendBroadcast } from '../services/broadcastService.js';
+import {
+  getVapidPublicKey, savePushSubscription, deletePushSubscription,
+} from '../services/pushService.js';
 import {
   listHostProperties, createProperty, updateProperty, getHostProperty,
   setPropertyStatus, regenerateGuestAccess, listHostGuests,
@@ -37,6 +41,7 @@ import {
   updateHostRecommendation, deleteHostRecommendation,
 } from '../services/propertyService.js';
 import { recordAudit } from '../services/auditService.js';
+import { updateAccount, setAccountStatus, deleteAccount, resolveAccountId } from '../services/adminAccountService.js';
 import {
   getAdminProfile, updateAdminProfile, changeAdminPassword, uploadAdminAvatar, removeAdminAvatar,
 } from '../services/adminProfileService.js';
@@ -342,6 +347,34 @@ v1.post('/notifications/read-all', requireAuth, asyncHandler(async (req, res) =>
   ok(res, { ok: true });
 }));
 
+const pushSubscribeSchema = z.object({
+  endpoint: z.string().min(1),
+  keys: z.object({
+    p256dh: z.string().min(1),
+    auth: z.string().min(1),
+  }),
+});
+
+v1.get('/push/vapid-key', requireAuth, asyncHandler(async (_req, res) => {
+  ok(res, { publicKey: await getVapidPublicKey() });
+}));
+v1.post('/push/subscribe', requireAuth, validate(pushSubscribeSchema), asyncHandler(async (req, res) => {
+  await savePushSubscription({
+    accountId: req.auth!.id,
+    accountRole: req.auth!.role,
+    endpoint: req.body.endpoint,
+    p256dh: req.body.keys.p256dh,
+    auth: req.body.keys.auth,
+    userAgent: req.headers['user-agent'] ?? null,
+  });
+  ok(res, { ok: true });
+}));
+v1.post('/push/unsubscribe', requireAuth, asyncHandler(async (req, res) => {
+  const endpoint = String(req.body?.endpoint ?? '');
+  if (endpoint) await deletePushSubscription(req.auth!.id, endpoint);
+  ok(res, { ok: true });
+}));
+
 // Host
 v1.get('/hosts/me/properties', requireAuth, requireRole('HOST'), asyncHandler(async (req, res) => ok(res, await listHostProperties(req.auth!.id))));
 v1.post('/hosts/me/properties', requireAuth, requireRole('HOST'), asyncHandler(async (req, res) => ok(res, await createProperty(req.auth!, req.body), 201)));
@@ -378,12 +411,13 @@ v1.get('/admin/vitoria/kpis', requireAuth, requireRole('ADMIN'), requirePermissi
 v1.get('/admin/insights/series', requireAuth, requireRole('ADMIN'), requirePermission('analytics', 'view'), asyncHandler(async (req, res) => {
   ok(res, await adminSeries(String(req.query.metric ?? 'conversations'), String(req.query.range ?? '30d')));
 }));
-v1.get('/admin/guests', requireAuth, requireRole('ADMIN'), requirePermission('users', 'view'), asyncHandler(async (_req, res) => {
-  const { rows } = await query(`
-    select g.id, g.email, g.first_name, g.last_name, g.phone, g.language, g.created_at,
+const GUEST_ADMIN_SELECT = `
+    select g.id, g.email, g.first_name, g.last_name, g.phone, g.language, g.created_at, g.updated_at,
+           to_jsonb(g)->>'notes' as notes,
+           coalesce(nullif(to_jsonb(g)->>'status', ''), 'active') as account_status,
            s.check_in_date, s.check_out_date, s.adults, s.children, s.party_size,
            s.confirmation_code, s.status as stay_status,
-           p.id as property_id, p.name as property_name, p.host_id,
+           p.id as property_id, p.name as property_name, p.slug as property_slug, p.host_id,
            trim(h.first_name || ' ' || h.last_name) as host_name
     from guests g
     left join lateral (
@@ -394,10 +428,20 @@ v1.get('/admin/guests', requireAuth, requireRole('ADMIN'), requirePermission('us
     ) s on true
     left join properties p on p.id = s.property_id
     left join hosts h on h.id = p.host_id
-    where g.deleted_at is null
-    order by g.created_at desc
-  `);
+`;
+
+v1.get('/admin/guests', requireAuth, requireRole('ADMIN'), requirePermission('users', 'view'), asyncHandler(async (_req, res) => {
+  const { rows } = await query(`${GUEST_ADMIN_SELECT} where g.deleted_at is null order by g.created_at desc`);
   ok(res, { rows, total: rows.length });
+}));
+v1.patch('/admin/guests/:id', requireAuth, requireRole('ADMIN'), requirePermission('users', 'edit'), asyncHandler(async (req, res) => {
+  ok(res, await updateAccount('guest', req.params.id, req.body ?? {}, req.auth!));
+}));
+v1.post('/admin/guests/:id/status', requireAuth, requireRole('ADMIN'), requirePermission('users', 'edit'), asyncHandler(async (req, res) => {
+  ok(res, await setAccountStatus('guest', req.params.id, String(req.body?.status ?? ''), req.body?.reason ?? '', req.auth!));
+}));
+v1.delete('/admin/guests/:id', requireAuth, requireRole('ADMIN'), requirePermission('users', 'edit'), asyncHandler(async (req, res) => {
+  ok(res, await deleteAccount('guest', req.params.id, req.auth!));
 }));
 v1.get('/admin/hosts', requireAuth, requireRole('ADMIN'), requirePermission('hosts', 'view'), asyncHandler(async (_req, res) => {
   const { rows } = await query(`
@@ -409,15 +453,19 @@ v1.get('/admin/hosts', requireAuth, requireRole('ADMIN'), requirePermission('hos
   `);
   ok(res, { rows, total: rows.length });
 }));
+v1.patch('/admin/hosts/:id', requireAuth, requireRole('ADMIN'), requirePermission('hosts', 'edit'), asyncHandler(async (req, res) => {
+  ok(res, await updateAccount('host', req.params.id, req.body ?? {}, req.auth!));
+}));
 v1.post('/admin/hosts/:id/status', requireAuth, requireRole('ADMIN'), requirePermission('hosts', 'edit'), asyncHandler(async (req, res) => {
-  await query(`update hosts set status = $2, notes = coalesce($3, notes) where id = $1`, [req.params.id, req.body.status, req.body.reason ?? null]);
-  await recordAudit({ actorId: req.auth!.id, actorRole: 'ADMIN', action: `Host ${req.body.status}`, entity: 'Host', entityId: req.params.id });
-  ok(res, { ok: true });
+  ok(res, await setAccountStatus('host', req.params.id, String(req.body?.status ?? ''), req.body?.reason ?? '', req.auth!));
+}));
+v1.delete('/admin/hosts/:id', requireAuth, requireRole('ADMIN'), requirePermission('hosts', 'edit'), asyncHandler(async (req, res) => {
+  ok(res, await deleteAccount('host', req.params.id, req.auth!));
 }));
 v1.get('/admin/partners', requireAuth, requireRole('ADMIN'), requirePermission('partners', 'view'), asyncHandler(async (_req, res) => {
   const { rows } = await query(`
     select id, email, name, owner_name, status, published, featured, submitted_at,
-           phone, website, town, address, cover_url, logo_url, category_id,
+           phone, website, town, address, cover_url, logo_url, category_id, slug,
            starting_price_cents, hours, description
     from partners
     where deleted_at is null
@@ -425,8 +473,15 @@ v1.get('/admin/partners', requireAuth, requireRole('ADMIN'), requirePermission('
   `);
   ok(res, { rows, total: rows.length });
 }));
+v1.patch('/admin/partners/:id', requireAuth, requireRole('ADMIN'), requirePermission('partners', 'edit'), asyncHandler(async (req, res) => {
+  ok(res, await updateAccount('partner', req.params.id, req.body ?? {}, req.auth!));
+}));
 v1.post('/admin/partners/:id/status', requireAuth, requireRole('ADMIN'), requirePermission('partners', 'edit'), asyncHandler(async (req, res) => {
-  ok(res, await setPartnerStatus(req.params.id, req.body.status, req.body.reason ?? '', req.auth!));
+  const partnerId = await resolveAccountId('partner', req.params.id);
+  ok(res, await setPartnerStatus(partnerId, req.body.status, req.body.reason ?? '', req.auth!));
+}));
+v1.delete('/admin/partners/:id', requireAuth, requireRole('ADMIN'), requirePermission('partners', 'edit'), asyncHandler(async (req, res) => {
+  ok(res, await deleteAccount('partner', req.params.id, req.auth!));
 }));
 v1.get('/admin/properties', requireAuth, requireRole('ADMIN'), requirePermission('properties', 'view'), asyncHandler(async (_req, res) => {
   const { rows } = await query(`select p.*, h.first_name || ' ' || h.last_name as host_name from properties p join hosts h on h.id = p.host_id where p.deleted_at is null`);
@@ -463,8 +518,36 @@ v1.put('/admin/settings/:key', requireAuth, requireRole('ADMIN'), requirePermiss
   await recordAudit({ actorId: req.auth!.id, actorRole: 'ADMIN', action: 'Updated settings', entity: 'Settings', entityId: req.params.key });
   ok(res, { ok: true });
 }));
-v1.post('/admin/notifications', requireAuth, requireRole('ADMIN'), asyncHandler(async (req, res) => {
-  ok(res, await createNotification(req.body), 201);
+const broadcastSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  message: z.string().trim().min(1).max(2000),
+  audience: z.enum(['guest', 'host', 'partner', 'admin']),
+  channel: z.enum(['push', 'email', 'both']),
+});
+
+v1.get('/admin/notifications', requireAuth, requireRole('ADMIN'), asyncHandler(async (req, res) => {
+  ok(
+    res,
+    await listBroadcasts({
+      search: String(req.query.search ?? ''),
+      audience: String(req.query.audience ?? 'all'),
+      status: String(req.query.status ?? 'all'),
+    }),
+  );
+}));
+v1.post('/admin/notifications', requireAuth, requireRole('ADMIN'), validate(broadcastSchema), asyncHandler(async (req, res) => {
+  ok(
+    res,
+    await sendBroadcast({
+      title: req.body.title,
+      message: req.body.message,
+      audience: req.body.audience,
+      channel: req.body.channel,
+      actorId: req.auth!.id,
+      actorName: req.auth!.name,
+    }),
+    201,
+  );
 }));
 v1.get('/admin/knowledge', requireAuth, requireRole('ADMIN'), requirePermission('content', 'view'), asyncHandler(async (_req, res) => {
   const { rows } = await query(`select id, question, content, type, source_type, is_active, used_count from knowledge_chunks order by updated_at desc`);
@@ -495,23 +578,7 @@ v1.post('/stays/rating', requireAuth, requireRole('GUEST'), asyncHandler(async (
 }));
 
 v1.get('/admin/guests/:id', requireAuth, requireRole('ADMIN'), requirePermission('users', 'view'), asyncHandler(async (req, res) => {
-  const { rows } = await query(`
-    select g.id, g.email, g.first_name, g.last_name, g.phone, g.language, g.created_at,
-           s.check_in_date, s.check_out_date, s.adults, s.children, s.party_size,
-           s.confirmation_code, s.status as stay_status,
-           p.id as property_id, p.name as property_name, p.host_id,
-           trim(h.first_name || ' ' || h.last_name) as host_name
-    from guests g
-    left join lateral (
-      select * from guest_stays
-      where guest_id = g.id
-      order by check_in_date desc nulls last
-      limit 1
-    ) s on true
-    left join properties p on p.id = s.property_id
-    left join hosts h on h.id = p.host_id
-    where g.id = $1 and g.deleted_at is null
-  `, [req.params.id]);
+  const { rows } = await query(`${GUEST_ADMIN_SELECT} where g.id = $1 and g.deleted_at is null`, [req.params.id]);
   if (!rows[0]) throw errors.notFound('that guest');
   ok(res, rows[0]);
 }));
@@ -529,9 +596,9 @@ v1.get('/admin/partners/:id', requireAuth, requireRole('ADMIN'), requirePermissi
   const { rows } = await query(`
     select id, email, name, owner_name, status, published, featured, phone, website,
            description, reason, submitted_at, town, address, cover_url, logo_url,
-           category_id, starting_price_cents, hours
+           category_id, starting_price_cents, hours, slug
     from partners
-    where id = $1 and deleted_at is null
+    where deleted_at is null and (id::text = $1 or slug = $1)
   `, [req.params.id]);
   if (!rows[0]) throw errors.notFound('that partner');
   ok(res, rows[0]);
@@ -674,10 +741,12 @@ v1.get('/admin/search', requireAuth, requireRole('ADMIN'), asyncHandler(async (r
   if (String(req.query.q ?? '').trim().length < 2) return ok(res, []);
   const guests = await query(`select id, first_name || ' ' || last_name as title, email as subtitle from guests where email ilike $1 or first_name ilike $1 limit 4`, [q]);
   const hosts = await query(`select id, first_name || ' ' || last_name as title, email as subtitle from hosts where email ilike $1 or first_name ilike $1 limit 4`, [q]);
-  const partners = await query(`select id, name as title, email as subtitle from partners where name ilike $1 or email ilike $1 limit 4`, [q]);
+  const partners = await query(`select id, slug, name as title, email as subtitle from partners where deleted_at is null and (name ilike $1 or email ilike $1) limit 4`, [q]);
+  const properties = await query(`select id, slug, name as title, city as subtitle from properties where deleted_at is null and (name ilike $1 or slug ilike $1 or address ilike $1) limit 4`, [q]);
   ok(res, [
     ...guests.rows.map((r) => ({ kind: 'Guest', ...r, to: `/admin/guests/${r.id}` })),
     ...hosts.rows.map((r) => ({ kind: 'Host', ...r, to: `/admin/hosts/${r.id}` })),
-    ...partners.rows.map((r) => ({ kind: 'Partner', ...r, to: `/admin/partners/${r.id}` })),
+    ...partners.rows.map((r) => ({ kind: 'Partner', ...r, to: `/admin/partners/${r.slug || r.id}` })),
+    ...properties.rows.map((r) => ({ kind: 'Property', ...r, to: `/admin/properties/${r.slug || r.id}` })),
   ]);
 }));

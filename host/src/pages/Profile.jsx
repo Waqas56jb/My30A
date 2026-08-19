@@ -11,6 +11,7 @@ import { validateEmail } from '../services/authService'
 import { formatDate } from '../utils/format'
 
 const NOTIFICATION_SETTINGS = [
+  ['pushNotifications', 'Push notifications', 'Browser and lock-screen alerts for guest activity and Vitoria.'],
   ['emailNotifications', 'Email notifications', 'Everything below, delivered to your inbox.'],
   ['guestActivityAlerts', 'Guest activity', 'When a guest first opens their link.'],
   ['feedbackAlerts', 'Guest feedback', 'When someone rates their stay.'],
@@ -64,6 +65,11 @@ export default function Profile() {
   const toggle = async (key, value) => {
     try {
       await updateSettings({ [key]: value })
+      if (key === 'pushNotifications') {
+        const { enablePush, disablePush } = await import('../services/pushClient')
+        if (value) await enablePush()
+        else await disablePush()
+      }
     } catch (error) {
       pushToast({ tone: 'error', title: 'That did not save', message: error.message })
     }
@@ -177,7 +183,11 @@ export default function Profile() {
                   <span className="setting-row__sub">{sub}</span>
                 </span>
                 <Switch
-                  checked={!!host.settings?.[key]}
+                  checked={
+                    key === 'pushNotifications'
+                      ? host.settings?.[key] !== false
+                      : !!host.settings?.[key]
+                  }
                   onChange={(value) => toggle(key, value)}
                   label={label}
                 />
@@ -186,7 +196,7 @@ export default function Profile() {
           </Panel>
 
           <Callout icon="info">
-            Notification delivery is mocked in this prototype — nothing is actually emailed or pushed.
+            Turn on push to allow browser alerts. Email uses the address on this account.
           </Callout>
         </div>
 

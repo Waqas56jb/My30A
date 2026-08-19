@@ -6,7 +6,7 @@ import { useTable, useLoad } from '../../hooks/useTable'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
 import { AUDIT_STATUSES } from '../../data/audit'
-import { formatDate, formatTime, formatRelative } from '../../utils/format'
+import { formatDate, formatTime, formatRelative, humanize } from '../../utils/format'
 
 const ENTITIES = [
   'Partner', 'Host', 'Property', 'Guest', 'Grocery order', 'Transfer', 'Payment',
@@ -36,7 +36,7 @@ export default function Audit() {
         <span>
           <span className="dtable__strong">{r.userName}</span>
           <span style={{ display: 'block', fontSize: 'var(--fs-micro)', color: 'var(--ink-500)', textTransform: 'capitalize' }}>
-            {r.userRole.replace(/_/g, ' ')}
+            {humanize(r.userRole)}
           </span>
         </span>
       ),
@@ -68,8 +68,7 @@ export default function Audit() {
       />
 
       <Callout icon="info">
-        The IP column is a placeholder. This build has no server and therefore no request to read an
-        address from — showing a realistic-looking one would be inventing evidence.
+        IP is recorded when the request includes one. Internal jobs and some admin actions log as —.
       </Callout>
 
       <div className="astats">

@@ -1,4 +1,5 @@
 import { eventCoverImage, restaurantCoverImage } from '../data/listingImages.js';
+import { catalogAsRow, catalogRestaurant, RESTAURANT_BOOKING_CATALOG } from '../data/restaurantBookingCatalog.js';
 import { query } from '../config/db.js';
 import { env } from '../config/env.js';
 import { errors } from '../utils/errors.js';
@@ -15,13 +16,28 @@ export async function listRestaurants(filters: { search?: string; category?: str
     where += ` and (name ilike $${params.length} or description ilike $${params.length})`;
   }
   const { rows } = await query(`select * from restaurants where ${where} order by featured desc, name`, params);
-  return rows.map(shapeRestaurant);
+  const shaped = rows.map(shapeRestaurant);
+  const seen = new Set(shaped.flatMap((row) => [String(row.id), String(row.slug ?? '')].filter(Boolean)));
+  const needle = String(filters.search ?? '').trim().toLowerCase();
+  const category = filters.category && filters.category !== 'All' ? String(filters.category).toLowerCase() : '';
+  for (const item of RESTAURANT_BOOKING_CATALOG) {
+    if (seen.has(item.id) || seen.has(item.slug)) continue;
+    if (category && !item.cuisine.toLowerCase().includes(category) && item.cuisine.toLowerCase() !== category) continue;
+    if (needle && !`${item.name} ${item.description} ${item.cuisine}`.toLowerCase().includes(needle)) continue;
+    shaped.push(shapeRestaurant(catalogAsRow(item)));
+  }
+  return shaped;
 }
 
 export async function getRestaurant(id: string) {
-  const { rows } = await query(`select * from restaurants where id::text = $1 or slug = $1`, [id]);
-  if (!rows[0]) throw errors.notFound('that restaurant');
-  return shapeRestaurant(rows[0]);
+  const catalog = catalogRestaurant(id, id);
+  const { rows } = await query(
+    `select * from restaurants where id::text = $1 or slug = $1 or ($2 != '' and slug = $2)`,
+    [id, catalog?.slug ?? ''],
+  );
+  if (rows[0]) return shapeRestaurant(rows[0]);
+  if (catalog) return shapeRestaurant(catalogAsRow(catalog));
+  throw errors.notFound('that restaurant');
 }
 
 export async function listPartnersPublic(filters: { search?: string; category?: string } = {}) {
@@ -189,9 +205,27 @@ function coords(row: Record<string, unknown>) {
   return row.latitude != null ? { lat: Number(row.latitude), lng: Number(row.longitude) } : null;
 }
 
+function bookingFromRow(row: Record<string, unknown>) {
+  const catalog = catalogRestaurant(row.id, row.slug);
+  const platform = catalog?.bookingPlatform ?? row.booking_platform ?? row.booking_provider ?? null;
+  const bookingUrl = catalog
+    ? catalog.bookingUrl
+    : (row.booking_url
+        ?? (platform === 'opentable' ? row.opentable_url : null)
+        ?? row.external_booking_url
+        ?? null);
+  return {
+    platform,
+    bookingUrl,
+    phone: catalog?.phone ?? row.phone,
+    website: catalog?.website ?? row.website,
+  };
+}
+
 function shapeRestaurant(row: Record<string, unknown>) {
   const image = restaurantCoverImage(row)
   const gallery = Array.isArray(row.gallery) && (row.gallery as unknown[]).length ? row.gallery : [image]
+  const booking = bookingFromRow(row)
   return {
     id: row.id,
     type: 'restaurant',
@@ -208,19 +242,19 @@ function shapeRestaurant(row: Record<string, unknown>) {
     reviewCount: row.review_count,
     priceLevel: row.price_level,
     startingPrice: row.starting_price_cents != null ? Number(row.starting_price_cents) / 100 : null,
-    phone: row.phone,
-    website: row.website,
+    phone: booking.phone,
+    website: booking.website,
     location: row.location,
     address: row.address,
     coordinates: coords(row),
     featured: row.featured,
     hours: row.hours,
-    externalBookingUrl: row.booking_url ?? row.external_booking_url ?? row.opentable_url,
-    bookingPlatform: row.booking_platform ?? row.booking_provider ?? null,
-    bookingUrl: row.booking_url ?? row.opentable_url ?? row.external_booking_url ?? null,
+    externalBookingUrl: booking.bookingUrl,
+    bookingPlatform: booking.platform,
+    bookingUrl: booking.bookingUrl,
     lastVerifiedDate: row.last_verified_date ?? null,
-    bookingProvider: row.booking_platform ?? row.booking_provider ?? null,
-    opentableUrl: row.booking_platform === 'opentable' ? (row.booking_url ?? row.opentable_url) : null,
+    bookingProvider: booking.platform,
+    opentableUrl: booking.platform === 'opentable' ? booking.bookingUrl : null,
     opentableRid: row.opentable_rid,
   };
 }

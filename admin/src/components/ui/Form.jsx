@@ -104,13 +104,14 @@ export function FilterChips({ options, value, onChange, label = 'Filter', wrap =
         const text = typeof option === 'string' ? option : option.label
         const count = typeof option === 'string' ? null : option.count
         const active = value === key
+        const reset = typeof options[0] === 'string' ? options[0] : options[0]?.value
         return (
           <button
             key={key}
             type="button"
             className="chip"
             aria-pressed={active}
-            onClick={() => onChange(active && key !== 'All' ? 'All' : key)}
+            onClick={() => onChange(active && key !== reset ? reset : key)}
           >
             {text}
             {count !== null && count !== undefined && <span className="chip__count">{count}</span>}

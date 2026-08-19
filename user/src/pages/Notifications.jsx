@@ -97,7 +97,7 @@ export default function Notifications() {
       )}
 
       <p className="u-xs u-muted" style={{ marginTop: 'var(--sp-6)', textAlign: 'center' }}>
-        Push and email notifications are mocked in this prototype. Delivery preferences live in{' '}
+        Delivery preferences live in{' '}
         <Link to="/settings" style={{ color: 'var(--sea-700)' }}>
           Settings
         </Link>

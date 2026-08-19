@@ -54,23 +54,32 @@ export async function sendEmail(input: {
        values ($1,$2,$3,'sent',$4, now())`,
       [input.to, input.subject, input.template, info.messageId ?? null],
     );
-    return { ok: true };
+    return { ok: true as const };
   } catch (error) {
+    const message = String((error as Error).message);
     logger.error({ err: error, template: input.template }, 'email send failed');
     await query(
       `insert into email_log (recipient, subject, template, status, error)
        values ($1,$2,$3,'failed',$4)`,
-      [input.to, input.subject, input.template, String((error as Error).message)],
+      [input.to, input.subject, input.template, message],
     );
-    return { ok: false };
+    return { ok: false as const, error: message };
   }
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 export function branded(title: string, body: string) {
   const html = `<!doctype html><html><body style="font-family:Inter,Arial,sans-serif;background:#f6f1e8;padding:24px">
   <div style="max-width:560px;margin:auto;background:#fff;border-radius:16px;padding:28px;border:1px solid #e6dcc8">
     <p style="color:#2b7d7a;letter-spacing:.12em;text-transform:uppercase;font-size:12px;margin:0 0 8px">My30A Host</p>
-    <h1 style="font-family:Georgia,serif;font-size:26px;margin:0 0 16px;color:#17332f">${title}</h1>
+    <h1 style="font-family:Georgia,serif;font-size:26px;margin:0 0 16px;color:#17332f">${escapeHtml(title)}</h1>
     <div style="color:#334;line-height:1.6">${body}</div>
     <p style="margin-top:28px;color:#887;font-size:12px">This is an official message from My30A Host.</p>
   </div></body></html>`;

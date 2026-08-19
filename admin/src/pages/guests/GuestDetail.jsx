@@ -7,20 +7,24 @@ import {
   PageHeader, Panel, Grid, Stat, Facts, StatusPill, ActivityList, InlineEmpty, Money, ReferralNote,
 } from '../../components/common/AdminUI'
 import DataTable from '../../components/tables/DataTable'
+import AccountModals from '../../components/accounts/AccountModals'
 import { useLoad } from '../../hooks/useTable'
+import { useAccountManage, isBlocked } from '../../hooks/useAccountManage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
-import { GUEST_STATUSES, buildGuestTimeline } from '../../data/guests'
+import { GUEST_STATUSES, GUEST_ACCOUNT_STATUSES, buildGuestTimeline } from '../../data/guests'
 import { GROCERY_STATUSES } from '../../data/orders'
 import { TRANSFER_STATUSES } from '../../data/transfers'
 import { PAYMENT_STATUSES, PAYMENT_TYPES } from '../../data/payments'
 import { CONVERSATION_STATUSES } from '../../data/conversations'
 import { formatDate, formatShortDate, formatRelative, formatNumber } from '../../utils/format'
+import { propertyPath, hostPath } from '../../utils/paths'
 
 /** Everything about one guest, assembled from every record that mentions them. */
 export default function GuestDetail() {
   const { id } = useParams()
   const { data, loading, error, reload } = useLoad(() => api.getGuest(id), [id])
+  const manage = useAccountManage('guest', { onDone: reload })
 
   useDocumentTitle(data?.guest?.name || 'Guest')
 
@@ -47,11 +51,26 @@ export default function GuestDetail() {
         actions={
           <>
             <StatusPill map={GUEST_STATUSES} value={guest.status} />
+            <StatusPill map={GUEST_ACCOUNT_STATUSES} value={guest.accountStatus ?? 'active'} />
             {guest.propertyId ? (
-              <Button to={`/admin/properties/${guest.propertyId}`} variant="secondary" size="sm" icon="key">
+              <Button to={propertyPath(guest)} variant="secondary" size="sm" icon="key">
                 Property
               </Button>
             ) : null}
+            <Button size="sm" variant="secondary" icon="edit" onClick={() => manage.setEditRow(guest)}>
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant={isBlocked('guest', guest) ? 'secondary' : 'danger'}
+              icon={isBlocked('guest', guest) ? 'checkCircle' : 'lock'}
+              onClick={() => manage.setBlockRow(guest)}
+            >
+              {isBlocked('guest', guest) ? 'Unblock' : 'Block'}
+            </Button>
+            <Button size="sm" variant="ghost" icon="trash" onClick={() => manage.setDeleteRow(guest)}>
+              Delete
+            </Button>
           </>
         }
       />
@@ -71,6 +90,7 @@ export default function GuestDetail() {
               { label: 'Email', value: guest.email },
               { label: 'Phone', value: guest.phone },
               { label: 'Language', value: guest.language },
+              { label: 'Account', value: <StatusPill map={GUEST_ACCOUNT_STATUSES} value={guest.accountStatus ?? 'active'} /> },
               { label: 'Party', value: `${guest.adults} adults, ${guest.children} children` },
               { label: 'Returning guest', value: guest.returning ? 'Yes' : 'First stay' },
               { label: 'Confirmation', value: guest.confirmationCode },
@@ -85,10 +105,10 @@ export default function GuestDetail() {
               {
                 label: 'Property',
                 value: (
-                  <Link to={`/admin/properties/${guest.propertyId}`}>{guest.propertyName}</Link>
+                  <Link to={propertyPath(guest)}>{guest.propertyName}</Link>
                 ),
               },
-              { label: 'Host', value: <Link to={`/admin/hosts/${guest.hostId}`}>{guest.hostName}</Link> },
+              { label: 'Host', value: <Link to={hostPath({ id: guest.hostId })}>{guest.hostName}</Link> },
               { label: 'Arrival', value: formatDate(guest.checkIn) },
               { label: 'Departure', value: formatDate(guest.checkOut) },
               { label: 'Nights', value: guest.nights },
@@ -225,6 +245,7 @@ export default function GuestDetail() {
           />
         )}
       </Panel>
+      <AccountModals manage={manage} />
     </div>
   )
 }

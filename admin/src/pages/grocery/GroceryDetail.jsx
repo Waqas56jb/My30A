@@ -17,6 +17,7 @@ import * as api from '../../services/adminApi'
 import { GROCERY_STATUSES, GROCERY_FLOW, DEFAULT_SERVICE_FEES, feeForBasket } from '../../data/orders'
 import { PAYMENT_STATUSES, PAYMENT_TYPES } from '../../data/payments'
 import { formatDate, formatCurrency, formatRelative } from '../../utils/format'
+import { propertyPath } from '../../utils/paths'
 
 /**
  * One grocery order, and the buttons that move it along.
@@ -127,7 +128,7 @@ export default function GroceryDetail() {
               },
               {
                 label: 'Property',
-                value: <Link to={`/admin/properties/${order.propertyId}`}>{order.propertyName}</Link>,
+                value: <Link to={propertyPath({ id: order.propertyId, propertyId: order.propertyId })}>{order.propertyName}</Link>,
               },
               { label: 'Host', value: order.hostName },
               { label: 'Store', value: order.store },

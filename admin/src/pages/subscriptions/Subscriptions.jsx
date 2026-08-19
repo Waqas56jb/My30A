@@ -84,7 +84,7 @@ export default function Subscriptions() {
 
   const mrr = table.rows
     .filter((r) => r.status === 'active')
-    .reduce((sum, r) => sum + r.amount, 0)
+    .reduce((sum, r) => sum + (Number(r.amount) || 0), 0)
 
   return (
     <div className="apage">

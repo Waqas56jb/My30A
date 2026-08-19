@@ -11,12 +11,15 @@ import {
 } from '../../components/common/AdminUI'
 import { RankBars } from '../../components/charts/Charts'
 import ReviewDecisionModal from '../../components/modals/ReviewDecisionModal'
+import AccountModals from '../../components/accounts/AccountModals'
 import { useLoad } from '../../hooks/useTable'
+import { useAccountManage } from '../../hooks/useAccountManage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAdmin } from '../../context/AdminContext'
 import * as api from '../../services/adminApi'
 import { PARTNER_STATUSES, TRACKED_EVENTS, NOT_TRACKED, partnerCtr } from '../../data/partners'
 import { formatDate, formatNumber, formatShortDate } from '../../utils/format'
+import { useCanonicalSlug } from '../../hooks/useCanonicalSlug'
 
 /**
  * One partner: the application, the listing, and the referral numbers.
@@ -29,9 +32,11 @@ export default function PartnerDetail() {
   const { id } = useParams()
   const { pushToast } = useAdmin()
   const { data, loading, error, reload } = useLoad(() => api.getPartner(id), [id])
+  const manage = useAccountManage('partner', { onDone: reload })
   const [decision, setDecision] = useState(null)
   const [busy, setBusy] = useState(false)
 
+  useCanonicalSlug(id, data?.partner?.slug, '/admin/partners')
   useDocumentTitle(data?.partner?.name || 'Partner')
 
   if (loading) return <SkeletonPage />
@@ -85,10 +90,16 @@ export default function PartnerDetail() {
         actions={
           <>
             <StatusPill map={PARTNER_STATUSES} value={partner.status} />
+            <Button size="sm" variant="secondary" icon="edit" onClick={() => manage.setEditRow(partner)}>
+              Edit
+            </Button>
             {partner.status === 'pending' && (
               <>
                 <Button size="sm" icon="checkCircle" onClick={() => setDecision('approve')}>Approve</Button>
                 <Button size="sm" variant="danger" icon="x" onClick={() => setDecision('reject')}>Reject</Button>
+                <Button size="sm" variant="danger" icon="lock" onClick={() => manage.setBlockRow(partner)}>
+                  Block
+                </Button>
               </>
             )}
             {partner.status === 'approved' && (
@@ -119,14 +130,24 @@ export default function PartnerDetail() {
                 >
                   {partner.published ? 'Unpublish' : 'Publish'}
                 </Button>
-                <Button size="sm" variant="danger" icon="alert" onClick={() => setDecision('suspend')}>
-                  Suspend
+                <Button size="sm" variant="danger" icon="lock" onClick={() => manage.setBlockRow(partner)}>
+                  Block
                 </Button>
               </>
             )}
             {['rejected', 'suspended'].includes(partner.status) && (
-              <Button size="sm" icon="refresh" onClick={() => setDecision('reinstate')}>Return to review</Button>
+              <>
+                <Button size="sm" icon="checkCircle" onClick={() => manage.setBlockRow(partner)}>
+                  Unblock
+                </Button>
+                <Button size="sm" variant="secondary" icon="refresh" onClick={() => setDecision('reinstate')}>
+                  Return to review
+                </Button>
+              </>
             )}
+            <Button size="sm" variant="ghost" icon="trash" onClick={() => manage.setDeleteRow(partner)}>
+              Delete
+            </Button>
           </>
         }
       />
@@ -295,6 +316,7 @@ export default function PartnerDetail() {
         onClose={() => setDecision(null)}
         onConfirm={decide}
       />
+      <AccountModals manage={manage} />
     </div>
   )
 }

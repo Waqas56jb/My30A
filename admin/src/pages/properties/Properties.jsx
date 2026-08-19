@@ -7,6 +7,7 @@ import { useTable } from '../../hooks/useTable'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
 import { PROPERTY_STATUSES } from '../../data/properties'
+import { propertyPath, hostPath } from '../../utils/paths'
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
@@ -29,7 +30,7 @@ export default function Properties() {
         <span className="tone-row" style={{ flexWrap: 'nowrap' }}>
           <Thumb photoId={row.images?.[0]} name={row.name} alt="" size={44} />
           <span style={{ minWidth: 0 }}>
-            <Link to={`/admin/properties/${row.id}`} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
+            <Link to={propertyPath(row)} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
               {row.name}
             </Link>
             <span style={{ display: 'block', fontSize: 'var(--fs-micro)', color: 'var(--ink-500)' }}>
@@ -43,7 +44,7 @@ export default function Properties() {
       key: 'hostName',
       label: 'Host',
       render: (row) => (
-        <Link to={`/admin/hosts/${row.hostId}`} onClick={(e) => e.stopPropagation()}>
+        <Link to={hostPath({ id: row.hostId })} onClick={(e) => e.stopPropagation()}>
           {row.hostName}
         </Link>
       ),
@@ -90,7 +91,7 @@ export default function Properties() {
           loading={table.loading}
           error={table.error}
           onRetry={table.reload}
-          rowTo={(row) => `/admin/properties/${row.id}`}
+          rowTo={propertyPath}
           caption="Properties"
           empty={{ icon: 'key', title: 'No properties match those filters' }}
         />

@@ -131,7 +131,11 @@ export default function EventDetail() {
                   style={{ minHeight: 260 }}
                 />
                 <p className="u-small u-muted" style={{ marginTop: 'var(--sp-3)' }}>
-                  {event.address} · {formatDistance(event.distance)} from {property?.name}
+                  {[event.address, event.location].filter(Boolean).join(' · ')
+                    || 'Scenic Highway 30A'}
+                  {event.distance != null && property?.name
+                    ? ` · ${formatDistance(event.distance)} from ${property.name}`
+                    : ''}
                 </p>
               </Section>
             </div>

@@ -141,6 +141,9 @@ export const pluralize = (count, singular, plural = `${singular}s`) =>
 /** Tiny classnames helper. */
 export const cx = (...parts) => parts.filter(Boolean).join(' ')
 
+/** Underscore labels from the API (`super_admin`) without crashing on a missing value. */
+export const humanize = (value) => String(value ?? '').replace(/_/g, ' ') || '—'
+
 /** Stable-ish id for locally created records. */
 let seq = 0
 export const makeId = (prefix = 'id') => `${prefix}_${Date.now().toString(36)}_${(seq += 1)}`

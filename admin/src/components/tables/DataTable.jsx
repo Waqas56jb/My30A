@@ -41,9 +41,17 @@ export default function DataTable({
   if (error) return <ErrorState error={error} onRetry={onRetry} />
   if (!list.length) return <InlineEmpty {...empty} />
 
+  const fromControl = (event) =>
+    Boolean(event.target.closest?.('button, a, input, select, textarea, label'))
+
   const activate = (row) => {
     if (onRowClick) onRowClick(row)
     else if (rowTo) navigate(rowTo(row))
+  }
+
+  const onActivate = (event, row) => {
+    if (fromControl(event)) return
+    activate(row)
   }
 
   const interactive = !!(rowTo || onRowClick)
@@ -55,34 +63,43 @@ export default function DataTable({
 
     return (
       <div className="dcards">
-        {list.map((row) => {
-          const Wrapper = interactive ? 'button' : 'div'
-          return (
-            <Wrapper
-              key={rowKey(row)}
-              type={interactive ? 'button' : undefined}
-              className={cx('dcard', interactive && 'dcard--link')}
-              onClick={interactive ? () => activate(row) : undefined}
-            >
-              <span className="dcard__head">
-                <span className="dcard__title">
-                  {primary.render ? primary.render(row) : row[primary.key]}
-                </span>
-                {interactive && <Icon name="chevronRight" size={16} className="dcard__go" />}
+        {list.map((row) => (
+          <div
+            key={rowKey(row)}
+            className={cx('dcard', interactive && 'dcard--link')}
+            role={interactive ? 'link' : undefined}
+            tabIndex={interactive ? 0 : undefined}
+            onClick={interactive ? (event) => onActivate(event, row) : undefined}
+            onKeyDown={
+              interactive
+                ? (event) => {
+                    if (fromControl(event)) return
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      activate(row)
+                    }
+                  }
+                : undefined
+            }
+          >
+            <span className="dcard__head">
+              <span className="dcard__title">
+                {primary.render ? primary.render(row) : row[primary.key]}
               </span>
-              <span className="dcard__fields">
-                {rest.map((column) => (
-                  <span className="dcard__field" key={column.key}>
-                    <span className="dcard__label">{column.label}</span>
-                    <span className="dcard__value">
-                      {column.render ? column.render(row) : (row[column.key] ?? '—')}
-                    </span>
+              {interactive && <Icon name="chevronRight" size={16} className="dcard__go" />}
+            </span>
+            <span className="dcard__fields">
+              {rest.map((column) => (
+                <span className="dcard__field" key={column.key}>
+                  <span className="dcard__label">{column.label}</span>
+                  <span className="dcard__value">
+                    {column.render ? column.render(row) : (row[column.key] ?? '—')}
                   </span>
-                ))}
-              </span>
-            </Wrapper>
-          )
-        })}
+                </span>
+              ))}
+            </span>
+          </div>
+        ))}
       </div>
     )
   }
@@ -126,11 +143,12 @@ export default function DataTable({
             <tr
               key={rowKey(row)}
               className={cx(interactive && 'is-clickable')}
-              onClick={interactive ? () => activate(row) : undefined}
+              onClick={interactive ? (event) => onActivate(event, row) : undefined}
               tabIndex={interactive ? 0 : undefined}
               onKeyDown={
                 interactive
                   ? (e) => {
+                      if (fromControl(e)) return
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault()
                         activate(row)

@@ -2,7 +2,10 @@ import { Link } from 'react-router-dom'
 import { SearchBar, FilterChips } from '../../components/ui/Form'
 import { PageHeader, Panel, StatusPill, Money } from '../../components/common/AdminUI'
 import DataTable, { Pagination, TableToolbar } from '../../components/tables/DataTable'
+import AccountActions from '../../components/accounts/AccountActions'
+import AccountModals from '../../components/accounts/AccountModals'
 import { useTable } from '../../hooks/useTable'
+import { useAccountManage } from '../../hooks/useAccountManage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
 import { HOST_STATUSES, SUBSCRIPTION_STATUSES } from '../../data/hosts'
@@ -23,6 +26,7 @@ const STATUS_FILTERS = [
 export default function Hosts() {
   useDocumentTitle('Hosts')
   const table = useTable(api.getHosts, { initial: { filters: { status: 'all' } } })
+  const manage = useAccountManage('host', { onDone: table.reload })
 
   const columns = [
     {
@@ -67,13 +71,18 @@ export default function Hosts() {
       hideOn: 'card',
       render: (row) => formatShortDate(row.subscription?.nextBillingDate),
     },
+    {
+      key: 'actions',
+      label: '',
+      render: (row) => <AccountActions kind="host" row={row} manage={manage} />,
+    },
   ]
 
   return (
     <div className="apage">
       <PageHeader
         title="Hosts"
-        subtitle="Property owners and managers. Approving a host is what lets their properties go live and their guests get an experience."
+        subtitle="Filter by status, then edit, block or remove a host from this list."
       />
 
       <Panel flush>
@@ -111,6 +120,7 @@ export default function Hosts() {
           onPage={table.setPage}
         />
       </Panel>
+      <AccountModals manage={manage} />
     </div>
   )
 }

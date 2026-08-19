@@ -1,13 +1,70 @@
 import { api } from './api'
 import { track, ANALYTICS_EVENTS, trackPartnerClick, trackPartnerView } from './analytics'
+import { connectNotifications } from './realtime'
+import { showBrowserNotification, restorePushIfGranted } from './pushClient'
 
 export const setFailureMode = () => {}
 export const getFailureMode = () => false
 export const failOnce = () => {}
 export const setLatency = () => {}
 export function resetMockData() {}
-export function subscribeToNotifications() {
-  return () => {}
+
+function shapeNotification(n) {
+  const createdAt = n.createdAt ?? n.created_at ?? n.at ?? null
+  return {
+    ...n,
+    read: Boolean(n.read),
+    createdAt,
+    at: n.at ?? createdAt,
+    type: String(n.type ?? 'info').toLowerCase(),
+    title: n.title ?? 'Notification',
+    message: n.message ?? '',
+    link: n.link ?? null,
+  }
+}
+
+export function subscribeToNotifications(onNotification) {
+  restorePushIfGranted()
+  const seen = new Set()
+  let primed = false
+
+  const deliver = (raw) => {
+    const notification = shapeNotification({ ...raw, read: raw.read ?? false })
+    if (notification.id) {
+      if (seen.has(notification.id)) return
+      seen.add(notification.id)
+    }
+    onNotification?.(notification)
+    showBrowserNotification(notification)
+  }
+
+  const stopSocket = connectNotifications(deliver)
+
+  const poll = async () => {
+    try {
+      const items = await getNotifications()
+      if (!primed) {
+        items.forEach((item) => {
+          if (item.id) seen.add(item.id)
+        })
+        primed = true
+        return
+      }
+      items
+        .filter((item) => item.id && !seen.has(item.id))
+        .reverse()
+        .forEach(deliver)
+    } catch {
+      /* keep the shell up even if the inbox is briefly unreachable */
+    }
+  }
+  poll()
+  const timer = window.setInterval(poll, 12000)
+
+  return () => {
+    stopSocket()
+    window.clearInterval(timer)
+  }
 }
 export function appendMessage() {}
 export const listGuests = async () => []
@@ -349,11 +406,7 @@ export async function getSavedPlaces(ids = []) {
 
 export async function getNotifications() {
   const data = await api('/notifications')
-  return (data.items ?? data).map((n) => ({
-    ...n,
-    read: n.read,
-    at: n.created_at ?? n.at,
-  }))
+  return (data.items ?? data).map(shapeNotification)
 }
 
 export async function markNotificationRead(id) {

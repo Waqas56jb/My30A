@@ -14,10 +14,11 @@ export const NOTIFICATION_CHANNELS = {
 }
 
 export const NOTIFICATION_STATUSES = {
-  sent: { label: 'Sent', tone: 'success' },
-  scheduled: { label: 'Scheduled', tone: 'info' },
-  draft: { label: 'Draft', tone: 'muted' },
+  sent: { label: 'Sent', tone: 'ok' },
+  partial: { label: 'Partial', tone: 'warn' },
   failed: { label: 'Failed', tone: 'danger' },
+  scheduled: { label: 'Scheduled', tone: 'info' },
+  draft: { label: 'Draft', tone: 'sand' },
 }
 
 const SEED = [

@@ -79,6 +79,14 @@ export function WorkspaceProvider({ children }) {
     loadProperties()
     recommendationService.listRecommendations().then(setRecommendations).catch(() => {})
     notificationService.listNotifications().then(setNotifications).catch(() => {})
+    return notificationService.subscribe((notification) => {
+      setNotifications((list) =>
+        list.some((row) => row.id && row.id === notification.id)
+          ? list
+          : [notification, ...list],
+      )
+      pushToast({ tone: 'info', title: notification.title, message: notification.message })
+    })
   }, [isAuthed, loadProperties])
 
   // Keep a valid property selected at all times.

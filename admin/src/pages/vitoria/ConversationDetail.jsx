@@ -9,6 +9,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
 import { CONVERSATION_STATUSES } from '../../data/conversations'
 import { formatDate, formatTime } from '../../utils/format'
+import { propertyPath } from '../../utils/paths'
 
 /**
  * One conversation.
@@ -93,7 +94,7 @@ export default function ConversationDetail() {
               },
               {
                 label: 'Property',
-                value: <Link to={`/admin/properties/${data.propertyId}`}>{data.propertyName}</Link>,
+                value: <Link to={propertyPath({ id: data.propertyId, propertyId: data.propertyId })}>{data.propertyName}</Link>,
               },
               { label: 'Topic', value: data.topic },
               { label: 'Language', value: data.language },

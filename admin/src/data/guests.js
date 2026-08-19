@@ -17,6 +17,11 @@ export const GUEST_STATUSES = {
   inactive: { label: 'Inactive', tone: 'neutral', icon: 'circle' },
 }
 
+export const GUEST_ACCOUNT_STATUSES = {
+  active: { label: 'Active', tone: 'success', icon: 'checkCircle' },
+  blocked: { label: 'Blocked', tone: 'danger', icon: 'lock' },
+}
+
 export function guestStatus(guest) {
   if (!guest.checkIn || !guest.checkOut) return 'inactive'
   if (guest.checkOut < TODAY) return 'checked_out'

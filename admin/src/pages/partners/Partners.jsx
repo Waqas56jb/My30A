@@ -4,11 +4,15 @@ import { SearchBar, FilterChips, Select, Field } from '../../components/ui/Form'
 import { PageHeader, Panel, StatusPill, Money, ReferralNote, Stat } from '../../components/common/AdminUI'
 import DataTable, { Pagination, TableToolbar } from '../../components/tables/DataTable'
 import { Thumb } from '../../components/ui/SmartImage'
+import AccountActions from '../../components/accounts/AccountActions'
+import AccountModals from '../../components/accounts/AccountModals'
 import { useTable, useLoad } from '../../hooks/useTable'
+import { useAccountManage } from '../../hooks/useAccountManage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
 import { PARTNER_STATUSES } from '../../data/partners'
 import { formatNumber, formatRelative } from '../../utils/format'
+import { partnerPath } from '../../utils/paths'
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All' },
@@ -29,6 +33,7 @@ export default function Partners() {
   useDocumentTitle('Partners')
   const table = useTable(api.getPartners, { initial: { filters: { status: 'all', categoryId: '' } } })
   const categories = useLoad(() => api.getCategories(), [])
+  const manage = useAccountManage('partner', { onDone: table.reload })
 
   const pending = table.rows.filter((p) => p.status === 'pending').length
 
@@ -41,7 +46,7 @@ export default function Partners() {
         <span className="tone-row" style={{ flexWrap: 'nowrap' }}>
           <Thumb photoId={row.images?.[0]} name={row.name} alt="" />
           <span style={{ minWidth: 0 }}>
-            <Link to={`/admin/partners/${row.id}`} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
+            <Link to={partnerPath(row)} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
               {row.name}
             </Link>
             <span style={{ display: 'block', fontSize: 'var(--fs-micro)', color: 'var(--ink-500)' }}>
@@ -78,13 +83,18 @@ export default function Partners() {
     },
     { key: 'status', label: 'Status', render: (row) => <StatusPill map={PARTNER_STATUSES} value={row.status} /> },
     { key: 'submittedAt', label: 'Applied', hideOn: 'card', render: (row) => formatRelative(row.submittedAt) },
+    {
+      key: 'actions',
+      label: '',
+      render: (row) => <AccountActions kind="partner" row={row} manage={manage} />,
+    },
   ]
 
   return (
     <div className="apage">
       <PageHeader
         title="Partners"
-        subtitle="Local businesses listed in the guest app. Approving one makes it visible; nothing here books, schedules or charges on their behalf."
+        subtitle="Filter by status or category, then edit, block or remove a listing from this list."
       />
 
       {pending > 0 && table.filters.status !== 'pending' && (
@@ -133,7 +143,7 @@ export default function Partners() {
           loading={table.loading}
           error={table.error}
           onRetry={table.reload}
-          rowTo={(row) => `/admin/partners/${row.id}`}
+          rowTo={partnerPath}
           caption="Partners"
           empty={{ icon: 'sparkles', title: 'No partners match those filters' }}
         />
@@ -146,6 +156,7 @@ export default function Partners() {
           onPage={table.setPage}
         />
       </Panel>
+      <AccountModals manage={manage} />
     </div>
   )
 }

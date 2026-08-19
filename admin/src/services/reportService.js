@@ -7,6 +7,25 @@ import { formatCurrency } from '../utils/format'
  * screen, so a downloaded file matches what the operator is looking at.
  */
 
+const EMPTY_STATS = {
+  views: 0,
+  websiteClicks: 0,
+  phoneClicks: 0,
+  directionsClicks: 0,
+  conversations: 0,
+  serviceRequests: 0,
+}
+
+const statsOf = (row) => ({ ...EMPTY_STATS, ...(row?.stats && typeof row.stats === 'object' ? row.stats : {}) })
+
+const cell = (value) => {
+  if (value == null || value === '') return '—'
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return String(value)
+  return '—'
+}
+
+const money = (value) => formatCurrency(value ?? 0)
+
 export const REPORTS = [
   {
     id: 'guest_activity', name: 'Guest Activity Report', icon: 'users',
@@ -62,65 +81,87 @@ export const toCsv = (columns, rows) =>
 
 /** Build the rows for a report from the data already loaded on the page. */
 export function buildReport(id, data) {
-  const { guests = [], hosts = [], partners = [], orders = [], transfers = [], payments = [], conversations = [], categories = [] } = data
+  const guests = Array.isArray(data?.guests) ? data.guests : []
+  const hosts = Array.isArray(data?.hosts) ? data.hosts : []
+  const partners = Array.isArray(data?.partners) ? data.partners : []
+  const orders = Array.isArray(data?.orders) ? data.orders : []
+  const transfers = Array.isArray(data?.transfers) ? data.transfers : []
+  const payments = Array.isArray(data?.payments) ? data.payments : []
+  const conversations = Array.isArray(data?.conversations) ? data.conversations : []
+  const categories = Array.isArray(data?.categories) ? data.categories : []
 
   switch (id) {
     case 'guest_activity':
-      return guests.map((g) => [
-        g.name, g.email, g.propertyName, g.hostName, g.checkIn, g.checkOut,
-        g.stats.conversations, g.stats.serviceRequests, g.rating ?? '—',
-      ])
+      return guests.map((g) => {
+        const stats = statsOf(g)
+        return [
+          cell(g?.name), cell(g?.email), cell(g?.propertyName), cell(g?.hostName),
+          cell(g?.checkIn), cell(g?.checkOut), cell(stats.conversations),
+          cell(stats.serviceRequests), cell(g?.rating ?? '—'),
+        ]
+      })
 
     case 'host':
-      return hosts.map((h) => [
-        h.name, h.company ?? '—', h.status, h.propertyCount,
-        h.subscription.planId, h.subscription.status, h.subscription.nextBillingDate,
-        h.satisfaction ?? '—',
-      ])
+      return hosts.map((h) => {
+        const subscription = h?.subscription && typeof h.subscription === 'object' ? h.subscription : {}
+        return [
+          cell(h?.name), cell(h?.company ?? '—'), cell(h?.status), cell(h?.propertyCount),
+          cell(subscription.planId ?? subscription.planName ?? '—'),
+          cell(subscription.status ?? '—'),
+          cell(subscription.nextBillingDate ?? '—'),
+          cell(h?.satisfaction ?? '—'),
+        ]
+      })
 
     case 'partner':
       return partners.map((p) => {
-        const clicks = p.stats.websiteClicks + p.stats.phoneClicks + p.stats.directionsClicks
+        const stats = statsOf(p)
+        const clicks = Number(stats.websiteClicks) + Number(stats.phoneClicks) + Number(stats.directionsClicks)
+        const views = Number(stats.views) || 0
         return [
-          p.name, p.categoryId, p.status, p.stats.views, p.stats.websiteClicks,
-          p.stats.phoneClicks, p.stats.directionsClicks,
-          p.stats.views ? `${((clicks / p.stats.views) * 100).toFixed(1)}%` : '0%',
+          cell(p?.name), cell(p?.categoryId), cell(p?.status), cell(views),
+          cell(stats.websiteClicks), cell(stats.phoneClicks), cell(stats.directionsClicks),
+          views ? `${((clicks / views) * 100).toFixed(1)}%` : '0%',
         ]
       })
 
     case 'grocery':
       return orders.map((o) => [
-        o.id, o.guestName, o.propertyName, o.deliveryDate,
-        formatCurrency(o.actualAmount ?? o.estimatedAmount), formatCurrency(o.serviceFee),
-        o.tipAmount ? formatCurrency(o.tipAmount) : '—', o.status,
+        cell(o?.id), cell(o?.guestName), cell(o?.propertyName), cell(o?.deliveryDate),
+        money(o?.actualAmount ?? o?.estimatedAmount), money(o?.serviceFee),
+        o?.tipAmount ? money(o.tipAmount) : '—', cell(o?.status),
       ])
 
     case 'transfer':
       return transfers.map((t) => [
-        t.id, t.guestName, t.airport, t.flightNumber, `${t.pickupDate} ${t.pickupTime}`,
-        t.vehicleName, formatCurrency(t.amount), t.status,
+        cell(t?.id), cell(t?.guestName), cell(t?.airport), cell(t?.flightNumber),
+        cell([t?.pickupDate, t?.pickupTime].filter(Boolean).join(' ') || '—'),
+        cell(t?.vehicleName), money(t?.amount), cell(t?.status),
       ])
 
     case 'revenue':
       return payments.map((p) => [
-        p.id, p.guestName, p.type, formatCurrency(p.amount), p.status, p.method,
-        String(p.createdAt).slice(0, 10), p.relatedLabel ?? '—',
+        cell(p?.id), cell(p?.guestName ?? p?.guest_name), cell(p?.type),
+        money(p?.amount ?? p?.amount_cents), cell(p?.status), cell(p?.method),
+        cell(String(p?.createdAt ?? p?.created_at ?? '').slice(0, 10) || '—'),
+        cell(p?.relatedLabel ?? p?.related_label ?? '—'),
       ])
 
     case 'vitoria':
       return conversations.map((c) => [
-        c.id, c.guestName, c.propertyName, c.topic, c.language, c.messageCount, c.status,
-        c.createdRequest?.label ?? '—',
+        cell(c?.id), cell(c?.guestName), cell(c?.propertyName), cell(c?.topic),
+        cell(c?.language), cell(c?.messageCount), cell(c?.status),
+        cell(c?.createdRequest?.label ?? '—'),
       ])
 
     case 'referral':
-      return categories.map((cat) => {
-        const inCategory = partners.filter((p) => p.categoryId === cat.id)
-        const sum = (field) => inCategory.reduce((total, p) => total + p.stats[field], 0)
+      return categories.filter(Boolean).map((cat) => {
+        const inCategory = partners.filter((p) => p?.categoryId === cat?.id)
+        const sum = (field) => inCategory.reduce((total, p) => total + Number(statsOf(p)[field] || 0), 0)
         const views = sum('views')
         const clicks = sum('websiteClicks') + sum('phoneClicks') + sum('directionsClicks')
         return [
-          cat.name, inCategory.length, views, sum('websiteClicks'), sum('phoneClicks'),
+          cell(cat?.name), inCategory.length, views, sum('websiteClicks'), sum('phoneClicks'),
           sum('directionsClicks'), views ? `${((clicks / views) * 100).toFixed(1)}%` : '0%',
         ]
       })
@@ -154,6 +195,12 @@ export function downloadCsv(filename, csv) {
 
 export const generate = async (id, data) => {
   const report = reportById(id)
-  const rows = buildReport(id, data)
+  let rows = []
+  try {
+    const built = buildReport(id, data)
+    rows = Array.isArray(built) ? built : []
+  } catch {
+    rows = []
+  }
   return { report, rows, csv: toCsv(report.columns, rows), generatedAt: new Date().toISOString() }
 }

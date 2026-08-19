@@ -2,23 +2,33 @@ import { Link } from 'react-router-dom'
 import { SearchBar, FilterChips } from '../../components/ui/Form'
 import { PageHeader, Panel, StatusPill } from '../../components/common/AdminUI'
 import DataTable, { Pagination, TableToolbar } from '../../components/tables/DataTable'
+import AccountActions from '../../components/accounts/AccountActions'
+import AccountModals from '../../components/accounts/AccountModals'
 import { useTable } from '../../hooks/useTable'
+import { useAccountManage } from '../../hooks/useAccountManage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import * as api from '../../services/adminApi'
-import { GUEST_STATUSES } from '../../data/guests'
+import { GUEST_STATUSES, GUEST_ACCOUNT_STATUSES } from '../../data/guests'
 import { formatShortDate, formatRelative } from '../../utils/format'
 
 const STATUS_FILTERS = [
-  { value: 'all', label: 'All' },
+  { value: 'all', label: 'All stays' },
   { value: 'active', label: 'In residence' },
   { value: 'upcoming', label: 'Upcoming' },
   { value: 'checked_out', label: 'Checked out' },
   { value: 'inactive', label: 'Inactive' },
 ]
 
+const ACCOUNT_FILTERS = [
+  { value: 'all', label: 'All accounts' },
+  { value: 'active', label: 'Active' },
+  { value: 'blocked', label: 'Blocked' },
+]
+
 export default function Guests() {
   useDocumentTitle('Guests')
-  const table = useTable(api.getGuests, { initial: { filters: { status: 'all' } } })
+  const table = useTable(api.getGuests, { initial: { filters: { status: 'all', account: 'all' } } })
+  const manage = useAccountManage('guest', { onDone: table.reload })
 
   const columns = [
     {
@@ -41,12 +51,22 @@ export default function Guests() {
     { key: 'hostName', label: 'Host', hideOn: 'card' },
     { key: 'checkIn', label: 'Arrival', render: (row) => formatShortDate(row.checkIn) },
     { key: 'checkOut', label: 'Departure', render: (row) => formatShortDate(row.checkOut) },
-    { key: 'status', label: 'Status', render: (row) => <StatusPill map={GUEST_STATUSES} value={row.status} /> },
+    { key: 'status', label: 'Stay', render: (row) => <StatusPill map={GUEST_STATUSES} value={row.status} /> },
+    {
+      key: 'accountStatus',
+      label: 'Account',
+      render: (row) => <StatusPill map={GUEST_ACCOUNT_STATUSES} value={row.accountStatus ?? 'active'} />,
+    },
     {
       key: 'lastActiveAt',
       label: 'Last activity',
       hideOn: 'card',
       render: (row) => formatRelative(row.lastActiveAt),
+    },
+    {
+      key: 'actions',
+      label: '',
+      render: (row) => <AccountActions kind="guest" row={row} manage={manage} />,
     },
   ]
 
@@ -54,7 +74,7 @@ export default function Guests() {
     <div className="apage">
       <PageHeader
         title="Guests"
-        subtitle="Everyone with a stay on 30A — past, present and booked. Status is worked out from the stay dates, so it is never out of date."
+        subtitle="Filter by stay or account, then edit, block or remove anyone from this list."
       />
 
       <Panel flush>
@@ -69,7 +89,13 @@ export default function Guests() {
             options={STATUS_FILTERS}
             value={table.filters.status}
             onChange={(value) => table.setFilter('status', value)}
-            label="Filter by status"
+            label="Filter by stay"
+          />
+          <FilterChips
+            options={ACCOUNT_FILTERS}
+            value={table.filters.account}
+            onChange={(value) => table.setFilter('account', value)}
+            label="Filter by account"
           />
         </TableToolbar>
 
@@ -96,6 +122,7 @@ export default function Guests() {
           onPage={table.setPage}
         />
       </Panel>
+      <AccountModals manage={manage} />
     </div>
   )
 }

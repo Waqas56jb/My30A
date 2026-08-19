@@ -10,6 +10,19 @@ import { track, ANALYTICS_EVENTS } from '../../services/analytics'
 import { cx, formatTime, formatDistance } from '../../utils/format'
 import { eventCover, placeCover } from '../../utils/listingImages'
 
+function decodeHtml(value) {
+  if (value == null || value === '') return value
+  return String(value)
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&#(\d+);/g, (_, num) => String.fromCharCode(Number(num)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+}
+
 const routeFor = (kind, id) => {
   switch (kind) {
     case 'restaurant':
@@ -44,14 +57,16 @@ function MiniCard({ card }) {
   if (!entity && !card?.name) return null
   const item = entity ?? card
   const kind = card.kind ?? item.type
-  const name = item.name ?? item.title
+  const name = decodeHtml(item.name ?? item.title)
   const isEvent = kind === 'event' || Boolean(item.title && item.date)
   const cover = isEvent ? eventCover(item) : placeCover({ ...item, type: kind })
-  const sub = isEvent
-    ? [item.time, item.location].filter(Boolean).join(' · ')
-    : [item.subtitle ?? item.cuisine ?? item.category, item.distance !== undefined ? formatDistance(item.distance) : item.location]
-        .filter(Boolean)
-        .join(' · ')
+  const sub = decodeHtml(
+    isEvent
+      ? [item.time, item.location].filter(Boolean).join(' · ')
+      : [item.subtitle ?? item.cuisine ?? item.category, item.distance !== undefined ? formatDistance(item.distance) : item.location]
+          .filter(Boolean)
+          .join(' · '),
+  )
 
   return (
     <Link to={routeFor(kind, card.refId)} className="mini-card">

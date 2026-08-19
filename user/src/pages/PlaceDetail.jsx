@@ -264,7 +264,11 @@ export default function PlaceDetail({ kind = 'partner' }) {
                   style={{ minHeight: 260 }}
                 />
                 <p className="u-small u-muted" style={{ marginTop: 'var(--sp-3)' }}>
-                  {place.address} · {formatDistance(place.distance)} from {property?.name}
+                  {[place.address, place.location].filter(Boolean).join(' · ')
+                    || 'Scenic Highway 30A'}
+                  {place.distance != null && property?.name
+                    ? ` · ${formatDistance(place.distance)} from ${property.name}`
+                    : ''}
                 </p>
               </Section>
             </div>

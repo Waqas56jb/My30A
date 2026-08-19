@@ -13,6 +13,7 @@ import { useAdmin } from '../../context/AdminContext'
 import * as api from '../../services/adminApi'
 import { PARTNER_STATUSES } from '../../data/partners'
 import { formatNumber } from '../../utils/format'
+import { partnerPath } from '../../utils/paths'
 
 const VISIBILITY = [
   { value: 'all', label: 'All' },
@@ -54,7 +55,7 @@ export default function Listings() {
         <span className="tone-row" style={{ flexWrap: 'nowrap' }}>
           <Thumb photoId={row.images?.[0]} name={row.name} alt="" />
           <span style={{ minWidth: 0 }}>
-            <Link to={`/admin/partners/${row.id}`} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
+            <Link to={partnerPath(row)} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
               {row.name}
             </Link>
             <span style={{ display: 'block', fontSize: 'var(--fs-micro)', color: 'var(--ink-500)' }}>
@@ -128,7 +129,7 @@ export default function Listings() {
             </Button>
           </span>
         ) : (
-          <Button size="sm" variant="ghost" to={`/admin/partners/${row.id}`}>Review</Button>
+          <Button size="sm" variant="ghost" to={partnerPath(row)}>Review</Button>
         ),
     },
   ]

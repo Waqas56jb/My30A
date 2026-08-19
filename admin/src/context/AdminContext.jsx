@@ -1,9 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import * as auth from '../services/authService'
 import * as api from '../services/adminApi'
 import { makeId } from '../utils/format'
-
-const AdminContext = createContext(null)
+import { AdminContext } from './adminState'
 
 /**
  * Session, toasts and the attention counters the sidebar badges read from.

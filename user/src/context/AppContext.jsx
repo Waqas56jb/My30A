@@ -224,12 +224,20 @@ export function AppProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    if (!account) {
+      setNotifications([])
+      return undefined
+    }
     refreshNotifications()
     return api.subscribeToNotifications((notification) => {
-      setNotifications((list) => [notification, ...list])
+      setNotifications((list) =>
+        list.some((row) => row.id && row.id === notification.id)
+          ? list
+          : [notification, ...list],
+      )
       pushToast({ tone: 'info', title: notification.title, message: notification.message })
     })
-  }, [refreshNotifications, pushToast])
+  }, [account, refreshNotifications, pushToast])
 
   const markNotificationRead = useCallback(async (id) => {
     setNotifications((list) => list.map((n) => (n.id === id ? { ...n, read: true } : n)))
@@ -291,6 +299,12 @@ export function AppProvider({ children }) {
       const merged = { ...prev, ...next }
       writeStore(STORAGE_KEYS.settings, merged)
       api.setFailureMode(merged.simulateErrors)
+      if (Object.prototype.hasOwnProperty.call(next, 'pushEnabled')) {
+        import('../services/pushClient').then(({ enablePush, disablePush }) => {
+          if (merged.pushEnabled) enablePush().catch(() => {})
+          else disablePush().catch(() => {})
+        })
+      }
       return merged
     })
   }, [])

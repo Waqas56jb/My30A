@@ -11,6 +11,7 @@ import { createTransferRequest, getTransfer, listTransfers } from './transferSer
 import { getPricingCatalog } from './pricingService.js';
 import { listNotifications } from './notificationService.js';
 import type { AuthAccount } from '../types/index.js';
+import { normalizeVitoriaMarkdown, decodeHtmlEntities } from '../utils/vitoriaMarkdown.js';
 
 const promptPath = resolve(process.cwd(), 'src/prompts/vitoria.txt');
 
@@ -30,11 +31,11 @@ const TOOLS: ConciergeTool[] = [
   { type: 'function', name: 'get_property_access_information', description: 'Door code and access notes for the authorized stay only', parameters: { type: 'object', properties: {} } },
   { type: 'function', name: 'get_local_categories', description: 'Enabled local-guide categories', parameters: { type: 'object', properties: {} } },
   { type: 'function', name: 'get_guest_activity', description: 'This guest orders and notifications only', parameters: { type: 'object', properties: {} } },
-  { type: 'function', name: 'get_local_partners', description: 'Approved partners only', parameters: { type: 'object', properties: { category: { type: 'string' } } } },
+  { type: 'function', name: 'get_local_partners', description: 'Approved partners only. Returns at most 6 listings. Recommend 3–4 in markdown bullets with /partners/{id} links.', parameters: { type: 'object', properties: { category: { type: 'string' }, search: { type: 'string' } } } },
   { type: 'function', name: 'get_partner_details', description: 'One approved partner. Do not promise availability.', parameters: { type: 'object', properties: { id: { type: 'string' } }, required: ['id'] } },
-  { type: 'function', name: 'get_restaurants', description: 'Restaurant directory with id, image, booking_platform, booking_url, and phone. Never assume OpenTable. Use id in markdown links.', parameters: { type: 'object', properties: { search: { type: 'string' } } } },
-  { type: 'function', name: 'get_events', description: 'Local events with id, image, date, time, and location. Use id in markdown links.', parameters: { type: 'object', properties: {} } },
-  { type: 'function', name: 'get_beaches', description: 'Public beach and bay access with id, image, and location. Use id in markdown links.', parameters: { type: 'object', properties: { search: { type: 'string' } } } },
+  { type: 'function', name: 'get_restaurants', description: 'Restaurant directory with id, booking_platform, booking_url, and phone. Returns at most 6. Recommend 3–4. Never assume OpenTable. Link /restaurants/{id}.', parameters: { type: 'object', properties: { search: { type: 'string' } } } },
+  { type: 'function', name: 'get_events', description: 'Local events with id, date, time, and location. Returns at most 6. Use when=tonight for this evening. Recommend 3–4. Link /events/{id}.', parameters: { type: 'object', properties: { when: { type: 'string', description: 'tonight | today | weekend | upcoming' }, search: { type: 'string' } } } },
+  { type: 'function', name: 'get_beaches', description: 'Public beach and bay access. Returns at most 6. Recommend 3–4. Link /beaches/{id}.', parameters: { type: 'object', properties: { search: { type: 'string' } } } },
   { type: 'function', name: 'get_weather', description: '30A weather', parameters: { type: 'object', properties: {} } },
   { type: 'function', name: 'get_orders', description: 'This guest grocery and transfer requests', parameters: { type: 'object', properties: {} } },
   { type: 'function', name: 'get_order_status', description: 'One order', parameters: { type: 'object', properties: { kind: { type: 'string' }, id: { type: 'string' } }, required: ['kind', 'id'] } },
@@ -75,17 +76,26 @@ async function runTool(name: string, args: Record<string, unknown>, account: Aut
       return { groceries: g, transfers: t, notifications: n };
     }
     case 'get_local_partners':
-      return (await listPartnersPublic({ category: args.category as string | undefined })).slice(0, 12).map(compactListing);
+      return listingPayload(
+        (await listPartnersPublic({
+          category: args.category as string | undefined,
+          search: args.search as string | undefined,
+        })).slice(0, 6).map(compactListing),
+      );
     case 'get_partner_details': {
       const partner = await getPartnerPublic(String(args.id));
       return { ...compactListing(partner as Record<string, unknown>), contactOnly: true, note: 'Guest must contact the partner directly. Do not quote a price as a booking.' };
     }
     case 'get_restaurants':
-      return (await listRestaurants({ search: args.search as string | undefined })).slice(0, 12).map(compactListing);
+      return listingPayload(
+        (await listRestaurants({ search: args.search as string | undefined })).slice(0, 6).map(compactListing),
+      );
     case 'get_events':
-      return (await listEvents()).slice(0, 16).map(compactListing);
+      return listingPayload(
+        pickEvents(await listEvents({ search: args.search as string | undefined }) as Record<string, unknown>[], args.when).slice(0, 6).map(compactListing),
+      );
     case 'get_beaches':
-      return (await listBeaches(String(args.search ?? ''))).slice(0, 12).map(compactListing);
+      return listingPayload((await listBeaches(String(args.search ?? ''))).slice(0, 6).map(compactListing));
     case 'get_weather':
       return getWeather();
     case 'get_orders': {
@@ -207,7 +217,7 @@ export async function sendMessage(account: AuthAccount, text: string, conversati
         return result;
       },
     });
-    replyText = turn.text;
+    replyText = normalizeVitoriaMarkdown(turn.text);
     toolCalls = turn.toolCalls;
   } catch (error) {
     logger.error({ err: error }, 'Vitoria turn failed');
@@ -246,13 +256,15 @@ function compactListing(row: Record<string, unknown>) {
   return {
     id: row.id,
     slug: row.slug,
-    name: row.name ?? row.title,
-    title: row.title ?? row.name,
+    name: decodeHtmlEntities(String(row.name ?? row.title ?? '')),
+    title: decodeHtmlEntities(String(row.title ?? row.name ?? '')),
     type: row.type,
     cuisine: row.cuisine,
     category: row.category,
-    location: row.location,
-    shortDescription: row.shortDescription,
+    location: decodeHtmlEntities(String(row.location ?? '')),
+    shortDescription: row.shortDescription
+      ? decodeHtmlEntities(String(row.shortDescription))
+      : row.shortDescription,
     image: listingImage(row.image),
     phone: row.phone,
     website: row.website,
@@ -262,6 +274,70 @@ function compactListing(row: Record<string, unknown>) {
     time: row.time,
     externalUrl: row.externalUrl,
   };
+}
+
+function listingPayload(listings: unknown[]) {
+  return {
+    listings,
+    recommendAtMost: 4,
+    format:
+      'Reply with a ### heading and 3–4 markdown bullets only. Each bullet: - **[Name](/type/{id})** — one reason. *town or time*. Do not list every listing.',
+  };
+}
+
+function chicagoToday() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+}
+
+function eventDateKey(row: Record<string, unknown>) {
+  const raw = row.date ?? row.event_date;
+  if (!raw) return '';
+  const value = String(raw);
+  if (/^\d{4}-\d{2}-\d{2}/.test(value)) return value.slice(0, 10);
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10);
+}
+
+function weekendKeys(today: string) {
+  const [year, month, day] = today.split('-').map(Number);
+  const keys: string[] = [];
+  for (let i = 0; i < 8; i += 1) {
+    const noonUtc = new Date(Date.UTC(year, month - 1, day + i, 17));
+    const weekday = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Chicago',
+      weekday: 'short',
+    }).format(noonUtc);
+    const iso = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Chicago',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(noonUtc);
+    if (weekday === 'Sat' || weekday === 'Sun') keys.push(iso);
+  }
+  return keys.slice(0, 2);
+}
+
+function pickEvents(events: Record<string, unknown>[], when: unknown) {
+  const key = String(when ?? '').toLowerCase();
+  const today = chicagoToday();
+  const dated = events.filter((row) => eventDateKey(row));
+  const upcoming = dated.filter((row) => eventDateKey(row) >= today);
+  if (key === 'tonight' || key === 'today') {
+    const sameDay = dated.filter((row) => eventDateKey(row) === today);
+    return sameDay.length ? sameDay : upcoming;
+  }
+  if (key === 'weekend') {
+    const weekend = weekendKeys(today);
+    const match = dated.filter((row) => weekend.includes(eventDateKey(row)));
+    return match.length ? match : upcoming;
+  }
+  return upcoming.length ? upcoming : events;
 }
 
 function toolKind(name: string) {
@@ -274,7 +350,13 @@ function toolKind(name: string) {
 
 function asRows(result: unknown): Record<string, unknown>[] {
   if (Array.isArray(result)) return result.filter((row) => row && typeof row === 'object') as Record<string, unknown>[];
-  if (result && typeof result === 'object' && 'id' in (result as object)) return [result as Record<string, unknown>];
+  if (result && typeof result === 'object') {
+    const listings = (result as { listings?: unknown }).listings;
+    if (Array.isArray(listings)) {
+      return listings.filter((row) => row && typeof row === 'object') as Record<string, unknown>[];
+    }
+    if ('id' in result) return [result as Record<string, unknown>];
+  }
   return [];
 }
 
@@ -329,7 +411,7 @@ function extractCards(text: string, gathered: Array<{ name: string; result: unkn
     catalog.slice(0, 4).forEach(take);
   }
 
-  return picked.slice(0, 6).map((entry) => entry.card);
+  return picked.slice(0, 4).map((entry) => entry.card);
 }
 
 function extractActions(toolCalls: unknown[]) {
@@ -456,6 +538,13 @@ export async function listAdminConversations(hostId?: string) {
   return rows.map(decorateConversation);
 }
 
+type ConversationRecord = Record<string, unknown> & {
+  guest_id: string | null;
+  property_id: string | null;
+  topic: string;
+  createdRequest: { kind: string; label: string } | null;
+};
+
 export async function getAdminConversation(id: string) {
   const { rows } = await query(`${CONVERSATION_LIST_SQL} where c.id = $1`, [id]);
   if (!rows[0]) return null;
@@ -478,13 +567,19 @@ export async function getAdminConversation(id: string) {
   };
 }
 
-function decorateConversation(row: Record<string, unknown>) {
+function decorateConversation(row: Record<string, unknown>): ConversationRecord {
   const first = String(row.first_message ?? row.title ?? '');
   const topic = String(row.topic || inferTopic(first));
   let createdRequest = null;
   if (row.created_transfer) createdRequest = { kind: 'transfer', label: 'Airport transfer request' };
   else if (row.created_grocery) createdRequest = { kind: 'grocery', label: 'Grocery delivery request' };
-  return { ...row, topic, createdRequest };
+  return {
+    ...row,
+    guest_id: row.guest_id != null ? String(row.guest_id) : null,
+    property_id: row.property_id != null ? String(row.property_id) : null,
+    topic,
+    createdRequest,
+  };
 }
 
 export async function vitoriaKpis() {

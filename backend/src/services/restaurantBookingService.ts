@@ -85,7 +85,7 @@ export async function upsertRestaurantCatalog(exec: { query: QueryFn } = { query
          last_verified_date = excluded.last_verified_date,
          booking_notes = excluded.booking_notes,
          booking_provider = excluded.booking_platform,
-         opentable_url = case when excluded.booking_platform = 'opentable' then excluded.booking_url else restaurants.opentable_url end,
+         opentable_url = case when excluded.booking_platform = 'opentable' then excluded.booking_url else null end,
          external_booking_url = excluded.booking_url,
          updated_at = now()`,
       [
@@ -166,6 +166,7 @@ export async function updateRestaurant(id: string, input: Record<string, unknown
        booking_provider = coalesce($10, booking_provider),
        opentable_url = case
          when $10 = 'opentable' then coalesce($11, opentable_url)
+         when $10 is not null then null
          else opentable_url
        end,
        external_booking_url = case
@@ -267,7 +268,10 @@ function shapeAdminRestaurant(row: Record<string, unknown>) {
     featured: row.featured,
     active: row.active,
     bookingPlatform: row.booking_platform ?? row.booking_provider ?? null,
-    bookingUrl: row.booking_url ?? row.opentable_url ?? row.external_booking_url ?? null,
+    bookingUrl: row.booking_url
+      ?? ((row.booking_platform ?? row.booking_provider) === 'opentable' ? row.opentable_url : null)
+      ?? row.external_booking_url
+      ?? null,
     lastVerifiedDate,
     bookingNotes: row.booking_notes ?? null,
     stale: ageDays == null || ageDays > BOOKING_STALE_AFTER_DAYS,

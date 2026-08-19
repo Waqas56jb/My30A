@@ -22,7 +22,7 @@ const AUDIENCE_FILTERS = [
   ...Object.entries(NOTIFICATION_AUDIENCES).map(([value, meta]) => ({ value, label: meta.label })),
 ]
 
-const EMPTY = { title: '', message: '', audience: 'guest', channel: 'push', status: 'draft' }
+const EMPTY = { title: '', message: '', audience: 'guest', channel: 'both' }
 
 export default function Notifications() {
   useDocumentTitle('Notifications')
@@ -46,24 +46,41 @@ export default function Notifications() {
     }
     setBusy(true)
     try {
-      await api.createNotification(composing)
+      const result = await api.createNotification({
+        title: composing.title.trim(),
+        message: composing.message.trim(),
+        audience: composing.audience,
+        channel: composing.channel,
+      })
+      const emailed = Number(result?.emailed ?? 0)
+      const recipients = Number(result?.recipients ?? 0)
+      const failed = Number(result?.failed ?? 0)
+      const tone =
+        result?.status === 'failed' ? 'error' : 'success'
       pushToast({
-        tone: 'success',
-        title: 'Notification saved as a draft',
-        message: 'Nothing is sent in this build — no push or email provider is connected.',
+        tone,
+        title:
+          result?.status === 'failed'
+            ? 'Could not send'
+            : result?.status === 'partial'
+              ? 'Sent with some failures'
+              : 'Notification sent',
+        message: [
+          recipients ? `${recipients} in-app` : null,
+          emailed ? `${emailed} email` : composing.channel === 'push' ? null : `${emailed} email`,
+          failed ? `${failed} failed` : null,
+          result?.failureReason,
+        ]
+          .filter(Boolean)
+          .join(' · '),
       })
       setComposing(null)
       reload()
     } catch (err) {
-      pushToast({ tone: 'error', title: 'Could not save', message: err.message })
+      pushToast({ tone: 'error', title: 'Could not send', message: err.message })
     } finally {
       setBusy(false)
     }
-  }
-
-  const markRead = async (notification) => {
-    await api.markNotificationRead(notification.id)
-    reload()
   }
 
   const rows = Array.isArray(data) ? data : []
@@ -77,15 +94,14 @@ export default function Notifications() {
       />
 
       <Callout icon="info">
-        <strong style={{ display: 'block', marginBottom: 2 }}>Nothing sends in this build</strong>
-        There is no push service and no mail provider connected. Creating a notification records it
-        as a draft so the workflow and the copy can be reviewed.
+        In-app alerts go out immediately. Email uses the SMTP account on the backend.
+        Browser push appears if the recipient has allowed notifications in their app.
       </Callout>
 
       <div className="astats">
         <Stat label="Notifications" value={rows.length} icon="bell" tone="sea" />
         <Stat label="Sent" value={rows.filter((n) => n.status === 'sent').length} icon="send" tone="success" />
-        <Stat label="Scheduled" value={rows.filter((n) => n.status === 'scheduled').length} icon="clock" tone="info" />
+        <Stat label="Partial" value={rows.filter((n) => n.status === 'partial').length} icon="clock" tone="info" />
         <Stat label="Failed" value={rows.filter((n) => n.status === 'failed').length} icon="alert" tone="danger" />
       </div>
 
@@ -135,24 +151,19 @@ export default function Notifications() {
                     <span style={{ minWidth: 0, flex: '1 1 auto' }}>
                       <span className="activity__title">
                         {n.title}
-                        {!n.read && n.status === 'sent' && (
-                          <span
-                            aria-label="Unread"
-                            style={{
-                              display: 'inline-block', width: 7, height: 7, marginLeft: 7,
-                              borderRadius: '50%', background: 'var(--sand-500)',
-                            }}
-                          />
-                        )}
                       </span>
                       <span className="activity__body">{n.message}</span>
                       <span className="chiplist" style={{ marginTop: 7 }}>
                         <Badge tone={audienceMeta?.tone}>{audienceMeta?.label}</Badge>
                         <Badge>{channelMeta?.label}</Badge>
                         <StatusPill map={NOTIFICATION_STATUSES} value={n.status} />
-                        {n.status === 'sent' && (
+                        {n.status !== 'failed' && (
                           <span className="u-xs u-muted">
-                            {formatNumber(n.recipients)} recipients · {formatNumber(n.opened)} opened
+                            {formatNumber(n.recipients)} in-app
+                            {(n.channel === 'email' || n.channel === 'both') && (
+                              <> · {formatNumber(n.emailed ?? 0)} emailed</>
+                            )}
+                            {n.opened > 0 && <> · {formatNumber(n.opened)} opened</>}
                           </span>
                         )}
                         {n.scheduledFor && (
@@ -165,11 +176,6 @@ export default function Notifications() {
                       <span className="activity__meta">
                         {formatRelative(n.sentAt ?? n.createdAt)}
                       </span>
-                      {!n.read && n.status === 'sent' && (
-                        <Button size="sm" variant="ghost" onClick={() => markRead(n)}>
-                          Mark read
-                        </Button>
-                      )}
                     </span>
                   </li>
                 )
@@ -186,7 +192,7 @@ export default function Notifications() {
         footer={
           <>
             <Button variant="secondary" onClick={() => setComposing(null)} disabled={busy}>Cancel</Button>
-            <Button onClick={create} loading={busy} icon="check">Save draft</Button>
+            <Button onClick={create} loading={busy} icon="send">Send now</Button>
           </>
         }
       >

@@ -12,6 +12,7 @@ import {
 } from '../../components/common/AdminUI'
 import DataTable from '../../components/tables/DataTable'
 import { useLoad } from '../../hooks/useTable'
+import { useCanonicalSlug } from '../../hooks/useCanonicalSlug'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAdmin } from '../../context/AdminContext'
 import * as api from '../../services/adminApi'
@@ -29,6 +30,7 @@ export default function PropertyDetail() {
   const [form, setForm] = useState(null)
   const [busy, setBusy] = useState(false)
 
+  useCanonicalSlug(id, data?.property?.slug, '/admin/properties')
   useDocumentTitle(data?.property?.name || 'Property')
 
   if (loading) return <SkeletonPage />

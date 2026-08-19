@@ -79,6 +79,7 @@ export default function NotificationBell() {
         aria-haspopup="dialog"
         onClick={() => {
           unlockNotificationSound()
+          import('../../services/pushClient').then(({ enablePush }) => enablePush().catch(() => {}))
           setOpen((value) => !value)
           dismissArriving()
         }}

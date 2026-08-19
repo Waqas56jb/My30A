@@ -28,6 +28,7 @@ function Row({ icon, title, sub, control, onClick }) {
 }
 
 const NOTIFICATION_SETTINGS = [
+  ['pushNotifications', 'Push notifications', 'Browser and lock-screen alerts for listing and performance updates.'],
   ['emailNotifications', 'Email notifications', 'Everything below, delivered to your inbox.'],
   ['performanceReports', 'Performance reports', 'A monthly summary of views and taps.'],
   ['profileUpdates', 'Profile updates', 'When your listing status or details change.'],

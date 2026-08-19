@@ -21,6 +21,8 @@ export async function createProperty(account: AuthAccount, input: { name: string
 }
 
 export async function updateProperty(account: AuthAccount, id: string, patch: Record<string, unknown>) {
+  const current = await getHostProperty(account, id);
+  const propertyId = String(current.id);
   const allowed = ['name','description','address','city','type','wifi','check_in','check_out','access','parking','emergency','rules','photos','branding','vitoria','guest_access','status','amenities'];
   const sets: string[] = [];
   const values: unknown[] = [];
@@ -30,23 +32,23 @@ export async function updateProperty(account: AuthAccount, id: string, patch: Re
     values.push(typeof value === 'object' ? JSON.stringify(value) : value);
     sets.push(`${col} = $${values.length}`);
   }
-  if (!sets.length) return getHostProperty(account, id);
-  values.push(id, account.role === 'ADMIN' ? undefined : account.id);
+  if (!sets.length) return current;
+  values.push(propertyId, account.role === 'ADMIN' ? undefined : account.id);
   const ownerClause = account.role === 'ADMIN' ? '' : ` and host_id = $${values.length}`;
   const { rows } = await query(
     `update properties set ${sets.join(', ')} where id = $${sets.length + 1}${ownerClause} returning *`,
-    account.role === 'ADMIN' ? [...values.slice(0, -1), id] : values,
+    account.role === 'ADMIN' ? [...values.slice(0, -1), propertyId] : values,
   );
   if (!rows[0]) throw errors.notFound('that property');
-  await recordAudit({ actorId: account.id, actorRole: account.role, action: 'Updated property', entity: 'Property', entityId: id });
+  await recordAudit({ actorId: account.id, actorRole: account.role, action: 'Updated property', entity: 'Property', entityId: propertyId });
   return rows[0];
 }
 
 export async function getHostProperty(account: AuthAccount, id: string) {
   const { rows } = await query(
     account.role === 'ADMIN'
-      ? `select * from properties where id = $1 and deleted_at is null`
-      : `select * from properties where id = $1 and host_id = $2 and deleted_at is null`,
+      ? `select * from properties where deleted_at is null and (id::text = $1 or slug = $1)`
+      : `select * from properties where deleted_at is null and host_id = $2 and (id::text = $1 or slug = $1)`,
     account.role === 'ADMIN' ? [id] : [id, account.id],
   );
   if (!rows[0]) throw errors.notFound('that property');

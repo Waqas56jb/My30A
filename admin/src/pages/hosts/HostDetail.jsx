@@ -9,7 +9,9 @@ import {
 } from '../../components/common/AdminUI'
 import DataTable from '../../components/tables/DataTable'
 import ReviewDecisionModal from '../../components/modals/ReviewDecisionModal'
+import AccountModals from '../../components/accounts/AccountModals'
 import { useLoad } from '../../hooks/useTable'
+import { useAccountManage } from '../../hooks/useAccountManage'
 import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAdmin } from '../../context/AdminContext'
 import * as api from '../../services/adminApi'
@@ -18,11 +20,13 @@ import { PROPERTY_STATUSES } from '../../data/properties'
 import { GUEST_STATUSES } from '../../data/guests'
 import { PAYMENT_STATUSES } from '../../data/payments'
 import { formatDate, formatShortDate } from '../../utils/format'
+import { propertyPath } from '../../utils/paths'
 
 export default function HostDetail() {
   const { id } = useParams()
   const { pushToast } = useAdmin()
   const { data, loading, error, reload } = useLoad(() => api.getHost(id), [id])
+  const manage = useAccountManage('host', { onDone: reload })
   const [decision, setDecision] = useState(null)
   const [busy, setBusy] = useState(false)
 
@@ -67,20 +71,36 @@ export default function HostDetail() {
         actions={
           <>
             <StatusPill map={HOST_STATUSES} value={host.status} />
+            <Button size="sm" variant="secondary" icon="edit" onClick={() => manage.setEditRow(host)}>
+              Edit
+            </Button>
             {host.status === 'pending' && (
               <>
                 <Button size="sm" icon="checkCircle" onClick={() => setDecision('approve')}>Approve</Button>
                 <Button size="sm" variant="danger" icon="x" onClick={() => setDecision('reject')}>Reject</Button>
+                <Button size="sm" variant="danger" icon="lock" onClick={() => manage.setBlockRow(host)}>
+                  Block
+                </Button>
               </>
             )}
             {host.status === 'active' && (
-              <Button size="sm" variant="danger" icon="alert" onClick={() => setDecision('suspend')}>
-                Suspend
+              <Button size="sm" variant="danger" icon="lock" onClick={() => manage.setBlockRow(host)}>
+                Block
               </Button>
             )}
             {['suspended', 'rejected'].includes(host.status) && (
-              <Button size="sm" icon="refresh" onClick={() => setDecision('reinstate')}>Return to review</Button>
+              <>
+                <Button size="sm" icon="checkCircle" onClick={() => manage.setBlockRow(host)}>
+                  Unblock
+                </Button>
+                <Button size="sm" variant="secondary" icon="refresh" onClick={() => setDecision('reinstate')}>
+                  Return to review
+                </Button>
+              </>
             )}
+            <Button size="sm" variant="ghost" icon="trash" onClick={() => manage.setDeleteRow(host)}>
+              Delete
+            </Button>
           </>
         }
       />
@@ -154,7 +174,7 @@ export default function HostDetail() {
             { key: 'status', label: 'Status', render: (r) => <StatusPill map={PROPERTY_STATUSES} value={r.status} /> },
           ]}
           rows={properties}
-          rowTo={(r) => `/admin/properties/${r.id}`}
+          rowTo={propertyPath}
           caption="Properties for this host"
           empty={{ icon: 'key', title: 'No properties yet', body: 'This host has not added a property.' }}
         />
@@ -215,6 +235,7 @@ export default function HostDetail() {
         onClose={() => setDecision(null)}
         onConfirm={decide}
       />
+      <AccountModals manage={manage} />
     </div>
   )
 }

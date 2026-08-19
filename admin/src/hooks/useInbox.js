@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import * as api from '../services/adminApi'
 import { playNotificationSound, unlockNotificationSound } from '../utils/notifySound'
+import { connectNotifications } from '../services/realtime'
+import { restorePushIfGranted, showBrowserNotification } from '../services/pushClient'
 
 const POLL_MS = 12000
 
@@ -56,14 +58,20 @@ export function useInbox() {
   }, [])
 
   useEffect(() => {
+    restorePushIfGranted()
     reload()
     const timer = window.setInterval(reload, POLL_MS)
     const onFocus = () => reload()
     const onUnlock = () => unlockNotificationSound()
+    const stopSocket = connectNotifications((notification) => {
+      showBrowserNotification(notification)
+      reload()
+    })
     window.addEventListener('focus', onFocus)
     window.addEventListener('visibilitychange', onFocus)
     window.addEventListener('pointerdown', onUnlock, { once: true })
     return () => {
+      stopSocket()
       window.clearInterval(timer)
       window.clearTimeout(arrivingTimer.current)
       window.removeEventListener('focus', onFocus)

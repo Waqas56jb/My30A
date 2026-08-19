@@ -14,6 +14,7 @@ import * as api from '../../services/adminApi'
 import { TRACKED_EVENTS, NOT_TRACKED, partnerCtr } from '../../data/partners'
 import { series } from '../../data/analytics'
 import { formatNumber } from '../../utils/format'
+import { partnerPath } from '../../utils/paths'
 
 /**
  * Partner referral analytics.
@@ -128,7 +129,7 @@ export default function PartnerAnalytics() {
               label: 'Partner',
               primary: true,
               render: (r) => (
-                <Link to={`/admin/partners/${r.id}`} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
+                <Link to={partnerPath(r)} className="dtable__strong" onClick={(e) => e.stopPropagation()}>
                   {r.name}
                 </Link>
               ),
@@ -156,7 +157,7 @@ export default function PartnerAnalytics() {
             },
           ]}
           rows={rows.slice(0, 20)}
-          rowTo={(r) => `/admin/partners/${r.id}`}
+          rowTo={partnerPath}
           caption="Top partners by referral activity"
           empty={{ icon: 'sparkles', title: 'No approved partners yet' }}
         />

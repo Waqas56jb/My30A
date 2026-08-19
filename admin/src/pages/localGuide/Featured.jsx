@@ -12,6 +12,7 @@ import { useDocumentTitle } from '../../hooks/useDocumentTitle'
 import { useAdmin } from '../../context/AdminContext'
 import * as api from '../../services/adminApi'
 import { formatNumber } from '../../utils/format'
+import { partnerPath } from '../../utils/paths'
 
 /**
  * Featured places.
@@ -105,7 +106,7 @@ export default function Featured() {
                   <span className="mediacard__flag">Featured</span>
                 </div>
                 <div className="mediacard__body">
-                  <Link to={`/admin/partners/${partner.id}`} className="mediacard__name">
+                  <Link to={partnerPath(partner)} className="mediacard__name">
                     {partner.name}
                   </Link>
                   <span className="mediacard__meta">{categoryName(partner.categoryId)}</span>
@@ -137,7 +138,7 @@ export default function Featured() {
               <li className="activity__row" key={partner.id}>
                 <Thumb photoId={partner.images?.[0]} name={partner.name} alt="" />
                 <span style={{ minWidth: 0, flex: '1 1 auto' }}>
-                  <Link to={`/admin/partners/${partner.id}`} className="activity__title" style={{ textDecoration: 'none' }}>
+                  <Link to={partnerPath(partner)} className="activity__title" style={{ textDecoration: 'none' }}>
                     {partner.name}
                   </Link>
                   <span className="activity__body">

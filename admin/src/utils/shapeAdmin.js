@@ -181,6 +181,7 @@ export function shapeGuest(row) {
     language: LANG[language] ?? language,
     propertyId: pick(row, 'propertyId', 'property_id') ?? '',
     propertyName: pick(row, 'propertyName', 'property_name') ?? 'No stay on file',
+    propertySlug: pick(row, 'propertySlug', 'property_slug') ?? '',
     hostId: pick(row, 'hostId', 'host_id') ?? '',
     hostName: pick(row, 'hostName', 'host_name') ?? '—',
     checkIn: isoDay(checkIn) ?? checkIn ?? null,
@@ -194,7 +195,10 @@ export function shapeGuest(row) {
     lastActiveAt: pick(row, 'lastActiveAt', 'last_active_at', 'updated_at', 'created_at') ?? null,
     joinedAt: pick(row, 'joinedAt', 'created_at') ?? null,
     rating: pick(row, 'rating') ?? null,
-    status: stayStatus(checkIn, checkOut, pick(row, 'stay_status', 'status')),
+    languageCode: language,
+    notes: pick(row, 'notes') ?? '',
+    accountStatus: pick(row, 'accountStatus', 'account_status') === 'blocked' ? 'blocked' : 'active',
+    status: stayStatus(checkIn, checkOut, pick(row, 'stay_status')),
     stats: { ...emptyStats, ...asObject(row.stats) },
   }
 }
@@ -241,6 +245,7 @@ export function shapePartner(row) {
   return {
     ...row,
     name: pick(row, 'name') ?? 'Untitled listing',
+    ownerName: pick(row, 'ownerName', 'owner_name', 'owner') ?? '',
     owner: pick(row, 'owner', 'ownerName', 'owner_name') ?? '—',
     town: pick(row, 'town', 'city') ?? '—',
     address: pick(row, 'address') ?? '—',
@@ -250,6 +255,7 @@ export function shapePartner(row) {
     hours: asText(pick(row, 'hours'), '—'),
     social: { instagram: '—', ...asObject(row.social) },
     categoryId: pick(row, 'categoryId', 'category_id') ?? null,
+    slug: pick(row, 'slug') ?? '',
     status: pick(row, 'status') ?? 'pending',
     published: Boolean(pick(row, 'published')),
     featured: Boolean(pick(row, 'featured')),
@@ -289,6 +295,7 @@ export function shapeProperty(row) {
     currentGuests: Number(pick(row, 'currentGuests', 'current_guests') ?? 0),
     recommendations: Number(pick(row, 'recommendations') ?? 0),
     createdAt: pick(row, 'createdAt', 'created_at') ?? null,
+    slug: pick(row, 'slug') ?? '',
     images: asImages(row),
     wifi: {
       ...wifi,
@@ -491,3 +498,23 @@ export function shapeTransferRow(row) {
 
 export const shapeOrders = (rows) => asArray(rows).map(shapeOrder).filter(Boolean)
 export const shapeTransfers = (rows) => asArray(rows).map(shapeTransferRow).filter(Boolean)
+
+export function shapeAudit(row) {
+  if (!row || typeof row !== 'object') return null
+  const metadata = pick(row, 'detail', 'metadata')
+  return {
+    id: pick(row, 'id'),
+    userId: pick(row, 'userId', 'user_id', 'actor_id') ?? '',
+    userName: pick(row, 'userName', 'user_name', 'actor_name') ?? '—',
+    userRole: pick(row, 'userRole', 'user_role', 'actor_role') ?? '',
+    action: pick(row, 'action') ?? '—',
+    entity: pick(row, 'entity') ?? '—',
+    entityId: pick(row, 'entityId', 'entity_id') ?? '—',
+    status: pick(row, 'status') ?? 'success',
+    detail: typeof metadata === 'string' ? metadata : '',
+    ip: pick(row, 'ip') || '—',
+    at: pick(row, 'at', 'created_at', 'createdAt') ?? null,
+  }
+}
+
+export const shapeAudits = (rows) => asArray(rows).map(shapeAudit).filter(Boolean)

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AdminLayout from './components/layout/AdminLayout'
-import ErrorBoundary from './components/ErrorBoundary'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import RequireAdmin from './components/common/RequireAdmin'
 import { SkeletonPage } from './components/ui/Skeleton'
 

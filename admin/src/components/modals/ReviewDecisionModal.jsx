@@ -6,7 +6,7 @@ import { Field, Textarea } from '../ui/Form'
 import { cx } from '../../utils/format'
 
 /**
- * Approve / reject / suspend, in one dialog.
+ * Approve / reject / suspend / block, in one dialog.
  *
  * A rejection or a suspension *must* carry a reason: the partner or host sees
  * it, and it is the only way they know what to fix before resubmitting. An
@@ -62,6 +62,22 @@ export default function ReviewDecisionModal({
       confirm: 'Move to review',
       tone: 'primary',
       icon: 'refresh',
+      needsReason: false,
+    },
+    block: {
+      title: `Block ${subject}?`,
+      body: 'They will not be able to sign in until you unblock them. Their records stay on file.',
+      confirm: 'Block account',
+      tone: 'danger',
+      icon: 'lock',
+      needsReason: true,
+    },
+    restore: {
+      title: `Unblock ${subject}?`,
+      body: 'They will be able to sign in again. Nothing else about the account is changed.',
+      confirm: 'Unblock',
+      tone: 'primary',
+      icon: 'checkCircle',
       needsReason: false,
     },
   }[decision] ?? {}

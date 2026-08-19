@@ -94,6 +94,22 @@ export function can(role: AdminRole | undefined, area: PermissionArea, minimum: 
 
 type LoginInput = { email: string; password: string; role: AppRole };
 
+function assertAccountAllowed(role: AppRole, row: Record<string, unknown>) {
+  const status = String(row.status ?? '');
+  const blocked =
+    (role === 'GUEST' && status === 'blocked') ||
+    (role === 'HOST' && (status === 'suspended' || status === 'rejected')) ||
+    (role === 'PARTNER' && (status === 'suspended' || status === 'rejected')) ||
+    (role === 'ADMIN' && status === 'suspended');
+  if (blocked) {
+    throw new AppError(
+      403,
+      'ACCOUNT_BLOCKED',
+      'This account has been blocked. Contact My30A if you think that is a mistake.',
+    );
+  }
+}
+
 export async function loadAccount(role: AppRole, id: string): Promise<AuthAccount> {
   const table = ROLE_TABLE[role];
   const { rows } = await query<Record<string, unknown>>(
@@ -101,6 +117,7 @@ export async function loadAccount(role: AppRole, id: string): Promise<AuthAccoun
     [id],
   );
   if (!rows[0]) throw errors.authRequired();
+  assertAccountAllowed(role, rows[0]);
   return hydrateAccount(role, rows[0]);
 }
 
@@ -114,6 +131,7 @@ export async function login({ email, password, role }: LoginInput): Promise<{ to
   if (!row) throw new AppError(401, 'AUTH_INVALID', 'No account matches that email.', { field: 'email' });
   const ok = await verifyPassword(String(row.password_hash), password);
   if (!ok) throw new AppError(401, 'AUTH_INVALID', 'That password is not right.', { field: 'password' });
+  assertAccountAllowed(role, row);
 
   const account = await hydrateAccount(role, row);
   const token = signToken(account);

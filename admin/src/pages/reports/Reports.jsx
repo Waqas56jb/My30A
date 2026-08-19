@@ -81,7 +81,12 @@ export default function Reports() {
     key: `c${i}`,
     label,
     primary: i === 0,
-    render: (row) => row[i] ?? '—',
+    render: (row) => {
+      const value = Array.isArray(row) ? row[i] : row?.[i]
+      if (value == null || value === '') return '—'
+      if (typeof value === 'object') return '—'
+      return String(value)
+    },
   }))
 
   return (
@@ -172,7 +177,9 @@ export default function Reports() {
           <DataTable
             columns={previewColumns}
             rows={result.rows.slice(0, 50)}
-            rowKey={(row) => row.join('|')}
+            rowKey={(row, index) =>
+              Array.isArray(row) ? row.map((value) => (value == null ? '' : String(value))).join('|') : String(index)
+            }
             caption={result.report.name}
           />
         )}
