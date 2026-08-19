@@ -59,6 +59,10 @@ export function createApp() {
     }),
   );
 
+  app.get('/', (_req, res) => {
+    res.json({ service: 'my30a-host-backend', health: '/health' });
+  });
+
   app.get('/health', async (_req, res) => {
     const database = (await pingDatabase()) ? 'connected' : 'down';
     const openai = openaiHealth();
