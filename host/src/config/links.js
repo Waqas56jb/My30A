@@ -1,15 +1,9 @@
 /**
  * Where the guest app lives.
  *
- * The host panel and the guest app are deployed as two separate Vercel
- * projects, so the host panel cannot know the guest domain by itself. It is
- * configurable, with a sensible production default:
- *
- *   VITE_GUEST_APP_URL=https://my30a.com        (Vercel → Settings → Environment Variables)
- *
- * Nothing breaks if it is unset — the default below is used instead.
+ *   VITE_GUEST_APP_URL=https://my30a-user.vercel.app
  */
-const FALLBACK_ORIGIN = 'https://my30a.com'
+const FALLBACK_ORIGIN = import.meta.env.DEV ? 'http://localhost:5173' : 'https://my30a-user.vercel.app'
 
 /** Trailing slashes would produce `https://host//guest/x`. */
 const trim = (value) => String(value ?? '').replace(/\/+$/, '')

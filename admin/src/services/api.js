@@ -1,5 +1,7 @@
-const BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000'
-export const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || BASE
+const trim = (value) => String(value ?? '').replace(/\/+$/, '')
+const LIVE_API = 'https://my30a-server.vercel.app'
+const BASE = trim(import.meta.env.VITE_API_BASE_URL) || (import.meta.env.DEV ? 'http://localhost:4000' : LIVE_API)
+export const SOCKET_URL = trim(import.meta.env.VITE_SOCKET_URL) || BASE
 export const isLive = () => true
 
 const TOKEN_KEY = 'my30a.admin.token'

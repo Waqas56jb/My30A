@@ -9,17 +9,24 @@ const envPath = existsSync(resolve(process.cwd(), '.env'))
 
 dotenv.config({ path: envPath });
 
+const LIVE_USER = 'https://my30a-user.vercel.app'
+const LIVE_HOST = 'https://my30a-host.vercel.app'
+const LIVE_PARTNER = 'https://my30a-partner.vercel.app'
+const LIVE_ADMIN = 'https://my30a-admin.vercel.app'
+const LIVE_API = 'https://my30a-server.vercel.app'
+const LIVE_ORIGINS = [LIVE_USER, LIVE_HOST, LIVE_PARTNER, LIVE_ADMIN]
+const LOCAL_ORIGINS =
+  'http://localhost:5173,http://localhost:5180,http://localhost:5185,http://localhost:5190'
+
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(4000),
-  APP_URL: z.string().default('http://localhost:4000'),
-  CORS_ORIGINS: z.string().default(
-    'http://localhost:5173,http://localhost:5180,http://localhost:5185,http://localhost:5190',
-  ),
-  FRONTEND_URL: z.string().default('http://localhost:5173'),
-  HOST_URL: z.string().default('http://localhost:5180'),
-  PARTNER_URL: z.string().default('http://localhost:5185'),
-  ADMIN_URL: z.string().default('http://localhost:5190'),
+  APP_URL: z.string().default(process.env.VERCEL ? LIVE_API : 'http://localhost:4000'),
+  CORS_ORIGINS: z.string().default([...LIVE_ORIGINS, LOCAL_ORIGINS].join(',')),
+  FRONTEND_URL: z.string().default(process.env.VERCEL ? LIVE_USER : 'http://localhost:5173'),
+  HOST_URL: z.string().default(process.env.VERCEL ? LIVE_HOST : 'http://localhost:5180'),
+  PARTNER_URL: z.string().default(process.env.VERCEL ? LIVE_PARTNER : 'http://localhost:5185'),
+  ADMIN_URL: z.string().default(process.env.VERCEL ? LIVE_ADMIN : 'http://localhost:5190'),
   SOCKET_CORS_ORIGIN: z.string().optional(),
 
   SUPABASE_URL: z.string().min(1),
@@ -101,14 +108,30 @@ if (envIssues.length) {
 
 export const env: AppEnv = parsed.success ? parsed.data : schema.parse(placeholder);
 
-export const corsOrigins = env.CORS_ORIGINS.split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+export const corsOrigins = [
+  ...new Set([
+    ...env.CORS_ORIGINS.split(',').map((s) => s.trim()).filter(Boolean),
+    ...LIVE_ORIGINS,
+  ]),
+];
 
-export const socketOrigins = (env.SOCKET_CORS_ORIGIN ?? env.CORS_ORIGINS)
-  .split(',')
-  .map((s) => s.trim())
-  .filter(Boolean);
+export const socketOrigins = [
+  ...new Set([
+    ...(env.SOCKET_CORS_ORIGIN ?? env.CORS_ORIGINS).split(',').map((s) => s.trim()).filter(Boolean),
+    ...LIVE_ORIGINS,
+  ]),
+];
+
+export function isAllowedOrigin(origin?: string | null) {
+  if (!origin) return true
+  if (corsOrigins.includes(origin) || socketOrigins.includes(origin)) return true
+  try {
+    const { hostname } = new URL(origin)
+    return /^my30a-(user|host|partner|admin)(-[\w-]+)?\.vercel\.app$/.test(hostname)
+  } catch {
+    return false
+  }
+}
 
 export function requireServiceRole(): string {
   if (!env.SUPABASE_SERVICE_ROLE_KEY.trim()) {

@@ -1,6 +1,6 @@
 import type { Server as HttpServer } from 'node:http';
 import { Server } from 'socket.io';
-import { socketOrigins } from '../config/env.js';
+import { isAllowedOrigin } from '../config/env.js';
 import { logger } from '../config/logger.js';
 import { verifyToken } from '../services/authService.js';
 
@@ -12,7 +12,7 @@ export function getIo() {
 
 export function attachSockets(httpServer: HttpServer) {
   io = new Server(httpServer, {
-    cors: { origin: socketOrigins, credentials: true },
+    cors: { origin: (origin, cb) => cb(null, isAllowedOrigin(origin)), credentials: true },
   });
 
   io.use((socket, next) => {

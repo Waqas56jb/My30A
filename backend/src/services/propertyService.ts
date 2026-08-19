@@ -1,4 +1,5 @@
 import { query, withTransaction } from '../config/db.js';
+import { env } from '../config/env.js';
 import { errors } from '../utils/errors.js';
 import { randomToken, sha256 } from './authService.js';
 import { recordAudit } from './auditService.js';
@@ -85,7 +86,7 @@ export async function regenerateGuestAccess(account: AuthAccount, propertyId: st
     );
     await recordAudit({ actorId: account.id, actorRole: 'HOST', action: 'Regenerated guest access', entity: 'Property', entityId: propertyId }, client);
   });
-  return { token: raw, code, slug, url: `${process.env.FRONTEND_URL ?? 'http://localhost:5173'}/guest/${slug}` };
+  return { token: raw, code, slug, url: `${env.FRONTEND_URL.replace(/\/$/, '')}/guest/${slug}` };
 }
 
 export async function listHostGuests(hostId: string) {

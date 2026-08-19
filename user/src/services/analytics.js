@@ -64,8 +64,11 @@ export function track(event, properties = {}) {
     console.log(`%c[analytics] ${event}`, 'color:#2b7d7a;font-weight:600', record.properties)
   }
   subscribers.forEach((fn) => fn(record))
-  if (import.meta.env.VITE_API_BASE_URL) {
-    void fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/analytics/events`, {
+  const apiBase = String(
+    import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? '' : 'https://my30a-server.vercel.app'),
+  ).replace(/\/+$/, '')
+  if (apiBase) {
+    void fetch(`${apiBase}/api/v1/analytics/events`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ event: event, properties }),

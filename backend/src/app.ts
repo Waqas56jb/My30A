@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmetImport from 'helmet';
 import rateLimitImport from 'express-rate-limit';
 import { resolve } from 'node:path';
-import { corsOrigins, env, envIssues, envReady, hasServiceRole } from './config/env.js';
+import { env, envIssues, envReady, hasServiceRole, isAllowedOrigin } from './config/env.js';
 import { requestId } from './middleware/requestId.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { pingDatabase } from './config/db.js';
@@ -22,7 +22,7 @@ export function createApp() {
   }
   app.use(requestId);
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-  app.use(cors({ origin: corsOrigins, credentials: true }));
+  app.use(cors({ origin: (origin, cb) => cb(null, isAllowedOrigin(origin)), credentials: true }));
   app.use('/uploads', express.static(resolve(process.cwd(), 'uploads')));
   app.use('/api/v1/admin/me/avatar', express.json({ limit: '6mb' }));
   app.use(express.json({ limit: '1mb' }));
