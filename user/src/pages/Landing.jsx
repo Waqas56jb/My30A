@@ -11,6 +11,7 @@ import EventCard from '../components/cards/EventCard'
 import { HeroVideo, VideoPlayer } from '../components/Video'
 import { VIDEO_TITLE } from '../config/video'
 import { hero, img, PHOTO } from '../assets/images'
+import { hostSignupUrl, partnerRegisterUrl } from '../config/portals'
 import { useApp } from '../context/AppContext'
 import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
@@ -380,6 +381,63 @@ export default function Landing() {
           </div>
         </Section>
         )}
+
+        {/* ------------------- Become a host / Become a partner ------------------- */}
+        <Section
+          title="Grow with 30A"
+          subtitle="List a home, or bring your business to the guests already staying here"
+          id="join"
+        >
+          <div className="join-pair">
+            <a className="join-card" href={hostSignupUrl}>
+              <span className="join-card__media" aria-hidden="true">
+                <SmartImage photoId={PHOTO.houseLuxury} alt="" fill width={1200} />
+              </span>
+              <span className="join-card__scrim" aria-hidden="true" />
+              <span className="join-card__body">
+                <span className="join-card__kicker">For homeowners</span>
+                <span className="join-card__title">Become a host</span>
+                <span className="join-card__copy">
+                  Give every guest a concierge, WiFi, and door codes — without another round of texts.
+                  Vitoria handles the routine so you keep the relationship.
+                </span>
+                <span className="join-card__perks">
+                  <span>Property guide that never sleeps</span>
+                  <span>Grocery &amp; transfer requests in one place</span>
+                  <span>You stay in control of the stay</span>
+                </span>
+                <span className="join-card__cta">
+                  Open the host panel
+                  <Icon name="arrowUpRight" />
+                </span>
+              </span>
+            </a>
+
+            <a className="join-card join-card--gold" href={partnerRegisterUrl}>
+              <span className="join-card__media" aria-hidden="true">
+                <SmartImage photoId={PHOTO.patioLights} alt="" fill width={1200} />
+              </span>
+              <span className="join-card__scrim" aria-hidden="true" />
+              <span className="join-card__body">
+                <span className="join-card__kicker">For local businesses</span>
+                <span className="join-card__title">Become a partner</span>
+                <span className="join-card__copy">
+                  Golf carts, bonfires, boats, spa days — guests find you inside the stay, not after
+                  a Google spiral. You keep the booking. We make the introduction.
+                </span>
+                <span className="join-card__perks">
+                  <span>Shown to guests already on 30A</span>
+                  <span>You take the call and the payment</span>
+                  <span>No commission on what they book</span>
+                </span>
+                <span className="join-card__cta">
+                  Apply as a partner
+                  <Icon name="arrowUpRight" />
+                </span>
+              </span>
+            </a>
+          </div>
+        </Section>
 
         {/* ----------------------------- Final CTA --------------------------- */}
         <div className="band band--sand">

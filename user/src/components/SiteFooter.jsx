@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Icon from './ui/Icon'
+import { hostSignupUrl, partnerRegisterUrl } from '../config/portals'
 
 const COLUMNS = [
   {
@@ -23,6 +24,13 @@ const COLUMNS = [
       { to: '/help', label: 'Help & contact' },
     ],
   },
+  {
+    title: 'Work with us',
+    links: [
+      { href: hostSignupUrl, label: 'Become a host' },
+      { href: partnerRegisterUrl, label: 'Become a partner' },
+    ],
+  },
 ]
 
 export default function SiteFooter() {
@@ -42,11 +50,17 @@ export default function SiteFooter() {
       {COLUMNS.map((column) => (
         <div className="site-foot__col" key={column.title}>
           <h3>{column.title}</h3>
-          {column.links.map((link) => (
-            <Link key={link.to + link.label} to={link.to}>
-              {link.label}
-            </Link>
-          ))}
+          {column.links.map((link) =>
+            link.href ? (
+              <a key={link.href + link.label} href={link.href}>
+                {link.label}
+              </a>
+            ) : (
+              <Link key={link.to + link.label} to={link.to}>
+                {link.label}
+              </Link>
+            ),
+          )}
         </div>
       ))}
 

@@ -9,6 +9,12 @@ import { useLockBodyScroll } from '../../hooks/useLockBodyScroll'
 import { useOnEscape } from '../../hooks/useOnEscape'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { cx } from '../../utils/format'
+import { hostSignupUrl, partnerRegisterUrl } from '../../config/portals'
+
+const PORTALS = [
+  { href: hostSignupUrl, label: 'Host' },
+  { href: partnerRegisterUrl, label: 'Partner' },
+]
 
 /** Public site navigation — this is a website header, not app chrome. */
 const NAV = [
@@ -76,6 +82,13 @@ export default function SiteHeader() {
           </nav>
 
           <div className="site-head__actions">
+            <nav className="site-head__portals" aria-label="Work with us">
+              {PORTALS.map((item) => (
+                <a key={item.href} href={item.href} className="site-head__link">
+                  {item.label}
+                </a>
+              ))}
+            </nav>
             {isAuthed ? (
               <Link to="/discover" className="site-head__guest">
                 <Avatar src={account?.avatar} name={account?.firstName} size="sm" />
@@ -142,6 +155,18 @@ export default function SiteHeader() {
                 ),
               )}
             </nav>
+
+            <div className="site-menu__portals">
+              <span className="site-menu__portals-label">Work with us</span>
+              <a href={hostSignupUrl} className="site-menu__link">
+                Become a host
+                <Icon name="arrowUpRight" size={18} />
+              </a>
+              <a href={partnerRegisterUrl} className="site-menu__link">
+                Become a partner
+                <Icon name="arrowUpRight" size={18} />
+              </a>
+            </div>
 
             <div className="site-menu__foot">
               {isAuthed ? (
