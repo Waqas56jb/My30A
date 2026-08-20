@@ -2,6 +2,7 @@
  * Copy and assets for the Area Map, digital card, and flyer.
  * Components take these as props so the words can change without a layout edit.
  */
+import { HOST_CONTACT } from '../config/contact'
 
 export const AREA_GUIDE = {
   pageTitle: 'Area Map & Info',
@@ -141,9 +142,10 @@ export const AREA_GUIDE = {
     flyerLine: 'One road. Endless beauty. We take care of the rest.',
     website: 'my30ahost.com',
     websiteUrl: 'https://my30ahost.com',
-    phone: '(850) 450-2152',
-    phoneHref: 'tel:+18504502152',
-    email: 'hello@my30ahost.com',
+    email: HOST_CONTACT.email,
+    emailHref: `mailto:${HOST_CONTACT.email}`,
+    instagram: HOST_CONTACT.instagram,
+    facebook: HOST_CONTACT.facebook,
   },
 
   card: {

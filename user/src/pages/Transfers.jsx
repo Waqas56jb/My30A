@@ -10,6 +10,8 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
 import { PHOTO } from '../assets/images'
 import { formatCurrency } from '../utils/format'
+import HostServiceContact from '../components/contact/HostServiceContact'
+import { serviceBookingRevealsPhone } from '../config/contact'
 
 export default function Transfers() {
   useDocumentTitle('Airport transfers')
@@ -27,6 +29,7 @@ export default function Transfers() {
 
   const upcoming = transfers.filter((t) => !['completed', 'cancelled'].includes(t.status))
   const past = transfers.filter((t) => ['completed', 'cancelled'].includes(t.status))
+  const canTextHost = transfers.some((t) => serviceBookingRevealsPhone(t.status))
 
   return (
     <div className="page">
@@ -64,6 +67,12 @@ export default function Transfers() {
           </Button>
         </div>
       </div>
+
+      {canTextHost && (
+        <div className="section">
+          <HostServiceContact service="transfer" />
+        </div>
+      )}
 
       {loading && (
         <Section title="Your transfers">

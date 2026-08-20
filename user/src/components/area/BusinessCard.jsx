@@ -39,10 +39,12 @@ export default function BusinessCard({
               <Icon name="globe" />
               {brand.website}
             </a>
-            <a href={brand.phoneHref}>
-              <Icon name="phone" />
-              {brand.phone}
+            <a href={brand.emailHref}>
+              <Icon name="mail" />
+              {brand.email}
             </a>
+            <span className="biz-card__soon">Instagram — {brand.instagram}</span>
+            <span className="biz-card__soon">Facebook — {brand.facebook}</span>
           </div>
         </div>
         <figure className="biz-card__qr">
@@ -61,7 +63,7 @@ export default function BusinessCard({
           <p className="biz-card__print-meta">
             {brand.website}
             <span aria-hidden="true"> · </span>
-            {brand.phone}
+            {brand.email}
           </p>
         </article>
 

@@ -334,7 +334,7 @@
 
 .biz-card__contact a,
 .flyer__web,
-.flyer__phone {
+.flyer__email {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -345,7 +345,7 @@
 
 .biz-card__contact a svg,
 .flyer__web svg,
-.flyer__phone svg {
+.flyer__email svg {
   color: var(--gold);
 }
 
@@ -677,9 +677,17 @@
   gap: 0.45rem;
 }
 
-.flyer__phone {
+.flyer__email {
   color: var(--gold);
   font-weight: 550;
+}
+
+.biz-card__soon,
+.flyer__soon {
+  display: block;
+  font-size: var(--fs-xs);
+  color: var(--on-dark-soft);
+  opacity: 0.85;
 }
 
 .flyer-share {

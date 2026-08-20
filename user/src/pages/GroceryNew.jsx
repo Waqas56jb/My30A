@@ -14,6 +14,7 @@ import * as api from '../services/mockApi'
 import { track, ANALYTICS_EVENTS } from '../services/analytics'
 import { GROCERY_STORES, GROCERY_TEMPLATES } from '../data/mockCategories'
 import { formatCurrency, formatLongDate, cx } from '../utils/format'
+import HostServiceContact from '../components/contact/HostServiceContact'
 
 const WINDOWS = [
   { value: '8:00 AM – 10:00 AM', label: 'Early morning', sub: '8 – 10 AM' },
@@ -158,6 +159,10 @@ export default function GroceryNew() {
             <li>Your shopper texts about substitutions while they shop.</li>
             <li>Everything is put away — cold items first — and you get a photo.</li>
           </ol>
+        </div>
+
+        <div className="section">
+          <HostServiceContact service="grocery" />
         </div>
       </div>
     )

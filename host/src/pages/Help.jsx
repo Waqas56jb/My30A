@@ -154,17 +154,15 @@ export default function Help() {
             <DefinitionList
               rows={[
                 { key: 'Email', value: supportContact.email },
-                { key: 'Phone', value: supportContact.phone },
                 { key: 'Hours', value: supportContact.hours },
                 { key: 'Typical reply', value: supportContact.responseTime },
+                { key: 'Instagram', value: supportContact.instagram },
+                { key: 'Facebook', value: supportContact.facebook },
               ]}
             />
             <div className="hstack" style={{ gap: 'var(--sp-2)', marginTop: 'var(--sp-3)' }}>
               <Button size="sm" variant="secondary" block icon="mail" href={`mailto:${supportContact.email}`} target="_self">
                 Email support
-              </Button>
-              <Button size="sm" variant="ghost" block icon="phone" href={`tel:${supportContact.phone}`} target="_self">
-                Call support
               </Button>
             </div>
           </Panel>

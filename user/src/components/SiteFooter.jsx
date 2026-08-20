@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Icon from './ui/Icon'
 import { hostSignupUrl, partnerRegisterUrl } from '../config/portals'
+import { HOST_CONTACT } from '../config/contact'
 
 const COLUMNS = [
   {
@@ -45,6 +46,11 @@ export default function SiteFooter() {
           A local concierge for Florida&apos;s Scenic Highway 30A — the beaches, the bonfires, the
           bike trail, and everyone worth calling while you are here.
         </p>
+        <div className="site-foot__contact">
+          <a href={`mailto:${HOST_CONTACT.email}`}>{HOST_CONTACT.email}</a>
+          <span>Instagram — {HOST_CONTACT.instagram}</span>
+          <span>Facebook — {HOST_CONTACT.facebook}</span>
+        </div>
       </div>
 
       {COLUMNS.map((column) => (

@@ -12,6 +12,7 @@ import * as api from '../services/mockApi'
 import { track, ANALYTICS_EVENTS } from '../services/analytics'
 import { formatCurrency, formatLongDate } from '../utils/format'
 import { useAsync } from '../hooks/useAsync'
+import HostServiceContact from '../components/contact/HostServiceContact'
 
 export default function TransferNew() {
   const navigate = useNavigate()
@@ -140,6 +141,10 @@ export default function TransferNew() {
             <li>Driver details arrive 24 hours before pickup.</li>
             <li>Payment is captured after the ride, and you can add a tip.</li>
           </ol>
+        </div>
+
+        <div className="section">
+          <HostServiceContact service="transfer" />
         </div>
       </div>
     )

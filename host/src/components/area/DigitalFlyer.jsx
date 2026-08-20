@@ -77,10 +77,12 @@ export default function DigitalFlyer({
                 <Icon name="globe" />
                 {brand.website}
               </a>
-              <a className="flyer__phone" href={brand.phoneHref}>
-                <Icon name="phone" />
-                {brand.phone}
+              <a className="flyer__email" href={brand.emailHref}>
+                <Icon name="mail" />
+                {brand.email}
               </a>
+              <span className="flyer__soon">Instagram — {brand.instagram}</span>
+              <span className="flyer__soon">Facebook — {brand.facebook}</span>
             </div>
           </div>
         </div>

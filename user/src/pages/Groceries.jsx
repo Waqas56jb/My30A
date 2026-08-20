@@ -9,6 +9,8 @@ import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
 import { PHOTO } from '../assets/images'
+import HostServiceContact from '../components/contact/HostServiceContact'
+import { serviceBookingRevealsPhone } from '../config/contact'
 
 export default function Groceries() {
   useDocumentTitle('Grocery delivery')
@@ -25,6 +27,7 @@ export default function Groceries() {
 
   const active = orders.filter((o) => !['delivered', 'cancelled'].includes(o.status))
   const past = orders.filter((o) => ['delivered', 'cancelled'].includes(o.status))
+  const canTextHost = orders.some((o) => serviceBookingRevealsPhone(o.status))
 
   return (
     <div className="page">
@@ -60,6 +63,12 @@ export default function Groceries() {
           </div>
         </div>
       </div>
+
+      {canTextHost && (
+        <div className="section">
+          <HostServiceContact service="grocery" />
+        </div>
+      )}
 
       {loading && (
         <Section title="Your requests">

@@ -17,6 +17,8 @@ import * as api from '../services/mockApi'
 import { GROCERY_FLOW, getStatusMeta } from '../data/statusConfig'
 import { formatCurrency, formatLongDate, formatTime, formatDayLabel } from '../utils/format'
 import { PHOTO } from '../assets/images'
+import HostServiceContact from '../components/contact/HostServiceContact'
+import { serviceBookingRevealsPhone } from '../config/contact'
 
 const NEXT_STATUS = {
   pending: 'confirmed',
@@ -312,6 +314,8 @@ export default function GroceryDetail() {
               ]}
             />
           </div>
+
+          {serviceBookingRevealsPhone(order.status) && <HostServiceContact service="grocery" />}
 
           {/* Demo affordance: in production, ops moves these states. */}
           {NEXT_STATUS[order.status] && (

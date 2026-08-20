@@ -153,7 +153,10 @@ export default function Settings() {
                   <Field label="Support email">
                     {(p) => <Input {...p} type="email" value={str(s.supportEmail)} onChange={(e) => set('supportEmail', e.target.value)} />}
                   </Field>
-                  <Field label="Support phone">
+                  <Field
+                    label="Support phone"
+                    hint="Internal only. Guests see this number after they book grocery delivery or an airport transfer — never on public pages."
+                  >
                     {(p) => <Input {...p} value={str(s.supportPhone)} onChange={(e) => set('supportPhone', e.target.value)} />}
                   </Field>
                   <Field label="Timezone">

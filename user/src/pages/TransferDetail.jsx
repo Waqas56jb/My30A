@@ -16,6 +16,8 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 import * as api from '../services/mockApi'
 import { TRANSFER_FLOW, getStatusMeta } from '../data/statusConfig'
 import { formatCurrency, formatLongDate, formatTime, formatDayLabel } from '../utils/format'
+import HostServiceContact from '../components/contact/HostServiceContact'
+import { serviceBookingRevealsPhone } from '../config/contact'
 
 const NEXT_STATUS = {
   pending: 'confirmed',
@@ -302,6 +304,8 @@ export default function TransferDetail() {
               ]}
             />
           </div>
+
+          {serviceBookingRevealsPhone(transfer.status) && <HostServiceContact service="transfer" />}
 
           {NEXT_STATUS[transfer.status] && (
             <div

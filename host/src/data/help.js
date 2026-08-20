@@ -1,3 +1,5 @@
+import { HOST_CONTACT } from '../config/contact'
+
 export const helpTopics = [
   {
     id: 'getting-started',
@@ -93,8 +95,9 @@ export const helpTopics = [
 ]
 
 export const supportContact = {
-  email: 'hosts@my30a.com',
-  phone: '(850) 555-0180',
-  hours: '8:00 AM – 6:00 PM CT, Monday to Saturday',
-  responseTime: 'Usually within a few hours',
+  email: HOST_CONTACT.email,
+  hours: HOST_CONTACT.hours,
+  responseTime: HOST_CONTACT.responseTime,
+  instagram: HOST_CONTACT.instagram,
+  facebook: HOST_CONTACT.facebook,
 }

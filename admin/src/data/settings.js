@@ -12,8 +12,8 @@ import { DEFAULT_CANCELLATION_RULES } from './transfers'
 export const DEFAULT_SETTINGS = {
   general: {
     platformName: 'My30A',
-    supportEmail: 'help@my30a.com',
-    supportPhone: '(850) 555-0100',
+    supportEmail: 'my30ahost@gmail.com',
+    supportPhone: '+1 (850) 955-4577',
     timezone: 'America/Chicago',
     currency: 'USD',
     serviceArea: 'Scenic Highway 30A, Walton County, Florida',

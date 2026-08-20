@@ -1477,6 +1477,23 @@
   color: var(--ink-900);
 }
 
+.site-foot__contact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--ink-500);
+}
+
+.site-foot__contact a {
+  color: var(--ink-700);
+}
+
+.site-foot__contact a:hover {
+  color: var(--sea-700);
+}
+
 .site-foot__col h3 {
   font-size: var(--fs-micro);
   font-weight: 700;

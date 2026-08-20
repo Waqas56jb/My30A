@@ -6,7 +6,10 @@ import { Section, DefinitionList } from '../components/ui/Display'
 import { Field, Input, Textarea } from '../components/ui/Form'
 import { SuccessState } from '../components/ui/States'
 import { useApp } from '../context/AppContext'
+import { useAsync } from '../hooks/useAsync'
 import { useDocumentTitle } from '../hooks/useDocumentTitle'
+import { HOST_CONTACT, anyBookingRevealsPhone } from '../config/contact'
+import * as api from '../services/mockApi'
 
 const FAQS = [
   {
@@ -23,7 +26,7 @@ const FAQS = [
   },
   {
     q: 'What do you actually handle yourselves?',
-    a: 'Grocery delivery and airport transfers. Those go through our concierge team end to end, including payment.',
+    a: 'Grocery delivery and airport transfers. Those go through our concierge team end to end, including payment. After you book one of those, a text number appears on that request so you can reach us about it.',
   },
   {
     q: 'When am I charged?',
@@ -42,6 +45,14 @@ export default function Help() {
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
   const [openFaq, setOpenFaq] = useState(0)
+  const bookings = useAsync(
+    () =>
+      isAuthed
+        ? Promise.all([api.getGroceryOrders().catch(() => []), api.getTransfers().catch(() => [])])
+        : Promise.resolve([[], []]),
+    [isAuthed],
+  )
+  const showPhone = anyBookingRevealsPhone(bookings.data?.[0], bookings.data?.[1])
   useDocumentTitle('Help & contact')
 
   const submit = (event) => {
@@ -104,15 +115,23 @@ export default function Help() {
       <Section title="Reach us">
         <div className="grid grid--2">
           <div className="card card--pad">
-            <h3 style={{ fontSize: '1.05rem', marginBottom: 12 }}>My30A concierge</h3>
+            <h3 style={{ fontSize: '1.05rem', marginBottom: 12 }}>My30A Host</h3>
             <DefinitionList
               rows={[
-                { key: 'Email', value: 'concierge@my30a.com' },
-                { key: 'Phone', value: '(850) 555-0100' },
-                { key: 'Hours', value: '7:00 AM – 9:00 PM CT, daily' },
-                { key: 'Typical reply', value: 'Within an hour' },
+                { key: 'Email', value: HOST_CONTACT.email },
+                showPhone ? { key: 'Text', value: HOST_CONTACT.phoneDisplay } : null,
+                { key: 'Hours', value: HOST_CONTACT.hours },
+                { key: 'Typical reply', value: HOST_CONTACT.responseTime },
+                { key: 'Instagram', value: HOST_CONTACT.instagram },
+                { key: 'Facebook', value: HOST_CONTACT.facebook },
               ]}
             />
+            {!showPhone && (
+              <p className="u-xs u-muted" style={{ marginTop: 10, lineHeight: 1.6 }}>
+                Prefer to text? That number is shared after you book grocery delivery or an airport
+                transfer.
+              </p>
+            )}
             <div className="u-row u-wrap" style={{ marginTop: 'var(--sp-4)' }}>
               <Button
                 size="sm"
@@ -125,12 +144,17 @@ export default function Help() {
               <Button
                 size="sm"
                 variant="secondary"
-                icon="phone"
-                href="tel:8505550100"
+                icon="mail"
+                href={`mailto:${HOST_CONTACT.email}`}
                 target="_self"
               >
-                Call us
+                Email us
               </Button>
+              {showPhone && (
+                <Button size="sm" variant="ghost" icon="phone" href={HOST_CONTACT.phoneSms} target="_self">
+                  Text us
+                </Button>
+              )}
             </div>
           </div>
 
@@ -177,7 +201,11 @@ export default function Help() {
         {sent ? (
           <SuccessState
             title="Message sent"
-            message="Thanks — we have it, and we usually reply within the hour. Anything urgent is faster by phone."
+            message={
+              showPhone
+                ? 'Thanks — we have it, and we usually reply within the hour. Anything urgent about a grocery or transfer request is faster by text.'
+                : 'Thanks — we have it, and we usually reply within the hour by email.'
+            }
           >
             <Button variant="secondary" size="sm" onClick={() => setSent(false)}>
               Send another

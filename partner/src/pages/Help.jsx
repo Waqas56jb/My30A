@@ -97,21 +97,20 @@ export default function Help() {
       <Panel title="Talk to a person" className="psection">
         <DefinitionList
           rows={[
-            { key: 'Email', value: 'partners@my30a.com' },
-            { key: 'Phone', value: '(850) 555-0190' },
+            { key: 'Email', value: 'my30ahost@gmail.com' },
             { key: 'Hours', value: '8:00 AM – 6:00 PM CT, Monday to Saturday' },
+            { key: 'Instagram', value: 'Coming soon' },
+            { key: 'Facebook', value: 'Coming soon' },
           ]}
         />
         <div className="prow" style={{ marginTop: 'var(--sp-4)' }}>
-          <Button size="sm" variant="secondary" icon="mail" href="mailto:partners@my30a.com" target="_self">
+          <Button size="sm" variant="secondary" icon="mail" href="mailto:my30ahost@gmail.com" target="_self">
             Email us
-          </Button>
-          <Button size="sm" variant="ghost" icon="phone" href="tel:8505550190" target="_self">
-            Call us
           </Button>
         </div>
         <p className="u-xs u-muted" style={{ marginTop: 'var(--sp-3)' }}>
-          Prototype build — these contact details are illustrative.
+          We reply by email. A text line is shared only with guests who book grocery delivery or an
+          airport transfer.
         </p>
       </Panel>
 
